@@ -7,6 +7,7 @@ import _ from "lodash"
 const useCapacity = () => {
   const [capacity, setCapacity] = useState(null)
   const [generated, setGenerated] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState(null)
 
   const generate = (capPlan) => {
     if (capPlan && capPlan._id) {
@@ -18,6 +19,14 @@ const useCapacity = () => {
           setGenerated(true)
         })
         .catch((err) => console.log(err))
+
+      fetch(`/api/data/find/lastUpdated?capPlan=${capPlan._id}`)
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data.message)
+          setLastUpdated(data.data)
+        })
+        .catch((err) => console.log(err))
     } else {
       console.log("No initial data!")
     }
@@ -26,6 +35,7 @@ const useCapacity = () => {
 
   const reset = () => {
     setCapacity(null)
+    setLastUpdated(null)
   }
 
   const get = (weekRange, fields) => {
@@ -63,11 +73,16 @@ const useCapacity = () => {
     return generated
   }
 
+  const getLastUpdated = () => {
+    return lastUpdated
+  }
+
   return {
     generate,
     isGenerated,
     reset,
     get,
+    getLastUpdated,
   }
 }
 

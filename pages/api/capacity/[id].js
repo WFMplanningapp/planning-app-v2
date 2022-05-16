@@ -1,6 +1,6 @@
 import { connectToDatabase } from "../../../lib/mongodb"
 import { generateCapacity } from "../../../lib/capacityCalculations"
-import { ObjectId } from "mongodb"
+import { ObjectId } from "mongodb" // @ts-ignore
 
 /**
 METHODS: GET

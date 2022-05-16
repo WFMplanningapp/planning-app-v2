@@ -129,6 +129,28 @@ const CapPlanManagement = ({ data }) => {
           })
           .catch((err) => console.log(err))
         break
+
+      case "CLEANUP":
+        await fetch(
+          `/api/data/entries/cleanup?capPlan=${
+            selection.get("capPlan") && selection.get("capPlan")._id
+          }`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: auth.authorization(),
+            },
+          }
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            alert(data.message)
+            console.log("deleted: " + data.response.deletedCount)
+            form.resetAll()
+          })
+          .catch((err) => console.log(err))
+        break
     }
     selection.resetOne("capPlan")
     data.refresh()
@@ -481,6 +503,13 @@ const CapPlanManagement = ({ data }) => {
               disabled={!selection.get("capPlan")}
             >
               Remove Cap Plan
+            </button>
+            <button
+              className="button is-small is-danger is-light is-rounded"
+              onClick={() => handleSubmit("CLEANUP")}
+              disabled={!selection.get("capPlan")}
+            >
+              Cleanup Entries
             </button>
           </div>
         </div>

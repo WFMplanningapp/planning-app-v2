@@ -295,6 +295,24 @@ export default function Capacity() {
 
         {capacity.isGenerated() && (
           <div id={"cap-viewer"}>
+            {capacity.getLastUpdated() && (
+              <>
+                <div className="is-size-6">
+                  Last Updated:{" "}
+                  <span className="tag mr-3 is-rounded is-light is-success">
+                    {capacity.getLastUpdated().lastUpdated}
+                  </span>
+                  Updated By:{" "}
+                  <span className="tag mr-3 is-rounded is-link is-light">
+                    {capacity.getLastUpdated().updatedBy}
+                  </span>
+                  Type:{" "}
+                  <span className="tag mr-3 is-rounded is-danger is-light">
+                    {capacity.getLastUpdated().updateType}
+                  </span>
+                </div>
+              </>
+            )}
             <br />
             <div className="is-size-5 is-flex ">
               <label className="label is-size-5">Capacity Viewer</label>
@@ -350,7 +368,7 @@ export default function Capacity() {
             <h3 className="has-text-centered">FORECASTED FTE</h3>
             <TotalPercentageChart
               data={capacity.get(weekRange)}
-              lines={["forecastedFTE", "totalFTE", "expectedFTE"]}
+              lines={["fcFTE", "totalFTE", "expectedFTE"]}
             />
             <br />
             <h3 className="has-text-centered">BUDGET FTE</h3>
