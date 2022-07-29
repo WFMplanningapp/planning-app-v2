@@ -359,22 +359,22 @@ export default function Capacity() {
                 grid <FaExternalLinkAlt className="ml-1" />
               </a>
             </h2>
-            <h3 className="has-text-centered">BILLABLE FTE</h3>
+            <h3 className="has-text-centered">OVERALL VISION</h3>
             <TotalPercentageChart
               data={capacity.get(weekRange)}
-              lines={["billableFTE", "budgetFTE", "fcFTE", "totalFTE", "expectedFTE"]}
+              lines={["billableFTE", "budgetFTE", "requiredFTE", "totalFTE", "expectedFTE"]}
             />
             <br />
-            <h3 className="has-text-centered">FORECASTED FTE</h3>
+            <h3 className="has-text-centered">ACTUALS VS REQUIRED</h3>
             <TotalPercentageChart
               data={capacity.get(weekRange)}
-              lines={["fcFTE", "totalFTE", "expectedFTE"]}
+              lines={["requiredFTE", "totalFTE", "expectedFTE"]}
             />
             <br />
-            <h3 className="has-text-centered">BUDGET FTE</h3>
+            <h3 className="has-text-centered">ACTUALS VS FINANCIALS</h3>
             <TotalPercentageChart
               data={capacity.get(weekRange)}
-              lines={["budgetFTE", "totalFTE", "expectedFTE"]}
+              lines={["budgetFTE", "fcFTE" ,"totalFTE", "expectedFTE"]}
             />
             <br />
             <h3 className="has-text-centered">ATTRITION TREND</h3>
