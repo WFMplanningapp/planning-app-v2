@@ -10,6 +10,7 @@ const headcountFields = [
   "loaOUT",
   "rwsIN",
   "rwsOUT",
+  "rampDown",
 ]
 
 const trainingFields = [

@@ -515,4 +515,19 @@
   "persistant": "FALSE",
   "type": "capacity",
   "entry": true
-}]
+},{
+  "_id": {
+    "$oid": "630e313df0c30bb739eaa4de"
+  },
+  "aggSum": true,
+  "aggregatable": true,
+  "description": "Permanent leaver from MU",
+  "external": "Ramp Down",
+  "internal": "rampDown",
+  "order": 208,
+  "persistant": "FALSE",
+  "type": "headcount",
+  "entry": true,
+  "main": true
+}
+]
