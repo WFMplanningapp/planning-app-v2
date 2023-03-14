@@ -354,7 +354,8 @@ const CapPlanManagement = ({ data }) => {
               <StructureDropdown
                 structureName="capPlan"
                 selection={selection}
-                form={form}
+                                  form={form}
+                                  reset={["language"]}
                 data={
                   data &&
                   selection.get("lob") &&
@@ -363,16 +364,31 @@ const CapPlanManagement = ({ data }) => {
                   )
                 }
                 disabled={!selection.get("lob")}
-                callback={(f, s) => {
-                  f.setMany({
-                    name: s.name,
-                    firstWeek: s.firstWeek,
-                    startingHC: s.startingHC,
-                    active: s.active,
-                  })
-                }}
-              />
-            </div>
+                                  callback={(f) => {
+                                      f.resetAll()
+                                  }}
+               />
+                              <StructureDropdown
+                                  structureName="language"
+                                  selection={selection}
+                                  form={form}
+                                  data={
+                                      data &&
+                                      selection.get("capPlan") &&
+                                      data.languages.filter(
+                                          (language) => language.capPlan === selection.get("capPlan")._id
+                                      )
+                                  }
+                                  disabled={!selection.get("capPlan")}
+                                  callback={(f, s) => {
+                                      f.setMany({
+                                          name: s.name,
+                                          firstWeek: s.firstWeek,
+                                          startingHC: s.startingHC,
+                                          active: s.active,
+                                      })
+                                  }}
+                              />            </div>
           </div>
           <div id="edit-form" className="columns is-multiline">
             <div className="column is-3">
