@@ -364,21 +364,6 @@ const CapPlanManagement = ({ data }) => {
                   )
                 }
                   disabled={!selection.get("lob")}
-                  callback={(f) => {
-                    f.resetAll()
-                  }}
-               />
-              <StructureDropdown
-                structureName="language"
-                selection={selection}
-                form={form}
-                data={
-                  data &&
-                  data.languages.sort((a, b) =>
-                    a.name > b.name ? 1 : a.name < b.name ? -1 : 0
-                  )
-                }
-                disabled={!selection.get("capPlan")}
                 callback={(f, s) => {
                   f.setMany({
                     name: s.name,
@@ -387,7 +372,7 @@ const CapPlanManagement = ({ data }) => {
                     active: s.active,
                    })
                   }}
-                />            
+               />
             </div>
           </div>
           <div id="edit-form" className="columns is-multiline">
@@ -431,6 +416,20 @@ const CapPlanManagement = ({ data }) => {
                 />
               </div>
             </div>
+            <div className="column is-3">
+              <StructureDropdown
+                structureName="language"
+                selection={selection}
+                form={form}
+                data={
+                  data &&
+                  data.languages.sort((a, b) =>
+                    a.name > b.name ? 1 : a.name < b.name ? -1 : 0
+                  )
+                }
+                disabled={!selection.get("capPlan")}
+                />
+              </div>
             <div className="column is-12 ">
               <div className="control">
                 <label className="label">
@@ -451,7 +450,7 @@ const CapPlanManagement = ({ data }) => {
             <button
               className="button is-small is-warning is-rounded"
               onClick={() => handleSubmit("EDIT")}
-              disabled={!form.checkRequired() || !selection.get("capPlan")}
+              disabled={!form.checkRequired() || !selection.get("capPlan") || !selection.get("language")}
             >
               Edit Cap Plan
             </button>
