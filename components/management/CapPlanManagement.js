@@ -373,6 +373,7 @@ const CapPlanManagement = ({ data }) => {
                     startingHC: s.startingHC,
                     active: s.active,
                   })
+                  s.set("language", s.get("cap_plan").language)
                 }}
               />
             </div>
