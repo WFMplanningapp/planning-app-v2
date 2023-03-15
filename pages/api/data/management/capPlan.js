@@ -55,12 +55,20 @@ export default async function handler(req, res) {
       break
     case "PUT":
       if (verification.verified && verification.permission <= 2 && target) {
-        console.log("WILL UPDATE", payload)
+        console.log("WILL UPDATE", payload, language)
         let update =
-          payload && payload && target
-            ? await db
-                .collection("capPlans")
-                .updateOne({ _id: ObjectId(target) }, { $set: {...payload, lastUpdated: new Date, updatedBy: verification.user.username} })
+          payload && target
+            ? await db.collection("capPlans").updateOne(
+                { _id: ObjectId(target) },
+                {
+                  $set: {
+                    ...payload,
+                    language: language,
+                    lastUpdated: new Date(),
+                    updatedBy: verification.user.username,
+                  },
+                }
+              )
             : { message: "Nothing to Update" }
         res
           .status(200)

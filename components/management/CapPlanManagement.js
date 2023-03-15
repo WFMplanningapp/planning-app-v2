@@ -98,9 +98,9 @@ const CapPlanManagement = ({ data }) => {
               "Content-Type": "application/json",
               Authorization: auth.authorization(),
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               payload,
-              language: selection.get("language"),
+              language: selection.get("language")._id,
             }),
           }
         )
@@ -357,8 +357,7 @@ const CapPlanManagement = ({ data }) => {
               <StructureDropdown
                 structureName="capPlan"
                 selection={selection}
-                                  form={form}
-                                  reset={["language"]}
+                form={form}
                 data={
                   data &&
                   selection.get("lob") &&
@@ -366,16 +365,16 @@ const CapPlanManagement = ({ data }) => {
                     (capPlan) => capPlan.lob === selection.get("lob")._id
                   )
                 }
-                  disabled={!selection.get("lob")}
+                disabled={!selection.get("lob")}
                 callback={(f, s) => {
                   f.setMany({
                     name: s.name,
                     firstWeek: s.firstWeek,
                     startingHC: s.startingHC,
                     active: s.active,
-                   })
-                  }}
-               />
+                  })
+                }}
+              />
             </div>
           </div>
           <div id="edit-form" className="columns is-multiline">
@@ -419,7 +418,9 @@ const CapPlanManagement = ({ data }) => {
                 />
               </div>
             </div>
+
             <div className="column is-3">
+              <label className="label">Language</label>
               <StructureDropdown
                 structureName="language"
                 selection={selection}
@@ -431,8 +432,8 @@ const CapPlanManagement = ({ data }) => {
                   )
                 }
                 disabled={!selection.get("capPlan")}
-                />
-              </div>
+              />
+            </div>
             <div className="column is-12 ">
               <div className="control">
                 <label className="label">
@@ -453,7 +454,11 @@ const CapPlanManagement = ({ data }) => {
             <button
               className="button is-small is-warning is-rounded"
               onClick={() => handleSubmit("EDIT")}
-              disabled={!form.checkRequired() || !selection.get("capPlan") || !selection.get("language")}
+              disabled={
+                !form.checkRequired() ||
+                !selection.get("capPlan") ||
+                !selection.get("language")
+              }
             >
               Edit Cap Plan
             </button>
