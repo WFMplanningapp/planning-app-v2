@@ -98,7 +98,10 @@ const CapPlanManagement = ({ data }) => {
               "Content-Type": "application/json",
               Authorization: auth.authorization(),
             },
-            body: JSON.stringify({ payload }),
+            body: JSON.stringify({ 
+              payload,
+              language: selection.get("language"),
+            }),
           }
         )
           .then((response) => response.json())
