@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "../../contexts/authContext"
 import useForm from "../../hooks/useForm"
 import StructureDropdown from "../selection/StructureDropdown"
@@ -58,6 +58,17 @@ const CapPlanManagement = ({ data }) => {
   const form = useForm({
     fields: formFields,
   })
+
+  useEffect(() => {
+    selection.set(
+      "language",
+      data &&
+        selection.get("capPlan") &&
+        data.languages.find(
+          (lang) => lang._id === selection.get("capPlan").language
+        )
+    )
+  }, [selection.get("capPlan")])
 
   //HANDLERS
   const handleSubmit = async (action) => {
@@ -373,16 +384,6 @@ const CapPlanManagement = ({ data }) => {
                     startingHC: s.startingHC,
                     active: s.active,
                   })
-
-                  console.log("SELECTION:", s)
-
-                  s.set(
-                    "language",
-                    data &&
-                      data.languages.find(
-                        (language) => language._id === s.language
-                      )
-                  )
                 }}
               />
             </div>
@@ -434,14 +435,14 @@ const CapPlanManagement = ({ data }) => {
               <StructureDropdown
                 structureName="language"
                 selection={selection}
-                form={form}
+                form={selection}
                 data={
                   data &&
                   data.languages.sort((a, b) =>
                     a.name > b.name ? 1 : a.name < b.name ? -1 : 0
                   )
                 }
-                disabled={!selection.get("capPlan")}
+                disabled={!selection.get("language")}
               />
             </div>
             <div className="column is-12 ">
