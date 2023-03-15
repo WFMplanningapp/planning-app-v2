@@ -100,7 +100,7 @@ const CapPlanManagement = ({ data }) => {
             },
             body: JSON.stringify({
               payload,
-              language: selection.get("language")._id,
+              language: selection.get("language"),
             }),
           }
         )
