@@ -63,7 +63,7 @@ export default async function handler(req, res) {
                 {
                   $set: {
                     ...payload,
-                    language: language,
+                    language: language._id,
                     lastUpdated: new Date(),
                     updatedBy: verification.user.username,
                   },
