@@ -373,12 +373,14 @@ const CapPlanManagement = ({ data }) => {
                     startingHC: s.startingHC,
                     active: s.active,
                   })
+
+                  console.log("SELECTION:", s)
+
                   s.set(
                     "language",
                     data &&
                       data.languages.find(
-                        (language) =>
-                          language._id === selection.get("cap_plan").language
+                        (language) => language._id === s.language
                       )
                   )
                 }}
