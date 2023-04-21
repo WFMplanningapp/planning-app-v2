@@ -15,9 +15,10 @@ import CapacityDataGrid from "../components/capacity/CapacityDataGrid"
 import EntriesModal from "../components/entries/EntriesModal"
 
 const selectionFields = [
-  { name: "project", default: null, required: true, type: "object", level: 1 },
-  { name: "lob", default: null, required: true, type: "object", level: 2 },
-  { name: "capPlan", default: null, required: true, type: "object", level: 3 },
+  { name: "country", default: null, required: true, type: "object", level: 1},
+  { name: "project", default: null, required: true, type: "object", level: 2 },
+  { name: "lob", default: null, required: true, type: "object", level: 3 },
+  { name: "capPlan", default: null, required: true, type: "object", level: 4 },
   {
     name: "fromWeek",
     default: null,
@@ -45,6 +46,7 @@ export default function Capacity() {
   const [channelFields, setChannelFields] = useState([])
 
   const data = useData([
+    "countries",
     "projects",
     "lobs",
     "capPlans",
@@ -138,14 +140,29 @@ export default function Capacity() {
               <div className="column field">
                 <label className="label">Selection</label>
                 <StructureDropdown
+                  structureName="country"
+                  selection={selection}
+                  data={data && data.countries}
+                  disabled={false}
+                  reset={["project", "lob", "capPlan"]}
+                  callback={(f) => {
+                    f.resetAll()
+                  }}
+                />
+                <StructureDropdown
                   structureName="project"
                   selection={selection}
-                  data={data && data.projects}
-                  disabled={false}
+                  data={
+                    data &&
+                    selection.get("country") &&
+                    data.projects.filter((project) => project.country === selection.get("country").name)
+                  }
+                  disabled={!selection.get("country") || !data.projects.filter((project) => project.country === selection.get("country").name).length}
                   reset={["lob", "capPlan"]}
                   callback={(f) => {
                     f.resetAll()
                   }}
+                  
                 />
                 <StructureDropdown
                   structureName="lob"

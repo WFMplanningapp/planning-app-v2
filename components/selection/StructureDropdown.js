@@ -8,12 +8,17 @@ const StructureDropdown = ({
   form,
   callback,
   reset,
+  debug,
 }) => {
   const [selected, setSelected] = useState(null)
 
   useEffect(() => {
     setSelected(selection.get(structureName))
   }, [selection.get(structureName)])
+
+  useEffect(() => {
+    if(debug) debug();
+  }, [data])
 
   return (
     <div className="select is-small is-rounded">
