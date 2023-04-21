@@ -6,7 +6,8 @@ import StructureDropdown from "../selection/StructureDropdown"
 import { FaLock } from "react-icons/fa"
 
 const selectionFields = [
-  { name: "project", default: null, required: true, type: "object" },
+  { name: "project", default: null, required: true, type: "object", level:1 },
+  {name: "country", default: null, required: true, type: "object", level: 2}
 ]
 
 const formFields = [
@@ -25,6 +26,14 @@ const formFields = [
     type: "text",
     label: "Business Unit",
     placeholder: "Business Unit",
+  },
+  {
+    name: "country",
+    default: "",
+    required: true,
+    type: "text",
+    label: "Country",
+    placeholder: "Country",
   },
 ]
 
@@ -49,6 +58,7 @@ const ProjectManagement = ({ data }) => {
     let payload = form.getForm()
     switch (action) {
       case "ADD":
+
         await fetch(`/api/data/management/project`, {
           method: "POST",
           headers: {
@@ -180,6 +190,23 @@ const ProjectManagement = ({ data }) => {
                 />
               </div>
             </div>
+            <div className="column is-3">
+              <label className="label">Project Name</label>
+              <div className="control is-small">
+                <StructureDropdown
+                structureName="project"
+                selection={selection}
+                form={form}
+                data={data && data.countries}
+                disabled={false}
+                callback={(f, s) => {
+                  f.set(
+                    "country", s.name
+                  )
+                }}
+              />
+              </div>
+            </div>
           </div>
           <div>
             <button
@@ -197,11 +224,24 @@ const ProjectManagement = ({ data }) => {
             <div className="column field">
               <label className="label">Selection</label>
               <StructureDropdown
+                  structureName="country"
+                  selection={selection}
+                  data={data && data.countries}
+                  disabled={false}
+                  reset={["project"]}
+                  callback={(f) => {
+                    f.resetAll()
+                  }}
+                />
+              <StructureDropdown
                 structureName="project"
                 selection={selection}
                 form={form}
-                data={data && data.projects}
-                disabled={false}
+                data={data && data &&
+                    selection.get("country") &&
+                    data.projects.filter((project) => project.country === selection.get("country").name)
+                }
+                disabled={!selection.get("country") || !data.projects.filter((project) => project.country === selection.get("country").name).length}
                 callback={(f, s) => {
                   f.setMany({
                     name: s.name,

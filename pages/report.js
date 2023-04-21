@@ -28,6 +28,7 @@ const Report = () => {
   const [generated, setGenerated] = useState(false)
 
   const data = useData([
+    "countries",
     "projects",
     "lobs",
     "capPlans",
@@ -110,16 +111,28 @@ const Report = () => {
         <div className="columns">
           <div className="column field">
             <label className="label">Selection</label>
+             <StructureDropdown
+               structureName="country"
+               selection={selection}
+               data={data && data.countries}
+               disabled={false}
+               reset={["project", "lob", "capPlan"]}
+               callback={(f) => {
+                 f.resetAll()
+                 setGenerated(false)
+               }}
+             />
             <StructureDropdown
               structureName="project"
               selection={selection}
-              data={data && data.projects}
-              disabled={false}
+              data={data && selection.get("country") && data.projects.filter((project) => project.country === selection.get("country").name)}
+              disabled={!selection.get("country") || !data.projects.filter((project) => project.country === selection.get("country").name).length}
               reset={["lob", "capPlan"]}
               callback={(f) => {
                 f.resetAll()
                 setGenerated(false)
               }}
+
             />
             <StructureDropdown
               structureName="lob"
