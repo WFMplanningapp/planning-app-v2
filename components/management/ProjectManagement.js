@@ -190,23 +190,7 @@ const ProjectManagement = ({ data }) => {
                 />
               </div>
             </div>
-            <div className="column is-3">
-              <label className="label">Project Name</label>
-              <div className="control is-small">
-                <StructureDropdown
-                structureName="project"
-                selection={selection}
-                form={form}
-                data={data && data.countries}
-                disabled={false}
-                callback={(f, s) => {
-                  f.set(
-                    "country", s.name
-                  )
-                }}
-              />
-              </div>
-            </div>
+            
           </div>
           <div>
             <button
@@ -224,24 +208,12 @@ const ProjectManagement = ({ data }) => {
             <div className="column field">
               <label className="label">Selection</label>
               <StructureDropdown
-                  structureName="country"
-                  selection={selection}
-                  data={data && data.countries}
-                  disabled={false}
-                  reset={["project"]}
-                  callback={(f) => {
-                    f.resetAll()
-                  }}
-                />
-              <StructureDropdown
                 structureName="project"
                 selection={selection}
                 form={form}
-                data={data && data &&
-                    selection.get("country") &&
-                    data.projects.filter((project) => project.country === selection.get("country").name)
+                data={data && data.projects 
                 }
-                disabled={!selection.get("country") || !data.projects.filter((project) => project.country === selection.get("country").name).length}
+                disabled={false}
                 callback={(f, s) => {
                   f.setMany({
                     name: s.name,

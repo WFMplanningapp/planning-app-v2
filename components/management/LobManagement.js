@@ -7,7 +7,8 @@ import { FaLock } from "react-icons/fa"
 
 const selectionFields = [
   { name: "project", default: null, required: true, type: "object", level: 1 },
-  { name: "lob", default: null, required: true, type: "object", level: 2 },
+    { name: "lob", default: null, required: true, type: "object", level: 2 },
+    { name: "country", default: null, required: true, type: "object", level: 3 }
 ]
 
 const formFields = [
@@ -34,7 +35,15 @@ const formFields = [
     type: "text",
     label: "OCP Weeks",
     placeholder: "OCP Weeks",
-  },
+    },
+    {
+        name: "country",
+        default: "",
+        required: true,
+        type: "text",
+        label: "Country",
+        placeholder: "Country",
+    },
 ]
 
 const LobManagement = ({ data }) => {
@@ -164,7 +173,7 @@ const LobManagement = ({ data }) => {
       {tab === 1 ? (
         <div id="add-tab">
           <div id="add-selection" className="columns">
-            <div className="column field">
+            <div className="column is-3">
               <label className="label">Selection</label>
               <StructureDropdown
                 structureName="project"
@@ -177,7 +186,8 @@ const LobManagement = ({ data }) => {
                   f.resetAll()
                 }}
               />
-            </div>
+                      </div>
+                      
           </div>
           <div id="add-form" className="columns">
             <div className="column is-3">
@@ -218,7 +228,24 @@ const LobManagement = ({ data }) => {
                   required
                 />
               </div>
-            </div>
+                      </div>
+                      <div className="column is-3">
+                          <label className="label">Country</label>
+                          <div className="control is-small">
+                              <StructureDropdown
+                                  structureName="country"
+                                  selection={selection}
+                                  form={form}
+                                  data={data && data.countries}
+                                  disabled={false}
+                                  callback={(f, s) => {
+                                      f.set(
+                                          "country", s.name
+                                      )
+                                  }}
+                              />
+                          </div>
+                      </div>
           </div>
           <div id="add-button">
             <button
@@ -307,7 +334,24 @@ const LobManagement = ({ data }) => {
                   required
                 />
               </div>
-            </div>
+                          </div>
+                          <div className="column is-3">
+                              <label className="label">Country</label>
+                              <div className="control is-small">
+                                  <StructureDropdown
+                                      structureName="country"
+                                      selection={selection}
+                                      form={form}
+                                      data={data && data.countries}
+                                      disabled={false}
+                                      callback={(f, s) => {
+                                          f.set(
+                                              "country", s.name
+                                          )
+                                      }}
+                                  />
+                              </div>
+                          </div>
           </div>
           <div id="edit-button">
             <button

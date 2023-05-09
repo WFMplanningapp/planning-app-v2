@@ -111,46 +111,49 @@ const Report = () => {
         <div className="columns">
           <div className="column field">
             <label className="label">Selection</label>
-             <StructureDropdown
-               structureName="country"
-               selection={selection}
-               data={data && data.countries}
-               disabled={false}
-               reset={["project", "lob", "capPlan"]}
-               callback={(f) => {
-                 f.resetAll()
-                 setGenerated(false)
-               }}
-             />
-            <StructureDropdown
-              structureName="project"
-              selection={selection}
-              data={data && selection.get("country") && data.projects.filter((project) => project.country === selection.get("country").name)}
-              disabled={!selection.get("country") || !data.projects.filter((project) => project.country === selection.get("country").name).length}
-              reset={["lob", "capPlan"]}
-              callback={(f) => {
-                f.resetAll()
-                setGenerated(false)
-              }}
-
-            />
+                     <StructureDropdown
+                      structureName="project"
+                      selection={selection}
+                      data={
+                          data &&
+                          data.projects
+                      }
+                      disabled={false}
+                      reset={["country", "lob", "capPlan"]}
+                      callback={(f) => {
+                          f.resetAll()
+                      }}
+                              />
+                      <StructureDropdown
+                          structureName="country"
+                          selection={selection}
+                          data={data &&
+                              data.countries}
+                          disabled={!selection.get("project")}
+                          reset={["lob", "capPlan"]}
+                          callback={(f) => {
+                              f.resetAll()
+                          }}
+                      />
             <StructureDropdown
               structureName="lob"
               selection={selection}
               reset={["capPlan"]}
               data={
                 data &&
-                selection.get("project") && [
+                selection.get("country") && [
                   { name: "SELECT ALL" },
                   ...data.lobs.filter(
-                    (lob) => lob.project === selection.get("project")._id
+                      (lob) => lob.country === selection.get("country").name && lob.project === selection.get("project")._id
                   ),
                 ]
               }
               callback={(f) => {
                 setGenerated(false)
               }}
-              disabled={!selection.get("project")}
+                          disabled={!selection.get("country") || data.lobs.filter(
+                              (lob) => lob.country === selection.get("country").name && lob.project === selection.get("project")._id
+                          ).length <= 0}
             />
           </div>
         </div>

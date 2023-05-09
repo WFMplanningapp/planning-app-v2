@@ -50,6 +50,7 @@ export default async function handler(req, res) {
 							Lob_Name: "$lobDoc.name",
 							CapPlan_Name: "$name",
 							Language: "$langDoc.set",
+							Country: "$lobDoc.country",
 						},
 					},
 				])
