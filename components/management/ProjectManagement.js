@@ -7,7 +7,6 @@ import { FaLock } from "react-icons/fa"
 
 const selectionFields = [
   { name: "project", default: null, required: true, type: "object", level:1 },
-  {name: "country", default: null, required: true, type: "object", level: 2}
 ]
 
 const formFields = [
@@ -26,14 +25,6 @@ const formFields = [
     type: "text",
     label: "Business Unit",
     placeholder: "Business Unit",
-  },
-  {
-    name: "country",
-    default: "",
-    required: true,
-    type: "text",
-    label: "Country",
-    placeholder: "Country",
   },
 ]
 
