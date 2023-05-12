@@ -156,7 +156,14 @@ export default function Capacity() {
                                   structureName="country"
                                   selection={selection}
                                   data={data &&
-                                      data.countries}
+                                      data.countries &&
+                                      selection.get("project") &&
+                                      data.countries.filter((country) => {
+                                          const selectedProject = selection.get("project")._id;
+                                          const projectLobs = data.lobs.filter((lob) => lob.project === selectedProject);
+                                          console.log(projectLobs);
+                                          return projectLobs.find(lob => lob.country === country.name);
+                                      })}
                                   disabled={!selection.get("project")}
                                   reset={["lob", "capPlan"]}
                                   callback={(f) => {
@@ -176,7 +183,7 @@ export default function Capacity() {
                   }
                                   disabled={!selection.get("country") || data.lobs.filter(
                                       (lob) => lob.country === selection.get("country").name && lob.project === selection.get("project")._id
-                                  ).length <= 0}
+                                  ).length <= 0 }
                 />
                 <StructureDropdown
                   structureName="capPlan"

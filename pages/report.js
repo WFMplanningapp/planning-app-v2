@@ -128,7 +128,14 @@ const Report = () => {
                           structureName="country"
                           selection={selection}
                           data={data &&
-                              data.countries}
+                              data.countries &&
+                              selection.get("project") &&
+                              data.countries.filter((country) => {
+                                  const selectedProject = selection.get("project")._id;
+                                  const projectLobs = data.lobs.filter((lob) => lob.project === selectedProject);
+                                  console.log(projectLobs);
+                                  return projectLobs.find(lob => lob.country === country.name);
+                              })}
                           disabled={!selection.get("project")}
                           reset={["lob", "capPlan"]}
                           callback={(f) => {
