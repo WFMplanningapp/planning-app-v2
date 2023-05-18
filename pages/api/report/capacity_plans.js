@@ -32,6 +32,10 @@ export default async function handler(req, res) {
 							name: 1,
 							lobDoc: { $arrayElemAt: ["$lobDoc", 0] },
 							langDoc: { $arrayElemAt: ["$langDoc", 0] },
+							operationDays: 1,
+							fteHoursWeekly: 1,
+							pricingModel: 1,
+
 						},
 					},
 					{ $addFields: { projectObjId: { $toObjectId: "$lobDoc.project" } } },
@@ -51,6 +55,9 @@ export default async function handler(req, res) {
 							CapPlan_Name: "$name",
 							Language: "$langDoc.set",
 							Country: "$lobDoc.country",
+							Operation_Days: "$operationDays",
+							FTEHours_Weekly: "$fteHoursWeekly",
+							Pricing_Model: "$pricingModel",
 						},
 					},
 				])

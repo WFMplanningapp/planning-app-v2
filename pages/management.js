@@ -12,7 +12,7 @@ import EntriesManagement from "../components/management/EntriesManagement"
 export default function Management() {
 	const [screen, setScreen] = useState("projects")
 
-	const data = useData(["countries", "projects", "lobs", "capPlans", "languages", "fields"])
+	const data = useData(["countries", "projects", "lobs", "capPlans", "languages", "fields", "dow", "hours","pms"])
 
 	const auth = useAuth()
 

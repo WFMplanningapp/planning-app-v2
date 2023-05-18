@@ -23,7 +23,7 @@ const StructureDropdown = ({
   return (
     <div className="select is-small is-rounded">
       <select
-        style={{ minWidth: "150px" }}
+        style={{ minWidth: "40px" }}
         disabled={disabled}
         onChange={(e) => {
           let json = JSON.parse(e.target.value)
@@ -44,9 +44,9 @@ const StructureDropdown = ({
             callback(form, json, e.target.value)
           }
         }}
-        value={selected ? JSON.stringify(selected) : `Select ${structureName}`}
+        value={selected ? JSON.stringify(selected) : `${structureName}`}
       >
-        {!selected && <option value={null}>{`Select ${structureName}`}</option>}
+        {!selected && <option value={null}>{`${structureName}`}</option>}
         {data &&
           data.map((item, index) => (
             <option
