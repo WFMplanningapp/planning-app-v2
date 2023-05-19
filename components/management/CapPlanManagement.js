@@ -71,14 +71,14 @@ const formFields = [
   {
     name: "fteHoursWeekly",
     default: 0,
-    required: true,
+    required: false,
     type: "number",
     label: "FTE Hours Weekly"
   },
   {
     name: "pricingModel",
     default: "",
-    required: true,
+    required: false,
     type: "text",
     label: "Pricing Model"
   },
