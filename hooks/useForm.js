@@ -28,6 +28,7 @@ const useForm = ({ fields, callback }) => {
 
   const setMany = (formObj) => {
     setForm(formObj)
+    console.log(formObj)
   }
 
   const resetOne = (fieldName) => {
