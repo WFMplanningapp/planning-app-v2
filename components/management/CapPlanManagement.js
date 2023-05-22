@@ -10,12 +10,12 @@ const selectionFields = [
   { name: "project", default: null, required: true, type: "object", level: 1 },
   { name: "lob", default: null, required: true, type: "object", level: 2 },
   { name: "capPlan", default: null, required: true, type: "object", level: 3 },
-  { name: "language", default: null, required: true, type: "object", level: 3 },
+  { name: "language", default: "", required: true, type: "object", level: 3 },
   { name: "Status", default: null, required: true, type: "object", level: 1 },
   { name: "hours", default: null, required: false, type: "object", level: 1 },
   { name: "sunFrom", default: null, required: false, type: "object", level: 1 },
   { name: "sunTo", default: null, required: false, type: "object", level: 1 },
-  { name: "pricingModel", default: null, required: false, type:"object", level: 3}, 
+  { name: "pricingModel", default: null, required: false, type:"object", level: 4}, 
 ]
 
 
@@ -116,20 +116,26 @@ const CapPlanManagement = ({ data }) => {
     fields: formFields,
   })
 
-
-
   useEffect(() => {
-    console.log("papaya")
-    selection.set("language", data && selection.get("capPlan") && data.languages.find(
-      (lang) => lang._id === selection.get("capPlan").language
-    )
-    )
-    console.log(selection.get("language"))
-  }, [selection.get("capPlan")])
+    if(selection.get("capPlan")){
+      const capPlan = selection.get("capPlan");
+      selection.set("language", data && selection.get("capPlan") && data.languages.find(
+        (lang) => lang._id === selection.get("capPlan").language
+      )
+      )
+      form.setMany({
+        name: capPlan.name,
+        firstWeek: capPlan.firstWeek,
+        startingHC: capPlan.startingHC,
+        active: capPlan.active,
+        fteHoursWeekly: capPlan.fteHoursWeekly,
+        operationDays: capPlan.operationDays,
 
-  useEffect(() => {
-    console.log("banana")
-    //selection.set("pricingModel", data && selection.get("capPlan") && data.pms.find((pm) => pm.name === selection.get("capPlan").pricingModel))
+      })
+      selection.set("pricingModel", data && selection.get("capPlan") && data.pms.find((pm) => pm.name === selection.get("capPlan").pricingModel))
+    }
+      
+    
 
   }, [selection.get("capPlan")])
 
@@ -282,6 +288,7 @@ const CapPlanManagement = ({ data }) => {
       </div>
       {/*TABS*/}
       {tab === 1 ? (
+        /** ADD */
         <div id="add-tab">
           <div id="add-selection" className="columns">
             <div className="column field">
@@ -854,6 +861,7 @@ const CapPlanManagement = ({ data }) => {
           </div>
         </div>
       ) : tab === 2 ? (
+        /** EDIT */
         <div id="edit-tab">
           <div id="edit-selection" className="columns">
             <div className="column field">
@@ -899,16 +907,7 @@ const CapPlanManagement = ({ data }) => {
                 }
                 disabled={!selection.get("lob")}
                 callback={(f, s) => {
-                  f.setMany({
-                    name: s.name,
-                    firstWeek: s.firstWeek,
-                    startingHC: s.startingHC,
-                    active: s.active,
-                    fteHoursWeekly: s.fteHoursWeekly,
-                    operationDays: s.operationDays,
-
-                  })
-                  console.log(form.get("fteHoursWeekly"))
+                  
                 }}
               />
             </div>
