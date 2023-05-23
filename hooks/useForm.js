@@ -66,7 +66,7 @@ const useForm = ({ fields, callback }) => {
     let found = fields.find((field) => fieldName === field.name)
 
     if (found) {
-      await dispatch({type: 'YPDATE_FIELD', id: fieldName, payload: found.default});
+      await dispatch({type: 'UPDATE_FIELD', id: fieldName, payload: found.default});
     } else {
       console.log("Field does not exist")
     }
@@ -79,11 +79,11 @@ const useForm = ({ fields, callback }) => {
   }
 
   const getForm = () => {
-    return state || null
+    return state || ""
   }
 
   const get = (fieldName) => {
-    return state[fieldName] || null
+    return state[fieldName] || ""
   }
 
   const checkRequired = () => {
