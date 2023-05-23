@@ -56,13 +56,13 @@ const formFields = [
   {
     name: "operationDays",
     default: [
-      { weekDay: "Monday", status: "", start: "", end: "", },
-      { weekDay: "Tuesday", status: "", start: "", end: "", },
-      { weekDay: "Wednesday", status: "", start: "", end: "", },
-      { weekDay: "Thursday", status: "", start: "", end: "", },
-      { weekDay: "Friday", status: "", start: "", end: "", },
-      { weekDay: "Saturday", status: "", start: "", end: "", },
-      { weekDay: "Sunday", status: "", start: "", end: "", },
+      { weekDay: "Monday", status: "Closed", start: "", end: "", },
+      { weekDay: "Tuesday", status: "Closed", start: "", end: "", },
+      { weekDay: "Wednesday", status: "Closed", start: "", end: "", },
+      { weekDay: "Thursday", status: "Closed", start: "", end: "", },
+      { weekDay: "Friday", status: "Closed", start: "", end: "", },
+      { weekDay: "Saturday", status: "Closed", start: "", end: "", },
+      { weekDay: "Sunday", status: "Closed", start: "", end: "", },
     ],
     required: false,
     type: "text",
@@ -129,7 +129,6 @@ const CapPlanManagement = ({ data }) => {
         startingHC: capPlan.startingHC,
         active: capPlan.active,
         fteHoursWeekly: capPlan.fteHoursWeekly,
-        operationDays: capPlan.operationDays,
 
       })
       selection.set("pricingModel", data && selection.get("capPlan") && data.pms.find((pm) => pm.name === selection.get("capPlan").pricingModel))
@@ -162,8 +161,15 @@ const CapPlanManagement = ({ data }) => {
           .then((response) => response.json())
           .then((data) => {
             console.log(data.message)
-            form.resetAll()
-            selection.resetAll()
+            form.resetAll();
+            selection.resetAll();
+            (setStatusM(false), formFields[4].default[0].status = "Closed");
+            (setStatusT(false), formFields[4].default[1].status = "Closed");
+            (setStatusW(false), formFields[4].default[2].status = "Closed");
+            (setStatusTh(false), formFields[4].default[3].status = "Closed");
+            (setStatusF(false), formFields[4].default[4].status = "Closed");
+            (setStatusS(false), formFields[4].default[5].status = "Closed");
+            (setStatusSu(false), formFields[4].default[6].status = "Closed");
           })
           .catch((err) => console.log(err))
         break
@@ -181,13 +187,22 @@ const CapPlanManagement = ({ data }) => {
             body: JSON.stringify({
               payload,
               language: selection.get("language"),
+              pricingModel: selection.get("pricingModel"),
             }),
           }
         )
           .then((response) => response.json())
           .then((data) => {
-            console.log(data.message)
-            form.resetAll()
+            console.log(data.message);
+            form.resetAll();
+            selection.resetAll();
+            (setStatusM(false), formFields[4].default[0].status = "Closed");
+            (setStatusT(false), formFields[4].default[1].status = "Closed");
+            (setStatusW(false), formFields[4].default[2].status = "Closed");
+            (setStatusTh(false), formFields[4].default[3].status = "Closed");
+            (setStatusF(false), formFields[4].default[4].status = "Closed");
+            (setStatusS(false), formFields[4].default[5].status = "Closed");
+            (setStatusSu(false), formFields[4].default[6].status = "Closed");
           })
           .catch((err) => console.log(err))
         break
@@ -253,9 +268,16 @@ const CapPlanManagement = ({ data }) => {
           <li className={tab === 1 ? "is-active" : ""} key={1}>
             <a
               onClick={() => {
-                setTab(1)
-                form.resetAll()
-                selection.resetAll()
+                setTab(1);
+                form.resetAll();
+                selection.resetAll();
+                (setStatusM(false), formFields[4].default[0].status = "Closed");
+                (setStatusT(false), formFields[4].default[1].status = "Closed");
+                (setStatusW(false), formFields[4].default[2].status = "Closed");
+                (setStatusTh(false), formFields[4].default[3].status = "Closed");
+                (setStatusF(false), formFields[4].default[4].status = "Closed");
+                (setStatusS(false), formFields[4].default[5].status = "Closed");
+                (setStatusSu(false), formFields[4].default[6].status = "Closed");
               }}
             >
               Add
@@ -434,7 +456,7 @@ const CapPlanManagement = ({ data }) => {
                     className="mx-2"
                     checked={statusOpenMon}
                     onChange={() => {
-                      statusOpenMon ? (setStatusM(false), daysOfWeek[0].status = "Closed") : (setStatusM(true), daysOfWeek[0].status = "Open")  
+                      statusOpenMon ? (setStatusM(false), formFields[4].default[0].status = "Closed") : (setStatusM(true), formFields[4].default[0].status = "Open")  
                     }}
                   ></input>
                 </div>
@@ -451,7 +473,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f, j, v) => { daysOfWeek[0].start = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[0].start = JSON.parse(v).name }}
                       disabled={false}
 
                     />
@@ -463,7 +485,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f, j, v) => { daysOfWeek[0].end = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[0].end = JSON.parse(v).name }}
                       disabled={false}
 
                     />
@@ -508,7 +530,7 @@ const CapPlanManagement = ({ data }) => {
                     className="mx-2"
                     checked={statusOpenTue}
                     onChange={() => {
-                      statusOpenTue ? (setStatusT(false), daysOfWeek[1].status = "Closed") : (setStatusT(true), daysOfWeek[1].status = "Open")  
+                      statusOpenTue ? (setStatusT(false), formFields[4].default[1].status = "Closed") : (setStatusT(true), formFields[4].default[1].status = "Open")  
                     }}
                   ></input>
                 </div>
@@ -524,7 +546,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f, j, v) => { daysOfWeek[1].start = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[1].start = JSON.parse(v).name }}
                       disabled={false}
 
                     />
@@ -536,7 +558,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f, j, v) => { daysOfWeek[1].end = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[1].end = JSON.parse(v).name }}
                       disabled={false}
 
                     />
@@ -567,7 +589,7 @@ const CapPlanManagement = ({ data }) => {
                     className="mx-2"
                     checked={statusOpenWed}
                     onChange={() => {
-                      statusOpenWed ? (setStatusW(false), daysOfWeek[2].status = "Closed") : (setStatusW(true), daysOfWeek[2].status = "Open")  
+                      statusOpenWed ? (setStatusW(false), formFields[4].default[2].status = "Closed") : (setStatusW(true), formFields[4].default[2].status = "Open")  
                     }}
                   ></input>
                 </div>
@@ -583,7 +605,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f, j, v) => { daysOfWeek[2].start = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[2].start = JSON.parse(v).name }}
                       disabled={false}
 
                     />
@@ -595,7 +617,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f, j, v) => { daysOfWeek[2].end = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[2].end = JSON.parse(v).name }}
                       disabled={false}
 
                     />
@@ -626,7 +648,7 @@ const CapPlanManagement = ({ data }) => {
                     className="mx-2"
                     checked={statusOpenThu}
                     onChange={() => {
-                      statusOpenThu ? (setStatusTh(false), daysOfWeek[3].status = "Closed") : (setStatusTh(true), daysOfWeek[3].status = "Open")  
+                      statusOpenThu ? (setStatusTh(false), formFields[4].default[3].status = "Closed") : (setStatusTh(true), formFields[4].default[3].status = "Open")  
                     }}
                   ></input>
                 </div>
@@ -642,7 +664,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f, j, v) => { daysOfWeek[3].start = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[3].start = JSON.parse(v).name }}
                       disabled={false}
 
                     />
@@ -654,7 +676,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f, j, v) => { daysOfWeek[3].end = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[3].end = JSON.parse(v).name }}
                       disabled={false}
 
                     />
@@ -685,7 +707,7 @@ const CapPlanManagement = ({ data }) => {
                     className="mx-2"
                     checked={statusOpenFri}
                     onChange={() => {
-                      statusOpenFri ? (setStatusF(false), daysOfWeek[4].status = "Closed") : (setStatusF(true), daysOfWeek[4].status = "Open")  
+                      statusOpenFri ? (setStatusF(false), formFields[4].default[4].status = "Closed") : (setStatusF(true), formFields[4].default[4].status = "Open")  
                     }}
                   ></input>
                 </div>
@@ -701,7 +723,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f, j, v) => { daysOfWeek[4].start = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[4].start = JSON.parse(v).name }}
                       disabled={false}
 
                     />
@@ -713,7 +735,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f, j, v) => { daysOfWeek[4].end = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[4].end = JSON.parse(v).name }}
                       disabled={false}
 
                     />
@@ -742,9 +764,9 @@ const CapPlanManagement = ({ data }) => {
                   <input
                     type="checkbox"
                     className="mx-2"
-                    checked={statusOpenSat}
+                    checked={statusOpenSat || false}
                     onChange={() => {
-                      statusOpenSat ? (setStatusS(false), daysOfWeek[5].status = "Closed") : (setStatusS(true), daysOfWeek[5].status = "Open")  
+                      statusOpenSat ? (setStatusS(false), formFields[4].default[5].status = "Closed") : (setStatusS(true), formFields[4].default[5].status = "Open")  
                     }}
                   ></input>
                 </div>
@@ -760,7 +782,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f, j, v) => { daysOfWeek[5].start = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[5].start = JSON.parse(v).name }}
                       disabled={false}
 
                     />
@@ -772,7 +794,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f, j, v) => { daysOfWeek[5].end = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[5].end = JSON.parse(v).name }}
                       disabled={false}
 
                     />
@@ -803,7 +825,7 @@ const CapPlanManagement = ({ data }) => {
                     className="mx-2"
                     checked={statusOpenSun}
                     onChange={() => {
-                      statusOpenSun ? (setStatusSu(false), daysOfWeek[6].status="Closed") : (setStatusSu(true),daysOfWeek[6].status="Open")  
+                      statusOpenSun ? (setStatusSu(false), formFields[4].default[6].status = "Closed") : (setStatusSu(true), formFields[4].default[6].status ="Open")  
                     }}
                   ></input>
                 </div>
@@ -819,7 +841,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f,j,v) => { daysOfWeek[6].start = JSON.parse(v).name }}
+                      callback={(f, j, v) => { formFields[4].default[6].start = JSON.parse(v).name }}
                       disabled={false}
                     />
                     <StructureDropdownSmll
@@ -830,7 +852,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.hours.sort((a, b) => a.order - b.order)
                       }
-                      callback={(f,j,v) => { daysOfWeek[6].end = JSON.parse(v).name } }
+                      callback={(f, j, v) => { formFields[4].default[6].end = JSON.parse(v).name } }
                       disabled={false}
                     />
                   </div>
@@ -1001,6 +1023,7 @@ const CapPlanManagement = ({ data }) => {
                   </div>
                 </div>
               </div>
+
               <div className="columns">
                 <div className="column is-3" style={{ paddingBottom: "0px" }} >
                   <label className="label">Days of Operation</label>
@@ -1022,9 +1045,9 @@ const CapPlanManagement = ({ data }) => {
                     <input
                       type="checkbox"
                       className="mx-2"
-                      checked={form.get("operationDays")[0].status === "Open" || false}
+                      checked={statusOpenMon}
                       onChange={() => {
-                        statusOpenMon ? (setStatusM(false), form.set("operationDays"[0].status, "Closed")) : (setStatusM(true), form.set("operationDays"[0].status , "Open"))
+                        statusOpenMon ? (setStatusM(false), formFields[4].default[0].status = "Closed") : (setStatusM(true), formFields[4].default[0].status = "Open")
                       }}
                     ></input>
                   </div>
@@ -1041,7 +1064,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[0].start = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[0].start = JSON.parse(v).name }}
                         disabled={false}
 
                       />
@@ -1053,7 +1076,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[0].end = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[0].end = JSON.parse(v).name }}
                         disabled={false}
 
                       />
@@ -1096,9 +1119,9 @@ const CapPlanManagement = ({ data }) => {
                     <input
                       type="checkbox"
                       className="mx-2"
-                      checked={form.get("operationDays")[1].status === "Open" || false}
+                      checked={statusOpenTue}
                       onChange={() => {
-                        statusOpenTue ? (setStatusT(false), daysOfWeek[1].status = "Closed") : (setStatusT(true), daysOfWeek[1].status = "Open")
+                        statusOpenTue ? (setStatusT(false), formFields[4].default[1].status = "Closed") : (setStatusT(true), formFields[4].default[1].status = "Open")
                       }}
                     ></input>
                   </div>
@@ -1114,7 +1137,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[1].start = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[1].start = JSON.parse(v).name }}
                         disabled={false}
 
                       />
@@ -1126,7 +1149,11 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[1].end = JSON.parse(v).name }}
+                        callback={(f, j, v) => {
+                          formFields[4].default[1].end = JSON.parse(v).name
+                          console.log(formFields[4])
+
+                        }}
                         disabled={false}
 
                       />
@@ -1155,9 +1182,9 @@ const CapPlanManagement = ({ data }) => {
                     <input
                       type="checkbox"
                       className="mx-2"
-                      checked={form.get("operationDays")[2].status === "Open" || false}
+                      checked={statusOpenWed}
                       onChange={() => {
-                        statusOpenWed ? (setStatusW(false), daysOfWeek[2].status = "Closed") : (setStatusW(true), daysOfWeek[2].status = "Open")
+                        statusOpenWed ? (setStatusW(false), formFields[4].default[2].status = "Closed") : (setStatusW(true), formFields[4].default[2].status = "Open")
                       }}
                     ></input>
                   </div>
@@ -1173,7 +1200,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[2].start = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[2].start = JSON.parse(v).name }}
                         disabled={false}
 
                       />
@@ -1185,7 +1212,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[2].end = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[2].end = JSON.parse(v).name }}
                         disabled={false}
 
                       />
@@ -1214,9 +1241,9 @@ const CapPlanManagement = ({ data }) => {
                     <input
                       type="checkbox"
                       className="mx-2"
-                      checked={form.get("operationDays")[3].status === "Open" || false}
+                      checked={statusOpenThu}
                       onChange={() => {
-                        statusOpenThu ? (setStatusTh(false), daysOfWeek[3].status = "Closed") : (setStatusTh(true), daysOfWeek[3].status = "Open")
+                        statusOpenThu ? (setStatusTh(false), formFields[4].default[3].status = "Closed") : (setStatusTh(true), formFields[4].default[3].status = "Open")
                       }}
                     ></input>
                   </div>
@@ -1232,7 +1259,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[3].start = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[3].start = JSON.parse(v).name }}
                         disabled={false}
 
                       />
@@ -1244,7 +1271,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[3].end = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[3].end = JSON.parse(v).name }}
                         disabled={false}
 
                       />
@@ -1273,9 +1300,9 @@ const CapPlanManagement = ({ data }) => {
                     <input
                       type="checkbox"
                       className="mx-2"
-                      checked={form.get("operationDays")[4].status === "Open" || false}
+                      checked={statusOpenFri}
                       onChange={() => {
-                        statusOpenFri ? (setStatusF(false), daysOfWeek[4].status = "Closed") : (setStatusF(true), daysOfWeek[4].status = "Open")
+                        statusOpenFri ? (setStatusF(false), formFields[4].default[4].status = "Closed") : (setStatusF(true), formFields[4].default[4].status = "Open")
                       }}
                     ></input>
                   </div>
@@ -1291,7 +1318,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[4].start = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[4].start = JSON.parse(v).name }}
                         disabled={false}
 
                       />
@@ -1303,7 +1330,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[4].end = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[4].end = JSON.parse(v).name }}
                         disabled={false}
 
                       />
@@ -1332,9 +1359,9 @@ const CapPlanManagement = ({ data }) => {
                     <input
                       type="checkbox"
                       className="mx-2"
-                      checked={form.get("operationDays")[5].status === "Open" || false}
+                      checked={statusOpenSat || false}
                       onChange={() => {
-                        statusOpenSat ? (setStatusS(false), daysOfWeek[5].status = "Closed") : (setStatusS(true), daysOfWeek[5].status = "Open")
+                        statusOpenSat ? (setStatusS(false), formFields[4].default[5].status = "Closed") : (setStatusS(true), formFields[4].default[5].status = "Open")
                       }}
                     ></input>
                   </div>
@@ -1350,7 +1377,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[5].start = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[5].start = JSON.parse(v).name }}
                         disabled={false}
 
                       />
@@ -1362,7 +1389,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[5].end = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[5].end = JSON.parse(v).name }}
                         disabled={false}
 
                       />
@@ -1391,9 +1418,9 @@ const CapPlanManagement = ({ data }) => {
                     <input
                       type="checkbox"
                       className="mx-2"
-                      checked={form.get("operationDays")[6].status === "Open" || false}
+                      checked={statusOpenSun}
                       onChange={() => {
-                        statusOpenSun ? (setStatusSu(false), daysOfWeek[6].status = "Closed") : (setStatusSu(true), daysOfWeek[6].status = "Open")
+                        statusOpenSun ? (setStatusSu(false), formFields[4].default[6].status = "Closed") : (setStatusSu(true), formFields[4].default[6].status = "Open")
                       }}
                     ></input>
                   </div>
@@ -1409,7 +1436,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[6].start = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[6].start = JSON.parse(v).name }}
                         disabled={false}
                       />
                       <StructureDropdownSmll
@@ -1420,7 +1447,7 @@ const CapPlanManagement = ({ data }) => {
                           data &&
                           data.hours.sort((a, b) => a.order - b.order)
                         }
-                        callback={(f, j, v) => { daysOfWeek[6].end = JSON.parse(v).name }}
+                        callback={(f, j, v) => { formFields[4].default[6].end = JSON.parse(v).name }}
                         disabled={false}
                       />
                     </div>
