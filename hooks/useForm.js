@@ -6,60 +6,90 @@
  *
  **/
 
-import { useEffect, useState } from "react"
+import { useEffect, useReducer, useState } from "react"
 
 const useForm = ({ fields, callback }) => {
-  const [form, setForm] = useState({})
-
+  const form = {};
+  const reducer = (state, action) => {
+    switch (action.type) {
+      case 'ADD_FIELD':
+        return {
+          ...state,
+          [action.itemKey]: action.payload,
+        };
+      case 'SET_FORM':
+          return {
+            ...action.payload
+          }
+      case 'UPDATE_FIELD':
+          // console.log(action.id)
+          // console.log(action.payload);
+          // console.log(state);
+        return {
+          ...state,
+          [action.id]: action.payload,
+        };
+      default:
+        return state;
+    }
+  }
+  const [state, dispatch] = useReducer(reducer, form);
+  
+  const setup = () => {
+    fields && typeof fields === 'object' && fields.length && fields.forEach(field => {
+      dispatch({type: 'ADD_FIELD', payload: field.default, itemKey: field.name});
+    })
+  }
+  
   useEffect(() => {
     fields && (callback ? callback(form) : resetAll())
+    setup();
   }, [])
 
-  const set = (fieldName, value) => {
+  const set = async (fieldName, value) => {
     let found = fields.find((field) => field.name === fieldName)
-
     if (found) {
-      console.log("FOUND")
-      setForm({ ...form, [fieldName]: value })
+      await dispatch({type: 'UPDATE_FIELD', id: fieldName, payload: value});
     } else {
       console.log("Field does not exist")
     }
   }
 
   const setMany = (formObj) => {
-    setForm(formObj)
+    //setForm(formObj)
+    Object.entries(formObj).forEach(entry => {
+      dispatch({type: 'UPDATE_FIELD', id: entry[0], payload: entry[1]})
+    })
   }
 
-  const resetOne = (fieldName) => {
+  const resetOne = async (fieldName) => {
     let found = fields.find((field) => fieldName === field.name)
 
     if (found) {
-      setForm({ ...form, [fieldName]: found.default })
+      await dispatch({type: 'YPDATE_FIELD', id: fieldName, payload: found.default});
     } else {
       console.log("Field does not exist")
     }
   }
 
   const resetAll = () => {
-    let newForm = {}
     fields.forEach((field) => {
-      newForm = { ...newForm, [field.name]: field.default }
+      dispatch({type: 'UPDATE_FIELD', id: field.name, payload: field.default});
     })
-    setForm(newForm)
   }
 
   const getForm = () => {
-    return form || null
+    return state || null
   }
 
   const get = (fieldName) => {
-    return form[fieldName] || null
+    return state[fieldName] || null
   }
 
   const checkRequired = () => {
     let checked = true
     fields.forEach((field) => {
-      checked = field.required ? (form[field.name] ? checked : false) : checked
+      checked = field.required ? (state[field.name] ? checked : false) : checked
     })
     return checked
   }
