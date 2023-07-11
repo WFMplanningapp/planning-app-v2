@@ -140,6 +140,7 @@ const LobManagement = ({ data }) => {
                 setTab(1)
                 form.resetAll()
                 selection.resetAll()
+                selectionFields[2].required = true
               }}
             >
               Add
@@ -151,6 +152,7 @@ const LobManagement = ({ data }) => {
                 setTab(2)
                 form.resetAll()
                 selection.resetAll()
+                selectionFields[2].required = true
               }}
             >
               Edit
@@ -163,6 +165,7 @@ const LobManagement = ({ data }) => {
                 setTab(3)
                 form.resetAll()
                 selection.resetAll()
+                selectionFields[2].required= false
               }}
             >
               Remove

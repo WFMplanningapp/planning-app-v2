@@ -254,6 +254,7 @@ const CapPlanManagement = ({ data }) => {
   const [currentValue, setCurrentValue] = useState("");
   function checkValue(e) {
     setCurrentValue(handleDecimalsOnValue(e.target.value));
+    form.set("fteHoursWeekly", handleDecimalsOnValue(e.target.value));
   }
   function handleDecimalsOnValue(value) {
     //const regex = /[0-9]*(\.[0-9]{1,2})/s;
@@ -408,7 +409,7 @@ const CapPlanManagement = ({ data }) => {
                 <div className="control is-small">
                   <input
                     className="input is-small"
-                    onChange={(e) => (checkValue(e, 'change') , form.set("fteHoursWeekly", currentValue))}
+                    onChange={(e) => (checkValue(e, 'change'))}
                     value={currentValue}
                     type="number"
                     placeholder="FTE Hours Weekly"
@@ -999,7 +1000,7 @@ const CapPlanManagement = ({ data }) => {
                   <div className="control is-small">
                     <input
                       className="input is-small"
-                      onChange={(e) => (checkValue(e, 'change'), form.set("fteHoursWeekly", currentValue))}
+                      onChange={(e) => (checkValue(e, 'change'))}
                       value={form.get("fteHoursWeekly") || currentValue}
                       type="number"
                       placeholder="FTE Hours Weekly"
@@ -1018,7 +1019,7 @@ const CapPlanManagement = ({ data }) => {
                         data &&
                         data.pms
                       }
-                      disabled={!selection.get("pricingModel")}
+                      disabled={!selection.get("language")}
                     />
                   </div>
                 </div>
