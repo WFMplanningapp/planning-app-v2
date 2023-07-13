@@ -282,11 +282,11 @@ const EntryForm = ({ selection, week }) => {
           </div>
 
           <label>COMMENT</label>
-          <div className="columns mb-0">
+          <div className="columns mb-0" >
             <div key={`Col-Comment`} className="column is-12 pb-0">
               <div className="columns is-gapless is-fullwidth">
                 <div className="column">
-                  <textarea
+                  <textarea style={{ cursor: "not-allowed" }}
                     readOnly={true}
                     className="textarea is-fullwidth has-background-grey-lighter has-text-light"
                     aria-label={"commeent-locked"}
@@ -294,12 +294,14 @@ const EntryForm = ({ selection, week }) => {
                   />
                 </div>
                 <div className="column">
-                  <textarea
+                  <textarea style={{ cursor: "not-allowed" }}
+                    readOnly={true}
                     className={
-                      "textarea is-fullwidth" +
+                      "textarea is-fullwidth has-background-grey-lighter" +
                       (formInfo["Comment"] ? "is-danger" : "")
                     }
-                    aria-label={"comment-change"}
+
+                    label={"comment-change"}
                     value={formInfo["Comment"] || ""}
                     disabled={!week}
                     onChange={(e) => handleChange(e, "Comment")}

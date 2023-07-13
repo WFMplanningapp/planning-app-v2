@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\components",
+    "\\components\\management",
+    "\\hooks",
+    "\\pages",
+    "\\pages\\api",
+    "\\pages\\api\\data",
+    "\\pages\\api\\data\\management",
+    "\\pages\\api\\init",
+    "\\public"
+  ],
+  "SelectedNode": "\\components\\management\\LobManagement.js",
+  "PreviewInSolutionExplorer": false
+}
