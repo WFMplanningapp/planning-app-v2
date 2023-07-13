@@ -1083,7 +1083,35 @@ const CapPlanManagement = ({ data }) => {
                       />
                     </div>
                   </div>
-                  : null
+                  : <div className="column is-3" style={{ visibility: "hidden", paddingBottom: "0px" }}>
+                    <label className="label">Hours of Operation</label>
+                    <div className="control">
+                      <StructureDropdownSmll
+                        structureName="From"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[0].start = JSON.parse(v).name }}
+                        disabled={false}
+
+                      />
+                      <StructureDropdownSmll
+                        structureName="To"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[0].end = JSON.parse(v).name }}
+                        disabled={false}
+
+                      />
+                    </div>
+                  </div>
                 }
                 <div className="column is-12 ">
                   <div className="control">
@@ -1160,7 +1188,38 @@ const CapPlanManagement = ({ data }) => {
                       />
                     </div>
                   </div>
-                  : null
+                  : <div className="column is-3" style={{visibility:"hidden", paddingBottom: "0px", paddingTop: "0px" }}>
+                    <div className="control">
+                      <StructureDropdownSmll
+                        structureName="From"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[1].start = JSON.parse(v).name }}
+                        disabled={false}
+
+                      />
+                      <StructureDropdownSmll
+                        structureName="To"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => {
+                          formFields[4].default[1].end = JSON.parse(v).name
+                          console.log(formFields[4])
+
+                        }}
+                        disabled={false}
+
+                      />
+                    </div>
+                  </div>
                 }
 
               </div>
@@ -1219,7 +1278,34 @@ const CapPlanManagement = ({ data }) => {
                       />
                     </div>
                   </div>
-                  : null
+                  : <div className="column is-3" style={{visibility:"hidden", paddingBottom: "0px", paddingTop: "0px" }}>
+                    <div className="control">
+                      <StructureDropdownSmll
+                        structureName="From"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[2].start = JSON.parse(v).name }}
+                        disabled={false}
+
+                      />
+                      <StructureDropdownSmll
+                        structureName="To"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[2].end = JSON.parse(v).name }}
+                        disabled={false}
+
+                      />
+                    </div>
+                  </div>
                 }
 
               </div>
@@ -1278,7 +1364,34 @@ const CapPlanManagement = ({ data }) => {
                       />
                     </div>
                   </div>
-                  : null
+                  : <div className="column is-3" style={{visibility:"hidden", paddingBottom: "0px", paddingTop: "0px" }}>
+                    <div className="control">
+                      <StructureDropdownSmll
+                        structureName="From"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[3].start = JSON.parse(v).name }}
+                        disabled={false}
+
+                      />
+                      <StructureDropdownSmll
+                        structureName="To"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[3].end = JSON.parse(v).name }}
+                        disabled={false}
+
+                      />
+                    </div>
+                  </div>
                 }
 
               </div>
@@ -1337,7 +1450,34 @@ const CapPlanManagement = ({ data }) => {
                       />
                     </div>
                   </div>
-                  : null
+                  : <div className="column is-3" style={{visibility:"hidden", paddingBottom: "0px", paddingTop: "0px" }}>
+                    <div className="control">
+                      <StructureDropdownSmll
+                        structureName="From"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[4].start = JSON.parse(v).name }}
+                        disabled={false}
+
+                      />
+                      <StructureDropdownSmll
+                        structureName="To"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[4].end = JSON.parse(v).name }}
+                        disabled={false}
+
+                      />
+                    </div>
+                  </div>
                 }
 
               </div>
@@ -1396,7 +1536,34 @@ const CapPlanManagement = ({ data }) => {
                       />
                     </div>
                   </div>
-                  : null
+                  : <div className="column is-3" style={{visibility:"hidden", paddingBottom: "0px", paddingTop: "0px" }}>
+                    <div className="control">
+                      <StructureDropdownSmll
+                        structureName="From"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[5].start = JSON.parse(v).name }}
+                        disabled={false}
+
+                      />
+                      <StructureDropdownSmll
+                        structureName="To"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[5].end = JSON.parse(v).name }}
+                        disabled={false}
+
+                      />
+                    </div>
+                  </div>
                 }
 
               </div>
@@ -1453,7 +1620,32 @@ const CapPlanManagement = ({ data }) => {
                       />
                     </div>
                   </div>
-                  : null
+                  : <div className="column is-3" style={{visibility:"hidden", paddingTop: "0px" }}>
+                    <div className="control">
+                      <StructureDropdownSmll
+                        structureName="From"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[6].start = JSON.parse(v).name }}
+                        disabled={false}
+                      />
+                      <StructureDropdownSmll
+                        structureName="To"
+                        selection={selection}
+                        form={form}
+                        data={
+                          data &&
+                          data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => { formFields[4].default[6].end = JSON.parse(v).name }}
+                        disabled={false}
+                      />
+                    </div>
+                  </div>
                 }
 
               </div>
