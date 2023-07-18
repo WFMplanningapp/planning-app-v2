@@ -13,8 +13,21 @@ const selectionFields = [
   { name: "language", default: "", required: true, type: "object", level: 3 },
   { name: "Status", default: null, required: true, type: "object", level: 1 },
   { name: "hours", default: null, required: false, type: "object", level: 1 },
-  { name: "sunFrom", default: null, required: false, type: "object", level: 1 },
-  { name: "sunTo", default: null, required: false, type: "object", level: 1 },
+  { name: "MFrom", default: null, required: false, type: "object", level: 1 },
+  { name: "MTo", default: null, required: false, type: "object", level: 1 },
+    { name: "TFrom", default: null, required: false, type: "object", level: 1 },
+  { name: "TTo", default: null, required: false, type: "object", level: 1 },
+    { name: "WFrom", default: null, required: false, type: "object", level: 1 },
+  { name: "WTo", default: null, required: false, type: "object", level: 1 },
+    { name: "ThFrom", default: null, required: false, type: "object", level: 1 },
+  { name: "ThTo", default: null, required: false, type: "object", level: 1 },
+    { name: "FFrom", default: null, required: false, type: "object", level: 1 },
+  { name: "FTo", default: null, required: false, type: "object", level: 1 },
+    { name: "SFrom", default: null, required: false, type: "object", level: 1 },
+  { name: "STo", default: null, required: false, type: "object", level: 1 },
+    { name: "SuFrom", default: null, required: false, type: "object", level: 1 },
+  { name: "SuTo", default: null, required: false, type: "object", level: 1 },
+
   { name: "pricingModel", default: null, required: false, type:"object", level: 4}, 
 ]
 
@@ -1058,7 +1071,7 @@ const CapPlanManagement = ({ data }) => {
                     <label className="label">Hours of Operation</label>
                     <div className="control">
                       <StructureDropdownSmll
-                        structureName="From"
+                        structureName="MFrom"
                         selection={selection}
                         form={form}
                         data={
@@ -1070,7 +1083,7 @@ const CapPlanManagement = ({ data }) => {
 
                       />
                       <StructureDropdownSmll
-                        structureName="To"
+                        structureName="MTo"
                         selection={selection}
                         form={form}
                         data={
@@ -1159,7 +1172,7 @@ const CapPlanManagement = ({ data }) => {
                   <div className="column is-3" style={{ paddingBottom: "0px", paddingTop: "0px" }}>
                     <div className="control">
                       <StructureDropdownSmll
-                        structureName="From"
+                        structureName="TFrom"
                         selection={selection}
                         form={form}
                         data={
@@ -1171,7 +1184,7 @@ const CapPlanManagement = ({ data }) => {
 
                       />
                       <StructureDropdownSmll
-                        structureName="To"
+                        structureName="TTo"
                         selection={selection}
                         form={form}
                         data={
@@ -1253,7 +1266,7 @@ const CapPlanManagement = ({ data }) => {
                   <div className="column is-3" style={{ paddingBottom: "0px", paddingTop: "0px" }}>
                     <div className="control">
                       <StructureDropdownSmll
-                        structureName="From"
+                        structureName="WFrom"
                         selection={selection}
                         form={form}
                         data={
@@ -1265,7 +1278,7 @@ const CapPlanManagement = ({ data }) => {
 
                       />
                       <StructureDropdownSmll
-                        structureName="To"
+                        structureName="WTo"
                         selection={selection}
                         form={form}
                         data={
@@ -1339,7 +1352,7 @@ const CapPlanManagement = ({ data }) => {
                   <div className="column is-3" style={{ paddingBottom: "0px", paddingTop: "0px" }}>
                     <div className="control">
                       <StructureDropdownSmll
-                        structureName="From"
+                        structureName="ThFrom"
                         selection={selection}
                         form={form}
                         data={
@@ -1351,7 +1364,7 @@ const CapPlanManagement = ({ data }) => {
 
                       />
                       <StructureDropdownSmll
-                        structureName="To"
+                        structureName="ThTo"
                         selection={selection}
                         form={form}
                         data={
@@ -1425,7 +1438,7 @@ const CapPlanManagement = ({ data }) => {
                   <div className="column is-3" style={{ paddingBottom: "0px", paddingTop: "0px" }}>
                     <div className="control">
                       <StructureDropdownSmll
-                        structureName="From"
+                        structureName="FFrom"
                         selection={selection}
                         form={form}
                         data={
@@ -1437,7 +1450,7 @@ const CapPlanManagement = ({ data }) => {
 
                       />
                       <StructureDropdownSmll
-                        structureName="To"
+                        structureName="FTo"
                         selection={selection}
                         form={form}
                         data={
@@ -1539,7 +1552,7 @@ const CapPlanManagement = ({ data }) => {
                   : <div className="column is-3" style={{visibility:"hidden", paddingBottom: "0px", paddingTop: "0px" }}>
                     <div className="control">
                       <StructureDropdownSmll
-                        structureName="From"
+                        structureName="SFrom"
                         selection={selection}
                         form={form}
                         data={
@@ -1551,7 +1564,7 @@ const CapPlanManagement = ({ data }) => {
 
                       />
                       <StructureDropdownSmll
-                        structureName="To"
+                        structureName="STo"
                         selection={selection}
                         form={form}
                         data={
@@ -1597,7 +1610,7 @@ const CapPlanManagement = ({ data }) => {
                   <div className="column is-3" style={{ paddingTop: "0px" }}>
                     <div className="control">
                       <StructureDropdownSmll
-                        structureName="From"
+                        structureName="SuFrom"
                         selection={selection}
                         form={form}
                         data={
@@ -1608,7 +1621,7 @@ const CapPlanManagement = ({ data }) => {
                         disabled={false}
                       />
                       <StructureDropdownSmll
-                        structureName="To"
+                        structureName="SuTo"
                         selection={selection}
                         form={form}
                         data={
