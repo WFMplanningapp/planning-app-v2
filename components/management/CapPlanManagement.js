@@ -163,13 +163,13 @@ const CapPlanManagement = ({ data }) => {
             console.log(data.message)
             form.resetAll();
             selection.resetAll();
-            (setStatusM(false), formFields[4].default[0].status = "Closed");
-            (setStatusT(false), formFields[4].default[1].status = "Closed");
-            (setStatusW(false), formFields[4].default[2].status = "Closed");
-            (setStatusTh(false), formFields[4].default[3].status = "Closed");
-            (setStatusF(false), formFields[4].default[4].status = "Closed");
-            (setStatusS(false), formFields[4].default[5].status = "Closed");
-            (setStatusSu(false), formFields[4].default[6].status = "Closed");
+            (setStatusM(false), formFields[4].default[0].status = "Closed",formFields[4].default[0].start = "", formFields[4].default[0].end = "");
+            (setStatusT(false), formFields[4].default[1].status = "Closed",formFields[4].default[1].start = "", formFields[4].default[1].end = "");
+            (setStatusW(false), formFields[4].default[2].status = "Closed",formFields[4].default[2].start = "", formFields[4].default[2].end = "");
+            (setStatusTh(false), formFields[4].default[3].status = "Closed",formFields[4].default[3].start = "", formFields[4].default[3].end = "");
+            (setStatusF(false), formFields[4].default[4].status = "Closed",formFields[4].default[4].start = "", formFields[4].default[4].end = "",);
+            (setStatusS(false), formFields[4].default[5].status = "Closed",formFields[4].default[5].start = "", formFields[4].default[5].end = "",);
+            (setStatusSu(false), formFields[4].default[6].status = "Closed",formFields[4].default[6].start = "", formFields[4].default[6].end = "",);
           })
           .catch((err) => console.log(err))
         break
@@ -196,13 +196,13 @@ const CapPlanManagement = ({ data }) => {
             console.log(data.message);
             form.resetAll();
             selection.resetAll();
-            (setStatusM(false), formFields[4].default[0].status = "Closed");
-            (setStatusT(false), formFields[4].default[1].status = "Closed");
-            (setStatusW(false), formFields[4].default[2].status = "Closed");
-            (setStatusTh(false), formFields[4].default[3].status = "Closed");
-            (setStatusF(false), formFields[4].default[4].status = "Closed");
-            (setStatusS(false), formFields[4].default[5].status = "Closed");
-            (setStatusSu(false), formFields[4].default[6].status = "Closed");
+            (setStatusM(false), formFields[4].default[0].status = "Closed",formFields[4].default[0].start = "", formFields[4].default[0].end = "");
+            (setStatusT(false), formFields[4].default[1].status = "Closed",formFields[4].default[1].start = "", formFields[4].default[1].end = "");
+            (setStatusW(false), formFields[4].default[2].status = "Closed",formFields[4].default[2].start = "", formFields[4].default[2].end = "");
+            (setStatusTh(false), formFields[4].default[3].status = "Closed",formFields[4].default[3].start = "", formFields[4].default[3].end = "");
+            (setStatusF(false), formFields[4].default[4].status = "Closed",formFields[4].default[4].start = "", formFields[4].default[4].end = "",);
+            (setStatusS(false), formFields[4].default[5].status = "Closed",formFields[4].default[5].start = "", formFields[4].default[5].end = "",);
+            (setStatusSu(false), formFields[4].default[6].status = "Closed",formFields[4].default[6].start = "", formFields[4].default[6].end = "",);
           })
           .catch((err) => console.log(err))
         break
