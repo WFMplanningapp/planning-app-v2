@@ -46,7 +46,7 @@ const StructureDropdown = ({
         }}
         value={selected ? JSON.stringify(selected) : `${structureName}`}
       >
-        {!selected && <option value={null}>{`${structureName}`}</option>}
+        {!selected && <option value={null}>{`${structureName.match(/(From|To)\w*/g)}`}</option>}
         {data &&
           data.map((item, index) => (
             <option

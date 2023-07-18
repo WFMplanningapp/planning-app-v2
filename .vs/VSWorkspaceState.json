@@ -2,7 +2,7 @@
   "ExpandedNodes": [
     "",
     "\\components",
-    "\\components\\management",
+    "\\components\\capacity",
     "\\hooks",
     "\\pages",
     "\\pages\\api",
@@ -11,6 +11,6 @@
     "\\pages\\api\\init",
     "\\public"
   ],
-  "SelectedNode": "\\components\\management\\LobManagement.js",
+  "SelectedNode": "\\components\\capacity\\CapacityViewer.js",
   "PreviewInSolutionExplorer": false
 }
