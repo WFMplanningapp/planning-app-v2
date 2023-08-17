@@ -451,7 +451,7 @@ const CapPlanManagement = ({ data }) => {
               </div>
             </div>
             {weekdays.map((w, i) => (
-              <>
+              <div key={w + "-add"}>
                 <div className="columns">
                   <div className="column is-3">
                     <div className="control">
@@ -521,7 +521,7 @@ const CapPlanManagement = ({ data }) => {
                     </div>
                   ) : null}
                 </div>
-              </>
+              </div>
             ))}
           </div>
 
@@ -692,7 +692,7 @@ const CapPlanManagement = ({ data }) => {
             </div>
           </div>
           {weekdays.map((w, i) => (
-            <>
+            <div key={w + "-edit"}>
               <div className="columns">
                 <div className="column is-3">
                   <div className="control">
@@ -762,7 +762,7 @@ const CapPlanManagement = ({ data }) => {
                   </div>
                 ) : null}
               </div>
-            </>
+            </div>
           ))}
 
           <div id="edit-button">
