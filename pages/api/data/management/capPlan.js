@@ -22,7 +22,6 @@ export default async function handler(req, res) {
   let payload = body.payload
   let lob = body.lob
   let language = body.language
-  let pricingModel = body.pricingModel
 
   switch (method) {
     case "POST":
@@ -65,7 +64,6 @@ export default async function handler(req, res) {
                   $set: {
                     ...payload,
                     language: language._id,
-                    pricingModel: pricingModel.name,
                     lastUpdated: new Date(),
                     updatedBy: verification.user.username,
                   },

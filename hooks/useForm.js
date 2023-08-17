@@ -6,50 +6,58 @@
  *
  **/
 
-import { useEffect, useReducer, useState } from "react"
+import { useEffect, useReducer } from "react"
 
 const useForm = ({ fields, callback }) => {
-  const form = {};
+  const form = {}
   const reducer = (state, action) => {
     switch (action.type) {
-      case 'ADD_FIELD':
+      case "ADD_FIELD":
         return {
           ...state,
           [action.itemKey]: action.payload,
-        };
-      case 'SET_FORM':
-          return {
-            ...action.payload
-          }
-      case 'UPDATE_FIELD':
-          // console.log(action.id)
-          // console.log(action.payload);
-          // console.log(state);
+        }
+      case "SET_FORM":
+        return {
+          ...action.payload,
+        }
+      case "UPDATE_FIELD":
+        // console.log(action.id)
+        // console.log(action.payload);
+        // console.log(state);
         return {
           ...state,
           [action.id]: action.payload,
-        };
+        }
       default:
-        return state;
+        return state
     }
   }
-  const [state, dispatch] = useReducer(reducer, form);
-  
+  const [state, dispatch] = useReducer(reducer, form)
+
   const setup = () => {
-    fields && typeof fields === 'object' && fields.length && fields.forEach(field => {
-      dispatch({type: 'ADD_FIELD', payload: field.default, itemKey: field.name});
-    })
+    fields &&
+      typeof fields === "object" &&
+      fields.length &&
+      fields.forEach((field) => {
+        dispatch({
+          type: "ADD_FIELD",
+          payload: field.default,
+          itemKey: field.name,
+        })
+      })
   }
-  
+
   useEffect(() => {
     fields && (callback ? callback(form) : resetAll())
-    setup();
+    setup()
   }, [])
 
   const set = async (fieldName, value) => {
     let found = fields.find((field) => field.name === fieldName)
+    console.log("in set:", fieldName, found, fields)
     if (found) {
-      await dispatch({type: 'UPDATE_FIELD', id: fieldName, payload: value});
+      dispatch({ type: "UPDATE_FIELD", id: fieldName, payload: value })
     } else {
       console.log("Field does not exist")
     }
@@ -57,8 +65,8 @@ const useForm = ({ fields, callback }) => {
 
   const setMany = (formObj) => {
     //setForm(formObj)
-    Object.entries(formObj).forEach(entry => {
-      dispatch({type: 'UPDATE_FIELD', id: entry[0], payload: entry[1]})
+    Object.entries(formObj).forEach((entry) => {
+      dispatch({ type: "UPDATE_FIELD", id: entry[0], payload: entry[1] })
     })
   }
 
@@ -66,7 +74,11 @@ const useForm = ({ fields, callback }) => {
     let found = fields.find((field) => fieldName === field.name)
 
     if (found) {
-      await dispatch({type: 'UPDATE_FIELD', id: fieldName, payload: found.default});
+      dispatch({
+        type: "UPDATE_FIELD",
+        id: fieldName,
+        payload: found.default,
+      })
     } else {
       console.log("Field does not exist")
     }
@@ -74,7 +86,7 @@ const useForm = ({ fields, callback }) => {
 
   const resetAll = () => {
     fields.forEach((field) => {
-      dispatch({type: 'UPDATE_FIELD', id: field.name, payload: field.default});
+      dispatch({ type: "UPDATE_FIELD", id: field.name, payload: field.default })
     })
   }
 
