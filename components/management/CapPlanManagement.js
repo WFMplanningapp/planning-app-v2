@@ -126,7 +126,15 @@ const CapPlanManagement = ({ data }) => {
         startingHC: capPlan.startingHC,
         active: capPlan.active,
         fteHoursWeekly: capPlan.fteHoursWeekly,
-        operationDays: capPlan.operationDays,
+        operationDays: capPlan.operationDays || [
+          { weekDay: "Monday", status: "closed", start: "", end: "" },
+          { weekDay: "Tuesday", status: "closed", start: "", end: "" },
+          { weekDay: "Wednesday", status: "closed", start: "", end: "" },
+          { weekDay: "Thursday", status: "closed", start: "", end: "" },
+          { weekDay: "Friday", status: "closed", start: "", end: "" },
+          { weekDay: "Saturday", status: "closed", start: "", end: "" },
+          { weekDay: "Sunday", status: "closed", start: "", end: "" },
+        ],
         pricingModel: capPlan.pricingModel,
       })
     }
@@ -256,10 +264,10 @@ const CapPlanManagement = ({ data }) => {
           : (changedDay.status = "open")
         break
       case "start":
-        changedDay.start = value.name
+        changedDay.start = value
         break
       case "end":
-        changedDay.end = value.name
+        changedDay.end = value
         form.set("operationDays", operationDays)
         break
       default:
@@ -421,14 +429,10 @@ const CapPlanManagement = ({ data }) => {
               <div className="column is-3">
                 <label className="label">Pricing Model</label>
                 <div className="control">
-                  <StructureDropdown
-                    structureName="Princing Models"
-                    selection={selection}
+                  <FormDropdown
+                    fieldName="pricingModel"
                     form={form}
                     data={data && data.pms}
-                    callback={(f, j, v) => {
-                      f.set("pricingModel", JSON.parse(v).name)
-                    }}
                     disabled={false}
                   />
                 </div>
@@ -483,7 +487,8 @@ const CapPlanManagement = ({ data }) => {
                     <div className="column is-3">
                       <div className="control">
                         <FormDropdown
-                          fieldName="From"
+                          fieldName="operationDays"
+                          subFieldName="start"
                           form={form}
                           data={
                             data && data.hours.sort((a, b) => a.order - b.order)
@@ -492,17 +497,25 @@ const CapPlanManagement = ({ data }) => {
                             handleOperationDaysChange(j, "start", f, i)
                           }}
                           disabled={false}
+                          getNestedItem={(opDays) => {
+                            return opDays[i]["start"]
+                          }}
                         />
                         <FormDropdown
-                          fieldName="To"
+                          fieldName="operationDays"
+                          subFieldName="end"
                           form={form}
                           data={
                             data && data.hours.sort((a, b) => a.order - b.order)
                           }
                           callback={(f, j, v) => {
+                            console.log(j, v)
                             handleOperationDaysChange(j, "end", f, i)
                           }}
                           disabled={false}
+                          getNestedItem={(opDays) => {
+                            return opDays[i]["end"]
+                          }}
                         />
                       </div>
                     </div>
@@ -646,7 +659,7 @@ const CapPlanManagement = ({ data }) => {
                   <input
                     className="input is-small"
                     onChange={(e) => checkValue(e, "change")}
-                    value={form.get("fteHoursWeekly") || currentValue}
+                    value={form.get("fteHoursWeekly") || ""}
                     type="number"
                     placeholder="FTE Hours Weekly"
                     required
@@ -656,740 +669,102 @@ const CapPlanManagement = ({ data }) => {
               <div className="column is-3">
                 <label className="label">Pricing Model</label>
                 <div className="control">
-                  <StructureDropdown
-                    structureName="pricingModel"
-                    selection={selection}
-                    form={selection}
+                  <FormDropdown
+                    fieldName="pricingModel"
+                    form={form}
                     data={data && data.pms}
-                    disabled={!selection.get("language")}
                   />
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="columns">
-              <div className="column is-3" style={{ paddingBottom: "0px" }}>
-                <label className="label">Days of Operation</label>
-                <div className="control">
-                  <input
-                    className="input is-small"
-                    onChange={(e) => form.set("name", e.target.value)}
-                    value={"Monday"}
-                    type="text"
-                    placeholder="Monday"
-                    required
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="column is-1">
-                <label className="label">Status</label>
-                <div className="control">
-                  <input
-                    type="checkbox"
-                    className="mx-2"
-                    checked={statusOpenMon}
-                    onChange={() => {
-                      statusOpenMon
-                        ? (setStatusM(false),
-                          (formFields[4].default[0].status = "Closed"))
-                        : (setStatusM(true),
-                          (formFields[4].default[0].status = "Open"))
-                    }}
-                  ></input>
-                </div>
-              </div>
-              {statusOpenMon ? (
-                <div className="column is-3" style={{ paddingBottom: "0px" }}>
-                  <label className="label">Hours of Operation</label>
+          <div className="columns">
+            <div className="column is-3">
+              <label className="label">Days of Operation</label>
+            </div>
+            <div className="column is-1">
+              <label className="label">Status</label>
+            </div>
+
+            <div className="column is-3">
+              <label className="label">Hours of Operation</label>
+            </div>
+          </div>
+          {weekdays.map((w, i) => (
+            <>
+              <div className="columns">
+                <div className="column is-3">
                   <div className="control">
-                    <FormDropdown
-                      structureName="MFrom"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[0].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="MTo"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[0].end = JSON.parse(v).name
-                      }}
-                      disabled={false}
+                    <input
+                      className="input is-small"
+                      onChange={(e) => form.set("name", e.target.value)}
+                      value={w}
+                      type="text"
+                      placeholder={w}
+                      required
+                      disabled
                     />
                   </div>
                 </div>
-              ) : (
-                <div
-                  className="column is-3"
-                  style={{ visibility: "hidden", paddingBottom: "0px" }}
-                >
-                  <label className="label">Hours of Operation</label>
+                <div className="column is-1" style={{ paddingBottom: "0px" }}>
                   <div className="control">
-                    <FormDropdown
-                      structureName="From"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[0].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="To"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[0].end = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                  </div>
-                </div>
-              )}
-              <div className="column is-12 ">
-                <div className="control">
-                  <label className="label">
                     <input
                       type="checkbox"
                       className="mx-2"
-                      checked={form.get("active") || false}
+                      checked={
+                        form.get("operationDays") &&
+                        form.get("operationDays")[i].status == "open"
+                      }
                       onChange={() => {
-                        form.set("active", !form.get("active"))
+                        handleOperationDaysChange(true, "status", form, i)
                       }}
                     ></input>
-                    Active
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div className="columns">
-              <div
-                className="column is-3"
-                style={{ paddingBottom: "0px", paddingTop: "0px" }}
-              >
-                <div className="control">
-                  <input
-                    className="input is-small"
-                    onChange={(e) => form.set("name", e.target.value)}
-                    value={"Tuesday"}
-                    type="text"
-                    placeholder="Tuesday"
-                    required
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="column is-1" style={{ paddingTop: "0px" }}>
-                <div className="control">
-                  <input
-                    type="checkbox"
-                    className="mx-2"
-                    checked={statusOpenTue}
-                    onChange={() => {
-                      statusOpenTue
-                        ? (setStatusT(false),
-                          (formFields[4].default[1].status = "Closed"))
-                        : (setStatusT(true),
-                          (formFields[4].default[1].status = "Open"))
-                    }}
-                  ></input>
-                </div>
-              </div>
-              {statusOpenTue ? (
-                <div
-                  className="column is-3"
-                  style={{ paddingBottom: "0px", paddingTop: "0px" }}
-                >
-                  <div className="control">
-                    <FormDropdown
-                      structureName="TFrom"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[1].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="TTo"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[1].end = JSON.parse(v).name
-                        console.log(formFields[4])
-                      }}
-                      disabled={false}
-                    />
                   </div>
                 </div>
-              ) : (
-                <div
-                  className="column is-3"
-                  style={{
-                    visibility: "hidden",
-                    paddingBottom: "0px",
-                    paddingTop: "0px",
-                  }}
-                >
-                  <div className="control">
-                    <FormDropdown
-                      structureName="From"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[1].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="To"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[1].end = JSON.parse(v).name
-                        console.log(formFields[4])
-                      }}
-                      disabled={false}
-                    />
+
+                {form.get("operationDays") &&
+                form.get("operationDays")[i].status == "open" ? (
+                  <div className="column is-3">
+                    <div className="control">
+                      <div className="select is-small is-rounded"></div>
+                      <FormDropdown
+                        fieldName="operationDays"
+                        subFieldName={"start"}
+                        form={form}
+                        data={
+                          data && data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => {
+                          handleOperationDaysChange(j, "start", f, i)
+                        }}
+                        disabled={false}
+                        getNestedItem={(opDays) => {
+                          return opDays[i]["start"]
+                        }}
+                      />
+                      <FormDropdown
+                        fieldName="operationDays"
+                        form={form}
+                        subFieldName={"end"}
+                        data={
+                          data && data.hours.sort((a, b) => a.order - b.order)
+                        }
+                        callback={(f, j, v) => {
+                          handleOperationDaysChange(j, "end", f, i)
+                        }}
+                        disabled={false}
+                        getNestedItem={(opDays) => {
+                          return opDays[i]["end"]
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-            <div className="columns">
-              <div
-                className="column is-3"
-                style={{ paddingBottom: "0px", paddingTop: "0px" }}
-              >
-                <div className="control">
-                  <input
-                    className="input is-small"
-                    onChange={(e) => form.set("name", e.target.value)}
-                    value={"Wednesday"}
-                    type="text"
-                    placeholder="Wednesday"
-                    required
-                    disabled
-                  />
-                </div>
+                ) : null}
               </div>
-              <div className="column is-1" style={{ paddingTop: "0px" }}>
-                <div className="control">
-                  <input
-                    type="checkbox"
-                    className="mx-2"
-                    checked={statusOpenWed}
-                    onChange={() => {
-                      statusOpenWed
-                        ? (setStatusW(false),
-                          (formFields[4].default[2].status = "Closed"))
-                        : (setStatusW(true),
-                          (formFields[4].default[2].status = "Open"))
-                    }}
-                  ></input>
-                </div>
-              </div>
-              {statusOpenWed ? (
-                <div
-                  className="column is-3"
-                  style={{ paddingBottom: "0px", paddingTop: "0px" }}
-                >
-                  <div className="control">
-                    <FormDropdown
-                      structureName="WFrom"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[2].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="WTo"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[2].end = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="column is-3"
-                  style={{
-                    visibility: "hidden",
-                    paddingBottom: "0px",
-                    paddingTop: "0px",
-                  }}
-                >
-                  <div className="control">
-                    <FormDropdown
-                      structureName="From"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[2].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="To"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[2].end = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="columns">
-              <div
-                className="column is-3"
-                style={{ paddingBottom: "0px", paddingTop: "0px" }}
-              >
-                <div className="control">
-                  <input
-                    className="input is-small"
-                    onChange={(e) => form.set("name", e.target.value)}
-                    value={"Thursday"}
-                    type="text"
-                    placeholder="Thursday"
-                    required
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="column is-1" style={{ paddingTop: "0px" }}>
-                <div className="control">
-                  <input
-                    type="checkbox"
-                    className="mx-2"
-                    checked={statusOpenThu}
-                    onChange={() => {
-                      statusOpenThu
-                        ? (setStatusTh(false),
-                          (formFields[4].default[3].status = "Closed"))
-                        : (setStatusTh(true),
-                          (formFields[4].default[3].status = "Open"))
-                    }}
-                  ></input>
-                </div>
-              </div>
-              {statusOpenThu ? (
-                <div
-                  className="column is-3"
-                  style={{ paddingBottom: "0px", paddingTop: "0px" }}
-                >
-                  <div className="control">
-                    <FormDropdown
-                      structureName="ThFrom"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[3].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="ThTo"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[3].end = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="column is-3"
-                  style={{
-                    visibility: "hidden",
-                    paddingBottom: "0px",
-                    paddingTop: "0px",
-                  }}
-                >
-                  <div className="control">
-                    <FormDropdown
-                      structureName="From"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[3].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="To"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[3].end = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="columns">
-              <div
-                className="column is-3"
-                style={{ paddingBottom: "0px", paddingTop: "0px" }}
-              >
-                <div className="control">
-                  <input
-                    className="input is-small"
-                    onChange={(e) => form.set("name", e.target.value)}
-                    value={"Friday"}
-                    type="text"
-                    placeholder="Friday"
-                    required
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="column is-1" style={{ paddingTop: "0px" }}>
-                <div className="control">
-                  <input
-                    type="checkbox"
-                    className="mx-2"
-                    checked={statusOpenFri}
-                    onChange={() => {
-                      statusOpenFri
-                        ? (setStatusF(false),
-                          (formFields[4].default[4].status = "Closed"))
-                        : (setStatusF(true),
-                          (formFields[4].default[4].status = "Open"))
-                    }}
-                  ></input>
-                </div>
-              </div>
-              {statusOpenFri ? (
-                <div
-                  className="column is-3"
-                  style={{ paddingBottom: "0px", paddingTop: "0px" }}
-                >
-                  <div className="control">
-                    <FormDropdown
-                      structureName="FFrom"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[4].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="FTo"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[4].end = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="column is-3"
-                  style={{
-                    visibility: "hidden",
-                    paddingBottom: "0px",
-                    paddingTop: "0px",
-                  }}
-                >
-                  <div className="control">
-                    <FormDropdown
-                      structureName="From"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[4].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="To"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[4].end = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="columns">
-              <div
-                className="column is-3"
-                style={{ paddingBottom: "0px", paddingTop: "0px" }}
-              >
-                <div className="control">
-                  <input
-                    className="input is-small"
-                    onChange={(e) => form.set("name", e.target.value)}
-                    value={"Saturday"}
-                    type="text"
-                    placeholder="Saturday"
-                    required
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="column is-1" style={{ paddingTop: "0px" }}>
-                <div className="control">
-                  <input
-                    type="checkbox"
-                    className="mx-2"
-                    checked={statusOpenSat || false}
-                    onChange={() => {
-                      statusOpenSat
-                        ? (setStatusS(false),
-                          (formFields[4].default[5].status = "Closed"))
-                        : (setStatusS(true),
-                          (formFields[4].default[5].status = "Open"))
-                    }}
-                  ></input>
-                </div>
-              </div>
-              {statusOpenSat ? (
-                <div
-                  className="column is-3"
-                  style={{ paddingBottom: "0px", paddingTop: "0px" }}
-                >
-                  <div className="control">
-                    <FormDropdown
-                      structureName="From"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[5].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="To"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[5].end = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="column is-3"
-                  style={{
-                    visibility: "hidden",
-                    paddingBottom: "0px",
-                    paddingTop: "0px",
-                  }}
-                >
-                  <div className="control">
-                    <FormDropdown
-                      structureName="SFrom"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[5].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="STo"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[5].end = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="columns">
-              <div className="column is-3" style={{ paddingTop: "0px" }}>
-                <div className="control">
-                  <input
-                    className="input is-small"
-                    onLoad={(e) => form.set("Sunday", e.target.value)}
-                    value={"Sunday"}
-                    type="text"
-                    placeholder="Sunday"
-                    required
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="column is-1" style={{ paddingTop: "0px" }}>
-                <div className="control">
-                  <input
-                    type="checkbox"
-                    className="mx-2"
-                    checked={statusOpenSun}
-                    onChange={() => {
-                      statusOpenSun
-                        ? (setStatusSu(false),
-                          (formFields[4].default[6].status = "Closed"))
-                        : (setStatusSu(true),
-                          (formFields[4].default[6].status = "Open"))
-                    }}
-                  ></input>
-                </div>
-              </div>
-              {statusOpenSun ? (
-                <div className="column is-3" style={{ paddingTop: "0px" }}>
-                  <div className="control">
-                    <FormDropdown
-                      structureName="SuFrom"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[6].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="SuTo"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[6].end = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="column is-3"
-                  style={{ visibility: "hidden", paddingTop: "0px" }}
-                >
-                  <div className="control">
-                    <FormDropdown
-                      structureName="From"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[6].start = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                    <FormDropdown
-                      structureName="To"
-                      selection={selection}
-                      form={form}
-                      data={
-                        data && data.hours.sort((a, b) => a.order - b.order)
-                      }
-                      callback={(f, j, v) => {
-                        formFields[4].default[6].end = JSON.parse(v).name
-                      }}
-                      disabled={false}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+            </>
+          ))}
+
           <div id="edit-button">
             <button
               className="button is-small is-warning is-rounded"

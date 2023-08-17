@@ -2,22 +2,37 @@ import { useEffect, useState } from "react"
 
 const FormDropdown = ({
   fieldName,
+  subFieldName,
   data,
   disabled,
   form,
   callback,
   reset,
   debug,
+  getNestedItem,
 }) => {
   const [selected, setSelected] = useState(null)
 
   useEffect(() => {
-    setSelected(form.get(fieldName))
+    console.log(
+      "SETTING SELECTED: ",
+      form.get(fieldName),
+      handleGetItem(form.get(fieldName))
+    )
+    setSelected(handleGetItem(form.get(fieldName)))
   }, [form.get(fieldName)])
 
   useEffect(() => {
     if (debug) debug()
   }, [data])
+
+  const handleGetItem = (i) => {
+    if (getNestedItem) {
+      return getNestedItem(i)
+    } else {
+      return i
+    }
+  }
 
   return (
     <div className="select is-small is-rounded">
@@ -42,16 +57,23 @@ const FormDropdown = ({
           if (callback && form) {
             callback(form, json, e.target.value)
           }
+          return
         }}
-        value={selected ? JSON.stringify(selected) : `${fieldName}`}
+        value={
+          selected
+            ? JSON.stringify(selected)
+            : `Select ${subFieldName ? subFieldName : fieldName}`
+        }
       >
         {!selected && (
-          <option value={null}>{`${fieldName.match(/(From|To)\w*/g)}`}</option>
+          <option value={null}>{`Select ${
+            subFieldName ? subFieldName : fieldName
+          }`}</option>
         )}
         {data &&
-          data.map((item, index) => (
+          data.map((item) => (
             <option
-              key={"form-" + (item._id || item.name)}
+              key={"form-" + item._id || item.name}
               value={JSON.stringify(item)}
             >
               {item.name}
