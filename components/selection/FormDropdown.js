@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react"
 
-const StructureDropdown = ({
-  structureName,
+const FormDropdown = ({
+  fieldName,
   data,
   disabled,
-  selection,
   form,
   callback,
   reset,
@@ -13,11 +12,11 @@ const StructureDropdown = ({
   const [selected, setSelected] = useState(null)
 
   useEffect(() => {
-    setSelected(selection.get(structureName))
-  }, [selection.get(structureName)])
+    setSelected(form.get(fieldName))
+  }, [form.get(fieldName)])
 
   useEffect(() => {
-    if(debug) debug();
+    if (debug) debug()
   }, [data])
 
   return (
@@ -27,30 +26,32 @@ const StructureDropdown = ({
         disabled={disabled}
         onChange={(e) => {
           let json = JSON.parse(e.target.value)
-          console.log(json)
+          console.log("JSON:", json)
           setSelected(json)
 
           if (reset) {
-            let newSelection = {
-              ...selection.getForm(),
-              [structureName]: json,
+            let newForm = {
+              ...form.getForm(),
+              [fieldName]: json,
             }
-            reset.forEach((field) => (newSelection[field] = null))
-            selection.setMany(newSelection)
+            reset.forEach((field) => (newForm[field] = null))
+            form.setMany(newForm)
           } else {
-            selection.set(structureName, json)
+            form.set(fieldName, json)
           }
           if (callback && form) {
             callback(form, json, e.target.value)
           }
         }}
-        value={selected ? JSON.stringify(selected) : `${structureName}`}
+        value={selected ? JSON.stringify(selected) : `${fieldName}`}
       >
-        {!selected && <option value={null}>{`${structureName.match(/(From|To)\w*/g)}`}</option>}
+        {!selected && (
+          <option value={null}>{`${fieldName.match(/(From|To)\w*/g)}`}</option>
+        )}
         {data &&
           data.map((item, index) => (
             <option
-              key={"selection-" + (item._id || item.name)}
+              key={"form-" + (item._id || item.name)}
               value={JSON.stringify(item)}
             >
               {item.name}
@@ -61,4 +62,4 @@ const StructureDropdown = ({
   )
 }
 
-export default StructureDropdown
+export default FormDropdown
