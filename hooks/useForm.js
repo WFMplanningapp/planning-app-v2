@@ -6,10 +6,13 @@
  *
  **/
 
-import { useEffect, useReducer } from "react"
+import { useEffect, useState, useReducer } from "react"
 
 const useForm = ({ fields, callback }) => {
   const form = {}
+
+  const [isReset, setIsReset] = useState(true)
+
   const reducer = (state, action) => {
     switch (action.type) {
       case "ADD_FIELD":
@@ -55,7 +58,7 @@ const useForm = ({ fields, callback }) => {
 
   const set = async (fieldName, value) => {
     let found = fields.find((field) => field.name === fieldName)
-    console.log("in set:", fieldName, found, fields)
+    setIsReset(false)
     if (found) {
       dispatch({ type: "UPDATE_FIELD", id: fieldName, payload: value })
     } else {
@@ -65,6 +68,7 @@ const useForm = ({ fields, callback }) => {
 
   const setMany = (formObj) => {
     //setForm(formObj)
+    setIsReset(false)
     Object.entries(formObj).forEach((entry) => {
       dispatch({ type: "UPDATE_FIELD", id: entry[0], payload: entry[1] })
     })
@@ -85,6 +89,7 @@ const useForm = ({ fields, callback }) => {
   }
 
   const resetAll = () => {
+    setIsReset(true)
     fields.forEach((field) => {
       dispatch({ type: "UPDATE_FIELD", id: field.name, payload: field.default })
     })
@@ -106,6 +111,10 @@ const useForm = ({ fields, callback }) => {
     return checked
   }
 
+  const checkIsReset = () => {
+    return isReset
+  }
+
   return {
     getForm,
     get,
@@ -114,6 +123,7 @@ const useForm = ({ fields, callback }) => {
     resetOne,
     resetAll,
     checkRequired,
+    checkIsReset,
   }
 }
 

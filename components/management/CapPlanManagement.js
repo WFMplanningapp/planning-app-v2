@@ -48,13 +48,13 @@ const formFields = [
   {
     name: "operationDays",
     default: [
-      { weekDay: "Monday", status: "closed", start: "", end: "" },
-      { weekDay: "Tuesday", status: "closed", start: "", end: "" },
-      { weekDay: "Wednesday", status: "closed", start: "", end: "" },
-      { weekDay: "Thursday", status: "closed", start: "", end: "" },
-      { weekDay: "Friday", status: "closed", start: "", end: "" },
-      { weekDay: "Saturday", status: "closed", start: "", end: "" },
-      { weekDay: "Sunday", status: "closed", start: "", end: "" },
+      { weekDay: "Monday", status: "Closed", start: "", end: "" },
+      { weekDay: "Tuesday", status: "Closed", start: "", end: "" },
+      { weekDay: "Wednesday", status: "Closed", start: "", end: "" },
+      { weekDay: "Thursday", status: "Closed", start: "", end: "" },
+      { weekDay: "Friday", status: "Closed", start: "", end: "" },
+      { weekDay: "Saturday", status: "Closed", start: "", end: "" },
+      { weekDay: "Sunday", status: "Closed", start: "", end: "" },
     ],
     required: false,
     type: "list",
@@ -96,6 +96,18 @@ const weekdays = [
   "Sunday",
 ]
 
+const generateOperationDays = () => {
+  return [
+    { weekDay: "Monday", status: "Closed", start: "", end: "" },
+    { weekDay: "Tuesday", status: "Closed", start: "", end: "" },
+    { weekDay: "Wednesday", status: "Closed", start: "", end: "" },
+    { weekDay: "Thursday", status: "Closed", start: "", end: "" },
+    { weekDay: "Friday", status: "Closed", start: "", end: "" },
+    { weekDay: "Saturday", status: "Closed", start: "", end: "" },
+    { weekDay: "Sunday", status: "Closed", start: "", end: "" },
+  ]
+}
+
 const CapPlanManagement = ({ data }) => {
   const [tab, setTab] = useState(1)
 
@@ -126,16 +138,8 @@ const CapPlanManagement = ({ data }) => {
         startingHC: capPlan.startingHC,
         active: capPlan.active,
         fteHoursWeekly: capPlan.fteHoursWeekly,
-        operationDays: capPlan.operationDays || [
-          { weekDay: "Monday", status: "closed", start: "", end: "" },
-          { weekDay: "Tuesday", status: "closed", start: "", end: "" },
-          { weekDay: "Wednesday", status: "closed", start: "", end: "" },
-          { weekDay: "Thursday", status: "closed", start: "", end: "" },
-          { weekDay: "Friday", status: "closed", start: "", end: "" },
-          { weekDay: "Saturday", status: "closed", start: "", end: "" },
-          { weekDay: "Sunday", status: "closed", start: "", end: "" },
-        ],
-        pricingModel: capPlan.pricingModel,
+        operationDays: capPlan.operationDays || generateOperationDays(),
+        pricingModel: capPlan.pricingModel || "",
       })
     }
   }, [selection.get("capPlan")])
@@ -164,6 +168,7 @@ const CapPlanManagement = ({ data }) => {
           .then((data) => {
             console.log(data.message)
             form.resetAll()
+            form.set("operationDays", generateOperationDays())
             selection.resetAll()
           })
           .catch((err) => console.log(err))
@@ -190,6 +195,7 @@ const CapPlanManagement = ({ data }) => {
           .then((data) => {
             console.log(data.message)
             form.resetAll()
+            form.set("operationDays", generateOperationDays())
             selection.resetAll()
           })
           .catch((err) => console.log(err))
@@ -212,6 +218,7 @@ const CapPlanManagement = ({ data }) => {
           .then((data) => {
             console.log(data.message)
             form.resetAll()
+            form.set("operationDays", generateOperationDays())
           })
           .catch((err) => console.log(err))
         break
@@ -234,6 +241,7 @@ const CapPlanManagement = ({ data }) => {
             alert(data.message)
             console.log("deleted: " + data.response.deletedCount)
             form.resetAll()
+            form.set("operationDays", generateOperationDays())
           })
           .catch((err) => console.log(err))
         break
@@ -259,9 +267,9 @@ const CapPlanManagement = ({ data }) => {
     let changedDay = operationDays[dayIndex]
     switch (key) {
       case "status":
-        changedDay.status == "open"
-          ? (changedDay.status = "closed")
-          : (changedDay.status = "open")
+        changedDay.status == "Open"
+          ? (changedDay.status = "Closed")
+          : (changedDay.status = "Open")
         break
       case "start":
         changedDay.start = value
@@ -286,6 +294,7 @@ const CapPlanManagement = ({ data }) => {
               onClick={() => {
                 setTab(1)
                 form.resetAll()
+                form.set("operationDays", generateOperationDays())
                 selection.resetAll()
               }}
             >
@@ -297,6 +306,7 @@ const CapPlanManagement = ({ data }) => {
               onClick={() => {
                 setTab(2)
                 form.resetAll()
+                form.set("operationDays", generateOperationDays())
                 selection.resetAll()
               }}
             >
@@ -309,6 +319,7 @@ const CapPlanManagement = ({ data }) => {
               onClick={() => {
                 setTab(3)
                 form.resetAll()
+                form.set("operationDays", generateOperationDays())
                 selection.resetAll()
               }}
             >
@@ -333,6 +344,7 @@ const CapPlanManagement = ({ data }) => {
                 reset={["lob", "capPlan"]}
                 callback={(f) => {
                   f.resetAll()
+                  f.set("operationDays", generateOperationDays())
                 }}
               />
               <StructureDropdown
@@ -350,6 +362,7 @@ const CapPlanManagement = ({ data }) => {
                 disabled={!selection.get("project")}
                 callback={(f) => {
                   f.resetAll()
+                  f.set("operationDays", generateOperationDays())
                 }}
               />
               <StructureDropdown
@@ -366,6 +379,7 @@ const CapPlanManagement = ({ data }) => {
                 disabled={!selection.get("project")}
                 callback={(f) => {
                   f.resetAll()
+                  f.set("operationDays", generateOperationDays())
                 }}
               />
             </div>
@@ -432,7 +446,7 @@ const CapPlanManagement = ({ data }) => {
                   <FormDropdown
                     fieldName="pricingModel"
                     form={form}
-                    data={data && data.pms}
+                    data={data && data.pms.map((pms) => pms.name)}
                     disabled={false}
                   />
                 </div>
@@ -457,7 +471,6 @@ const CapPlanManagement = ({ data }) => {
                     <div className="control">
                       <input
                         className="input is-small"
-                        onChange={(e) => form.set("name", e.target.value)}
                         value={w}
                         type="text"
                         placeholder={w}
@@ -472,8 +485,9 @@ const CapPlanManagement = ({ data }) => {
                         type="checkbox"
                         className="mx-2"
                         checked={
-                          form.get("operationDays") &&
-                          form.get("operationDays")[i].status == "open"
+                          form.get("operationDays")
+                            ? form.get("operationDays")[i].status == "Open"
+                            : false
                         }
                         onChange={() => {
                           handleOperationDaysChange(true, "status", form, i)
@@ -483,7 +497,7 @@ const CapPlanManagement = ({ data }) => {
                   </div>
 
                   {form.get("operationDays") &&
-                  form.get("operationDays")[i].status == "open" ? (
+                  form.get("operationDays")[i].status == "Open" ? (
                     <div className="column is-3">
                       <div className="control">
                         <FormDropdown
@@ -491,7 +505,10 @@ const CapPlanManagement = ({ data }) => {
                           subFieldName="start"
                           form={form}
                           data={
-                            data && data.hours.sort((a, b) => a.order - b.order)
+                            data &&
+                            data.hours
+                              .sort((a, b) => a.order - b.order)
+                              .map((h) => h.name)
                           }
                           callback={(f, j, v) => {
                             handleOperationDaysChange(j, "start", f, i)
@@ -506,7 +523,10 @@ const CapPlanManagement = ({ data }) => {
                           subFieldName="end"
                           form={form}
                           data={
-                            data && data.hours.sort((a, b) => a.order - b.order)
+                            data &&
+                            data.hours
+                              .sort((a, b) => a.order - b.order)
+                              .map((h) => h.name)
                           }
                           callback={(f, j, v) => {
                             console.log(j, v)
@@ -558,6 +578,7 @@ const CapPlanManagement = ({ data }) => {
                 reset={["lob", "capPlan"]}
                 callback={(f) => {
                   f.resetAll()
+                  f.set("operationDays", generateOperationDays())
                 }}
               />
               <StructureDropdown
@@ -575,6 +596,7 @@ const CapPlanManagement = ({ data }) => {
                 disabled={!selection.get("project")}
                 callback={(f) => {
                   f.resetAll()
+                  f.set("operationDays", generateOperationDays())
                 }}
               />
               <StructureDropdown
@@ -672,7 +694,7 @@ const CapPlanManagement = ({ data }) => {
                   <FormDropdown
                     fieldName="pricingModel"
                     form={form}
-                    data={data && data.pms}
+                    data={data && data.pms.map((pms) => pms.name)}
                   />
                 </div>
               </div>
@@ -714,7 +736,7 @@ const CapPlanManagement = ({ data }) => {
                       className="mx-2"
                       checked={
                         form.get("operationDays") &&
-                        form.get("operationDays")[i].status == "open"
+                        form.get("operationDays")[i].status == "Open"
                       }
                       onChange={() => {
                         handleOperationDaysChange(true, "status", form, i)
@@ -724,7 +746,7 @@ const CapPlanManagement = ({ data }) => {
                 </div>
 
                 {form.get("operationDays") &&
-                form.get("operationDays")[i].status == "open" ? (
+                form.get("operationDays")[i].status == "Open" ? (
                   <div className="column is-3">
                     <div className="control">
                       <FormDropdown
@@ -732,7 +754,10 @@ const CapPlanManagement = ({ data }) => {
                         subFieldName={"start"}
                         form={form}
                         data={
-                          data && data.hours.sort((a, b) => a.order - b.order)
+                          data &&
+                          data.hours
+                            .sort((a, b) => a.order - b.order)
+                            .map((h) => h.name)
                         }
                         callback={(f, j, v) => {
                           handleOperationDaysChange(j, "start", f, i)
@@ -747,7 +772,10 @@ const CapPlanManagement = ({ data }) => {
                         form={form}
                         subFieldName={"end"}
                         data={
-                          data && data.hours.sort((a, b) => a.order - b.order)
+                          data &&
+                          data.hours
+                            .sort((a, b) => a.order - b.order)
+                            .map((h) => h.name)
                         }
                         callback={(f, j, v) => {
                           handleOperationDaysChange(j, "end", f, i)

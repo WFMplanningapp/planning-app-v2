@@ -1,3 +1,4 @@
+import { uniqueId } from "lodash"
 import { useEffect, useState } from "react"
 
 const FormDropdown = ({
@@ -14,12 +15,7 @@ const FormDropdown = ({
   const [selected, setSelected] = useState(null)
 
   useEffect(() => {
-    console.log(
-      "SETTING SELECTED: ",
-      form.get(fieldName),
-      handleGetItem(form.get(fieldName))
-    )
-    setSelected(handleGetItem(form.get(fieldName)))
+    !form.checkIsReset() && setSelected(handleGetItem(form.get(fieldName)))
   }, [form.get(fieldName)])
 
   useEffect(() => {
@@ -40,28 +36,27 @@ const FormDropdown = ({
         style={{ minWidth: "40px" }}
         disabled={disabled}
         onChange={(e) => {
-          let json = JSON.parse(e.target.value)
-          console.log("JSON:", json)
-          setSelected(json)
+          let value = e.target.value
+          console.log("Value:", value)
+          setSelected(value)
 
           if (reset) {
             let newForm = {
               ...form.getForm(),
-              [fieldName]: json,
+              [fieldName]: value,
             }
             reset.forEach((field) => (newForm[field] = null))
             form.setMany(newForm)
-          } else {
-            form.set(fieldName, json)
-          }
-          if (callback && form) {
-            callback(form, json, e.target.value)
+          } else if (!callback) {
+            form.set(fieldName, value)
+          } else if (callback && form) {
+            callback(form, value, e.target.value)
           }
           return
         }}
         value={
           selected
-            ? JSON.stringify(selected)
+            ? selected
             : `Select ${subFieldName ? subFieldName : fieldName}`
         }
       >
@@ -73,10 +68,10 @@ const FormDropdown = ({
         {data &&
           data.map((item) => (
             <option
-              key={"form-" + item._id || item.name}
-              value={JSON.stringify(item)}
+              key={"form-" + subFieldName + "-" + uniqueId()}
+              value={item}
             >
-              {item.name}
+              {item}
             </option>
           ))}
       </select>

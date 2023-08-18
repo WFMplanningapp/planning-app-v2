@@ -17,7 +17,7 @@ const StructureDropdown = ({
   }, [selection.get(structureName)])
 
   useEffect(() => {
-    if(debug) debug();
+    if (debug) debug()
   }, [data])
 
   return (
