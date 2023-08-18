@@ -727,7 +727,6 @@ const CapPlanManagement = ({ data }) => {
                 form.get("operationDays")[i].status == "open" ? (
                   <div className="column is-3">
                     <div className="control">
-                      <div className="select is-small is-rounded"></div>
                       <FormDropdown
                         fieldName="operationDays"
                         subFieldName={"start"}

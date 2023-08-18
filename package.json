@@ -26,5 +26,8 @@
 		"react-papaparse": "^3.18.2",
 		"react-tooltip": "^4.2.21",
 		"recharts": "^2.1.8"
+	},
+	"engines": {
+		"node": "16.x"
 	}
 }
