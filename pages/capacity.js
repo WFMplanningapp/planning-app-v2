@@ -3,6 +3,8 @@ import { useState } from "react"
 import useData from "../hooks/useData"
 import useForm from "../hooks/useForm"
 import StructureDropdown from "../components/selection/StructureDropdown"
+import { FaLock } from "react-icons/fa"
+import { useAuth } from "../contexts/authContext"
 
 import { FaExternalLinkAlt } from "react-icons/fa"
 import useWeeks from "../hooks/useWeeks"
@@ -13,6 +15,8 @@ import CapacityViewer from "../components/capacity/CapacityViewer"
 import TotalPercentageChart from "../components/capacity/TotalPercentageChart"
 import CapacityDataGrid from "../components/capacity/CapacityDataGrid"
 import EntriesModal from "../components/entries/EntriesModal"
+
+
 
 const selectionFields = [
   { name: "country", default: null, required: true, type: "object", level: 1},
@@ -44,6 +48,8 @@ export default function Capacity() {
   const [active, setActive] = useState(false)
   const [withStaff, setWithStaff] = useState(false)
   const [channelFields, setChannelFields] = useState([])
+
+  const auth = useAuth()
 
   const data = useData([
     "countries",
@@ -132,8 +138,19 @@ export default function Capacity() {
         toggle={handleToggle}
         active={active}
       />
+
+
       <div>
         <h1 className="has-text-centered mb-2 is-size-5">CAPACITY</h1>
+        <div className="column">
+          {!auth.permission(3) ? (
+            <div className="message is-danger is-size-5 px-5 py-5">
+              <span className="">
+                <FaLock />
+              </span>{" "}
+              UNAUTHORIZED ACCESS
+            </div>
+          ) : <div>
         <div className="columns">
           <div className="column is-two-thirds">
             <div className="columns">
@@ -439,6 +456,9 @@ export default function Capacity() {
             <br />
           </div>
         )}
+      </div>
+              }
+              </div>
       </div>
     </>
   )

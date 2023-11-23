@@ -7,6 +7,8 @@ import useWeeks from "../hooks/useWeeks"
 import WeekDropdown from "../components/selection/WeekDropdown"
 import Filter from "../components/selection/Filter"
 import { CSVDownloader } from "react-papaparse"
+import { FaLock } from "react-icons/fa"
+import { useAuth } from "../contexts/authContext"
 
 const selectionFields = [
   { name: "project", default: null, required: true, type: "object", level: 1 },
@@ -26,6 +28,8 @@ const Report = () => {
   const [fields, setFields] = useState([])
   const [report, setReport] = useState([])
   const [generated, setGenerated] = useState(false)
+
+  const auth = useAuth()
 
   const data = useData([
     "countries",
@@ -107,7 +111,15 @@ const Report = () => {
       </Head>
       <div>
         <h1 className="has-text-centered mb-2 is-size-5">REPORT</h1>
-
+        <div className="column">
+          {!auth.permission(3) ? (
+            <div className="message is-danger is-size-5 px-5 py-5">
+              <span className="">
+                <FaLock />
+              </span>{" "}
+              UNAUTHORIZED ACCESS
+            </div>
+          ) : <div>
         <div className="columns">
           <div className="column field">
             <label className="label">Selection</label>
@@ -280,9 +292,14 @@ const Report = () => {
             )}
           </div>
         </div>
-      </div>
+      </div>    
+      }
+        </div>
+        </div>
+
       <br></br>
-      <br></br>
+        <br></br>
+
     </>
   )
 }
