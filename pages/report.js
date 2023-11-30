@@ -93,8 +93,18 @@ const Report = () => {
             }
 
             fields.forEach((field) => {
-              projection[field.payload.internal] =
-                weekly[field.payload.internal] || null
+              switch (field.payload.internal) {
+                case "plannedAbs":
+                case "plannedVac":
+                case "actAbs":
+                case "actVac":
+                  projection[field.payload.internal] =
+                    weekly[field.payload.internal] / 100 || null
+                  break
+                default:
+                  projection[field.payload.internal] =
+                    weekly[field.payload.internal] || null
+              }
             })
             return projection
           })

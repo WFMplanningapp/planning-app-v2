@@ -264,7 +264,7 @@ const EntryForm = ({ selection, week }) => {
                           : "has-background-grey-lighter"
                       }`}
                       aria-label={field}
-                      value={(entry && entry[field]) || "none"}
+                      value={(entry && entry[field] && `${entry[field]}%`) || "none"}
                     />
                   </p>
                   <p className="control">
@@ -278,6 +278,7 @@ const EntryForm = ({ selection, week }) => {
                       disabled={!week}
                       onChange={(e) => handleChange(e, field)}
                     />
+                    <span className="input-fake-placeholder">%</span>
                   </p>
                 </div>
               </div>
@@ -301,7 +302,7 @@ const EntryForm = ({ selection, week }) => {
                           : "has-background-grey-lighter"
                         }`}
                       aria-label={field}
-                      value={(entry && entry[field]) || "none"}
+                      value={(entry && entry[field] && `${entry[field]}%`) || "none"}
                     />
                   </p>
                   <p className="control">
@@ -315,6 +316,7 @@ const EntryForm = ({ selection, week }) => {
                       disabled={!week}
                       onChange={(e) => handleChange(e, field)}
                     />
+                    <span className="input-fake-placeholder">%</span>
                   </p>
                 </div>
               </div>
