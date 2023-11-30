@@ -33,3 +33,12 @@ table td,
 th {
   padding: 0;
 }
+
+.input-fake-placeholder {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  font-size: 12px;
+  transform: translateY(-50%);
+  z-index: 4;
+}
