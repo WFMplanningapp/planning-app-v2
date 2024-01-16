@@ -274,11 +274,7 @@ const CapPlanManagement = ({ data }) => {
     console.log(value.match(/([0-9]*\.{0,1}[0-9]{0,2})/s)[0])
     return value.match(/([0-9]*\.{0,1}[0-9]{0,2})/s)[0];
   }
-  if (data = null) {
-    return (
-      <div> no data yet</div>
-    )
-  }else {
+
   return (
     <>
       <div className="tabs">
@@ -1765,6 +1761,6 @@ const CapPlanManagement = ({ data }) => {
       )}
     </>
   )
-}}
+}
 
 export default CapPlanManagement
