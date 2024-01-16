@@ -284,11 +284,7 @@ const CapPlanManagement = ({ data }) => {
 
     form.set("operationDays", operationDays)
   }
-  if (data = null) {
-    return (
-      <div> no data yet</div>
-    )
-  }else {
+
   return (
     <>
       <div className="tabs">
@@ -893,6 +889,6 @@ const CapPlanManagement = ({ data }) => {
       )}
     </>
   )
-}}
+}
 
 export default CapPlanManagement
