@@ -422,7 +422,7 @@ export default function Capacity() {
             <h3 className="has-text-centered">ATTRITION TREND</h3>
             <TotalPercentageChart
               data={capacity.get(weekRange)}
-              lines={["expectedAttrition"]}
+                    lines={["expectedAttrition", "budgetAtt"]}
               bars={["attrPercent", "fcAttrition"]}
             />
             <br />
