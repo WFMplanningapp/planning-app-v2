@@ -1,13 +1,14 @@
 import { connectToDatabase } from "../../../lib/mongodb"
 import { hashSync } from "bcrypt"
 import { verifySession } from "../../../lib/verification"
+import { remove } from "lodash"
 
 export default async function handler(req, res) {
   const { query, method, body, headers } = req
 
   const { client, db } = await connectToDatabase()
 
-  let { username, password, permission } = body
+  let { username, password, permission, name, country } = body
 
   if (method === "PUT") {
     let verification = await verifySession(db, headers.authorization)
@@ -17,60 +18,69 @@ export default async function handler(req, res) {
     if (verification.verified && verification.permission === 1) {
       
 
-        if (password && password.length > 7 && username && permission) {
-            let hashed = hashSync(body.password, 10)
-            const options = {
-                upsert: true,
-            }
+      if (password && password.length > 7 && username && permission) {
+        let hashed = hashSync(body.password, 10)
+        const options = {
+          upsert: true,
+        }
 
-            db.collection("verification").updateOne(
-                {
-                    username: username,
-                },
-                {
-                    $set: {
-                        username: username,
-                        password: hashed,
-                        permission: permission,
-                        session: {
-                            token: null,
-                            expires: 0,
-                        },
-                    },
-                },
-                options
-            )
+        db.collection("verification").updateOne(
+          {
+            username: username,
+          },
+          {
+            $set: {
+              username: username,
+              password: hashed,
+              permission: permission,
+              name: name,
+              country: country,
+              session: {
+                token: null,
+                expires: 0,
+              },
+            },
+          },
+          options
+        )
 
-            res.status(200).json({
-                message: "User Created!",
-            })
-        } else if (!password && username && permission) {
-            const options = {
-                upsert: true,
-            }
+        res.status(200).json({
+          message: "User Created!",
+        })
+      } else if (!password && username && permission && !remove) {
+        const options = {
+          upsert: true,
+        }
 
-            db.collection("verification").updateOne(
-                {
-                    username: username,
-                },
-                {
-                    $set: {
-                        username: username,
-                        permission: permission,
-                        session: {
-                            token: null,
-                            expires: 0,
-                        },
-                    },
-                },
-                options
-            )
+        db.collection("verification").updateOne(
+          {
+            username: username,
+          },
+          {
+            $set: {
+              username: username,
+              permission: permission,
+              name: name,
+              country: country,
+              session: {
+                token: null,
+                expires: 0,
+              },
+            },
+          },
+          options
+        )
 
-            res.status(200).json({
-                message: "User Updated!",
-            })
+        res.status(200).json({
+          message: "User Updated!",
+        })
+      } else if (username && permission && remove) {
+        db.collection("verification").deleteOne({ username: username })
+        res.status(200).json({
+          message: "User Deleted!",
+        })
         } else {
-        res.status(301).json({
+        res.status(422).json({
           message: "Missing or invalid fields!",
         })
       }

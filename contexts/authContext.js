@@ -83,20 +83,40 @@ export const AuthProvider = ({ children }) => {
       .catch((err) => console.log("Something went wrong!"))
   }
 
-  const upsertUser = ({ username, password, permission }) => {
+  const upsertUser = ({ username, password, permission, name, country }) => {
     const request = {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: authorization(),
       },
-      body: JSON.stringify({ username, password, permission }),
+      body: JSON.stringify({ username, password, permission, name, country }),
     }
 
     console.log(request)
 
     fetch("/api/auth/user", request)
       .then((response) => response.json())
+      .then((data) => {
+        alert(data.message)
+      })
+      .catch((err) => console.log("Something went wrong!"))
+  }
+
+  const deleteUser = ({ username, permission, remove}) => {
+    const request = {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authorization(),
+      },
+      body: JSON.stringify({ username, permission, remove}),
+    }
+
+    console.log(request)
+
+    fetch("/api/auth/user", request)
+    .then((response) => response.json())
       .then((data) => {
         alert(data.message)
       })
@@ -114,6 +134,7 @@ export const AuthProvider = ({ children }) => {
         authorization,
         resetPassword,
         upsertUser,
+        deleteUser,
       }}
     >
       {children}
