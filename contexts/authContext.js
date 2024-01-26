@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }) => {
 
   const deleteUser = ({ username, permission, remove}) => {
     const request = {
-      method: "PUT",
+      method: "DELETE",
       headers: {
         "Content-Type": "application/json",
         Authorization: authorization(),

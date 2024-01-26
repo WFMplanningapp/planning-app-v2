@@ -1,17 +1,16 @@
 import { connectToDatabase } from "../../../lib/mongodb"
 import { hashSync } from "bcrypt"
 import { verifySession } from "../../../lib/verification"
-import { remove } from "lodash"
 
 export default async function handler(req, res) {
   const { query, method, body, headers } = req
 
   const { client, db } = await connectToDatabase()
 
-  let { username, password, permission, name, country } = body
+  let { username, password, permission, name, country, remove} = body
+  let verification = await verifySession(db, headers.authorization)
 
   if (method === "PUT") {
-    let verification = await verifySession(db, headers.authorization)
 
     //USER EXISTS
 
@@ -74,23 +73,35 @@ export default async function handler(req, res) {
         res.status(200).json({
           message: "User Updated!",
         })
-      } else if (username && permission && remove) {
-        db.collection("verification").deleteOne({ username: username })
-        res.status(200).json({
-          message: "User Deleted!",
-        })
-        } else {
+      } else {
         res.status(422).json({
           message: "Missing or invalid fields!",
         })
       }
     } //NOT VERIFIED
     else {
-      res.status(305).json({
+      res.status(401).json({
         message: "Unauthorized!",
       })
     }
-    //BAD REQUEST
+   
+  } else if (method === "DELETE") {
+    if (verification.verified && verification.permission === 1) {
+      if (username && permission && remove) {
+        db.collection("verification").deleteOne({ username: username })
+        res.status(200).json({
+          message: "User Deleted!",
+        })
+      } else {
+        res.status(422).json({
+          message: "Missing or invalid fields!",
+        })
+      }
+    } else { 
+      res.status(401).json({
+        message: "Unauthorized!",
+      })
+    }
   } else {
     res.status(405).json({ message: "Method not Allowed, use PUT only" })
   }

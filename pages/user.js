@@ -105,177 +105,185 @@ export default function Login() {
             <Head>
                 <title>Planning App | User Admin</title>
             </Head>
-            <div className="mt-auto mb-auto">
-                <div className="columns">
-                    <div className="column is-two-fifths has-text-centered ml-auto mr-5 px-6 pb-5 pt-4 card">
-                        <h1 className="is-size-5">USER ADMIN</h1>
-                        <br />
-                        <>
-                            <div className="column field">
-                                <label className="label">Selection</label>
-                                <StructureDropdown
-                                    structureName="username"
-                                    form={form}
-                                    selection={selection}
-                                    data={
-                                        data &&
-                                        data.verification
-                                    }
-                                    disabled={false}
-                                    callback={(f, s) => {
-                                        f.setMany({
-                                            username: s.username,
-                                            name: s.name,
-                                            country: s.country,
-                                            permission: s.permission,
-                                            
-
-                                        })
-                                        setAgreement(false);
-                                        setInputThis(true);
-                                      setBttnMsg("Update User");
-                                      setDeleteBtn(true);
-                                    }}
-                                />
-                            </div>
-                            <label htmlFor="agreement">
-                                Password required?
-                            </label>
-                            <input
-                                type="checkbox"
-                                name="agreement"
-                                onChange={handleChange}
-                                id="agreement"
-                                checked={agreement}
-                                style={{ marginLeft: "5px" }}
-                            />
+        <div className="mt-auto mb-auto">
+          {!auth.permission(3) ? (
+            <div className="message is-danger is-size-5 px-5 py-5">
+              <span className="">
+                <FaLock />
+              </span>{" "}
+              UNAUTHORIZED ACCESS
+            </div>
+          ) :
+            <div className="columns">
+              <div className="column is-two-fifths has-text-centered ml-auto mr-5 px-6 pb-5 pt-4 card">
+                <h1 className="is-size-5">USER ADMIN</h1>
+                <br />
+                <>
+                  <div className="column field">
+                    <label className="label">Selection</label>
+                    <StructureDropdown
+                      structureName="username"
+                      form={form}
+                      selection={selection}
+                      data={
+                        data &&
+                        data.verification
+                      }
+                      disabled={false}
+                      callback={(f, s) => {
+                        f.setMany({
+                          username: s.username,
+                          name: s.name,
+                          country: s.country,
+                          permission: s.permission,
 
 
-                            <div className="field">
-                                <label className="label">
-                                    <FaUser /> Username
-                                </label>
-                                <div className="control">
-                                    <input
-                                        className="input"
-                                        onChange={(e) => form.set("username", e.target.value)}
-                                        value={form.get("username") || ""}
-                                        type="text"
-                                        placeholder="Username"
-                                    />
-                                </div>
-                            </div>
-                <div className="field" style={{ display: "inline-block", marginRight: 5 + "px", width: 49 + "%" }} >
-                  <label className="label">
-                    <FaUser /> Name
-                  </label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      onChange={(e) => form.set("name", e.target.value)}
-                      value={form.get("name") || ""}
-                      type="text"
-                      placeholder="Name"
+                        })
+                        setAgreement(false);
+                        setInputThis(true);
+                        setBttnMsg("Update User");
+                        setDeleteBtn(true);
+                      }}
                     />
                   </div>
-                </div>
-                <div className="field" style={{ display: "inline-block", marginLeft: 5 + "px", width: 48 + "%" }}>
-                  <label className="label">
-                    <FaGlobeAmericas /> Country
+                  <label htmlFor="agreement">
+                    Password required?
                   </label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      onChange={(e) => form.set("country", e.target.value)}
-                      value={form.get("country") || ""}
-                      type="text"
-                      placeholder="Country"
-                    />
+                  <input
+                    type="checkbox"
+                    name="agreement"
+                    onChange={handleChange}
+                    id="agreement"
+                    checked={agreement}
+                    style={{ marginLeft: "5px" }}
+                  />
+
+
+                  <div className="field">
+                    <label className="label">
+                      <FaUser /> Username
+                    </label>
+                    <div className="control">
+                      <input
+                        className="input"
+                        onChange={(e) => form.set("username", e.target.value)}
+                        value={form.get("username") || ""}
+                        type="text"
+                        placeholder="Username"
+                      />
+                    </div>
                   </div>
+                  <div className="field" style={{ display: "inline-block", marginRight: 5 + "px", width: 49 + "%" }} >
+                    <label className="label">
+                      <FaUser /> Name
+                    </label>
+                    <div className="control">
+                      <input
+                        className="input"
+                        onChange={(e) => form.set("name", e.target.value)}
+                        value={form.get("name") || ""}
+                        type="text"
+                        placeholder="Name"
+                      />
+                    </div>
+                  </div>
+                  <div className="field" style={{ display: "inline-block", marginLeft: 5 + "px", width: 48 + "%" }}>
+                    <label className="label">
+                      <FaGlobeAmericas /> Country
+                    </label>
+                    <div className="control">
+                      <input
+                        className="input"
+                        onChange={(e) => form.set("country", e.target.value)}
+                        value={form.get("country") || ""}
+                        type="text"
+                        placeholder="Country"
+                      />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label className="label">
+                      <FaLock /> Password
+                    </label>
+                    <div className="control">
+                      <input
+                        className="input"
+                        onChange={(e) => form.set("password", e.target.value)}
+                        value={form.get("password") || ""}
+                        type="password"
+                        placeholder="Password"
+                      />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label className="label">
+                      <FaIdBadge /> Permission
+                    </label>
+                    <div className="control">
+                      <input
+                        className="input"
+                        onChange={(e) =>
+                          form.set("permission", parseInt(e.target.value))
+                        }
+                        value={form.get("permission") || ""}
+                        type="number"
+                        placeholder="[1-3]"
+                      />
+                    </div>
+                  </div>
+                  <br />
+                  <button
+                    className={
+                      auth.permission(1) ? "button is-primary" : "button is-danger"
+                    }
+                    onClick={handleUpsertUser}
+                    type="button"
+                    disabled={!auth.permission(1) || !form.checkRequired()}
+                  >
+                    {auth.permission(1) ? (
+                      <>{bttnMessage} </>
+                    ) : (
+                      <>
+                        Unauthorized <FaLock />
+                      </>
+                    )}
+                  </button>
+                  <button
+                    className={
+                      auth.permission(1) ? "button is-danger ml-5" : "button is-disabled ml-5"
+                    }
+                    onClick={handleDeleteUser}
+                    type="button"
+                    disabled={!auth.permission(1) || !deleteBtn}
+                  >
+                    {auth.permission(1) ? (
+                      <>Delete User </>
+                    ) : (
+                      <>
+                        Unauthorized <FaLock />
+                      </>
+                    )}
+                  </button>
+                </>
+
+              </div>
+              <div className="flex-column is-two-fifths ml-5 mr-auto px-6 pb-5 pt-4 card">
+                <h1 className="is-size-5">LOGGED USERS</h1>
+                <div className="field mt-5" style={{ display: "inline-block", fontWeight: 400 }} >
+                  <label className="label">
+                    <FaUser /> User
+                  </label>
+                  {listItemUsr}
                 </div>
-                            <div className="field">
-                                <label className="label">
-                                    <FaLock /> Password
-                                </label>
-                                <div className="control">
-                                    <input
-                                        className="input"
-                                        onChange={(e) => form.set("password", e.target.value)}
-                                        value={form.get("password") || ""}
-                                        type="password"
-                                        placeholder="Password"
-                                    />
-                                </div>
-                            </div>
-                            <div className="field">
-                                <label className="label">
-                                    <FaIdBadge /> Permission
-                                </label>
-                                <div className="control">
-                                    <input
-                                        className="input"
-                                        onChange={(e) =>
-                                            form.set("permission", parseInt(e.target.value))
-                                        }
-                                        value={form.get("permission") || ""}
-                                        type="number"
-                                        placeholder="[1-3]"
-                                    />
-                                </div>
-                            </div>
-                            <br />
-                            <button
-                                className={
-                                    auth.permission(1) ? "button is-primary" : "button is-danger"
-                                }
-                                onClick={handleUpsertUser}
-                                type="button"
-                                disabled={!auth.permission(1) || !form.checkRequired()}
-                            >
-                                {auth.permission(1) ? (
-                                    <>{bttnMessage} </>
-                                ) : (
-                                    <>
-                                        Unauthorized <FaLock />
-                                    </>
-                                )}
-                </button>
-                <button
-                  className={
-                    auth.permission(1) ? "button is-danger ml-5" : "button is-disabled ml-5"
-                  }
-                  onClick={handleDeleteUser}
-                  type="button"
-                  disabled={!auth.permission(1) || !deleteBtn}
-                >
-                  {auth.permission(1) ? (
-                    <>Delete User </>
-                  ) : (
-                    <>
-                      Unauthorized <FaLock />
-                    </>
-                  )}
-                </button>
-                        </>
-
-            </div>
-            <div className="flex-column is-two-fifths ml-5 mr-auto px-6 pb-5 pt-4 card">
-              <h1 className="is-size-5">LOGGED USERS</h1>
-              <div className="field mt-5" style={{ display: "inline-block", fontWeight: 400 }} >
-                <label className="label">
-                  <FaUser /> User
-                </label>
-                {listItemUsr }
-              </div>
-              <div className="field has-text-centered mt-5" style={{ display: "inline-block" }}>
-                <label className="label">
-                  <FaClock /> Logged Hours
-                </label>
-                {listItemHrs}
+                <div className="field has-text-centered mt-5" style={{ display: "inline-block" }}>
+                  <label className="label">
+                    <FaClock /> Logged Hours
+                  </label>
+                  {listItemHrs}
+                </div>
               </div>
             </div>
-          </div>
-
+          }
         </div>
         </>
     )
