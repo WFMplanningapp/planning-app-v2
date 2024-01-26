@@ -37,17 +37,17 @@ export default async function handler(req, res) {
 
 			if (compare) {
 				//CREDENTIALS MATCH
-				let timestamp = new Date()
+				let timestamp =  Date.now()
 
 				let token =
-					user.session && user.session.expires > timestamp.getTime()
+					user.session && user.session.expires > timestamp
 						? user.session.token
-						: hashSync(user.username + timestamp.toISOString(), 10)
+						: hashSync(user.username + new Date(timestamp).toISOString(), 10)
 
 				console.log(token)
 				let session = {
 					token,
-					expires: timestamp.setHours(timestamp.getHours() + 12),
+					expires: timestamp  + 43200000,
 				}
 				console.log(session)
 
