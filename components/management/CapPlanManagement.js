@@ -463,6 +463,21 @@ const CapPlanManagement = ({ data }) => {
               <div className="column is-3">
                 <label className="label">Hours of Operation</label>
               </div>
+              <div className="column is-12 ">
+                <div className="control">
+                  <label className="label">
+                    <input
+                      type="checkbox"
+                      className="mx-2"
+                      checked={form.get("active") || false}
+                      onChange={() => {
+                        form.set("active", !form.get("active"))
+                      }}
+                    ></input>
+                    Active
+                  </label>
+                </div>
+              </div>
             </div>
             {weekdays.map((w, i) => (
               <div key={w + "-add"}>
@@ -543,7 +558,9 @@ const CapPlanManagement = ({ data }) => {
                 </div>
               </div>
             ))}
+
           </div>
+
 
           <div id="add-button">
             <div className="columns">
@@ -698,114 +715,132 @@ const CapPlanManagement = ({ data }) => {
                   />
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="columns">
-            <div className="column is-3">
-              <label className="label">Days of Operation</label>
-            </div>
-            <div className="column is-1">
-              <label className="label">Status</label>
-            </div>
-
-            <div className="column is-3">
-              <label className="label">Hours of Operation</label>
-            </div>
-          </div>
-          {weekdays.map((w, i) => (
-            <div key={w + "-edit"}>
+              </div>
               <div className="columns">
                 <div className="column is-3">
-                  <div className="control">
-                    <input
-                      className="input is-small"
-                      onChange={(e) => form.set("name", e.target.value)}
-                      value={w}
-                      type="text"
-                      placeholder={w}
-                      required
-                      disabled
-                    />
-                  </div>
+                  <label className="label">Days of Operation</label>
                 </div>
-                <div className="column is-1" style={{ paddingBottom: "0px" }}>
-                  <div className="control">
-                    <input
-                      type="checkbox"
-                      className="mx-2"
-                      checked={
-                        form.get("operationDays") &&
-                        form.get("operationDays")[i].status == "Open"
-                      }
-                      onChange={() => {
-                        handleOperationDaysChange(true, "status", form, i)
-                      }}
-                    ></input>
-                  </div>
+                <div className="column is-1">
+                  <label className="label">Status</label>
                 </div>
 
-                {form.get("operationDays") &&
-                form.get("operationDays")[i].status == "Open" ? (
-                  <div className="column is-3">
-                    <div className="control">
-                      <FormDropdown
-                        fieldName="operationDays"
-                        subFieldName={"start"}
-                        form={form}
-                        data={
-                          data &&
-                          data.hours
-                            .sort((a, b) => a.order - b.order)
-                            .map((h) => h.name)
-                        }
-                        callback={(f, j, v) => {
-                          handleOperationDaysChange(j, "start", f, i)
+                <div className="column is-3">
+                  <label className="label">Hours of Operation</label>
+                </div>
+                <div className="column is-12 ">
+                  <div className="control">
+                    <label className="label">
+                      <input
+                        type="checkbox"
+                        className="mx-2"
+                        checked={form.get("active") || false}
+                        onChange={() => {
+                          form.set("active", !form.get("active"))
                         }}
-                        disabled={false}
-                        getNestedItem={(opDays) => {
-                          return opDays[i]["start"]
-                        }}
-                      />
-                      <FormDropdown
-                        fieldName="operationDays"
-                        form={form}
-                        subFieldName={"end"}
-                        data={
-                          data &&
-                          data.hours
-                            .sort((a, b) => a.order - b.order)
-                            .map((h) => h.name)
-                        }
-                        callback={(f, j, v) => {
-                          handleOperationDaysChange(j, "end", f, i)
-                        }}
-                        disabled={false}
-                        getNestedItem={(opDays) => {
-                          return opDays[i]["end"]
-                        }}
-                      />
-                    </div>
+                      ></input>
+                      Active
+                    </label>
                   </div>
-                ) : null}
+                </div>
+              </div>
+              {weekdays.map((w, i) => (
+                <div key={w + "-edit"}>
+                  <div className="columns">
+                    <div className="column is-3">
+                      <div className="control">
+                        <input
+                          className="input is-small"
+                          onChange={(e) => form.set("name", e.target.value)}
+                          value={w}
+                          type="text"
+                          placeholder={w}
+                          required
+                          disabled
+                        />
+                      </div>
+                    </div>
+                    <div className="column is-1" style={{ paddingBottom: "0px" }}>
+                      <div className="control">
+                        <input
+                          type="checkbox"
+                          className="mx-2"
+                          checked={
+                            form.get("operationDays") &&
+                            form.get("operationDays")[i].status == "Open"
+                          }
+                          onChange={() => {
+                            handleOperationDaysChange(true, "status", form, i)
+                          }}
+                        ></input>
+                      </div>
+                    </div>
+
+                    {form.get("operationDays") &&
+                      form.get("operationDays")[i].status == "Open" ? (
+                      <div className="column is-3">
+                        <div className="control">
+                          <FormDropdown
+                            fieldName="operationDays"
+                            subFieldName={"start"}
+                            form={form}
+                            data={
+                              data &&
+                              data.hours
+                                .sort((a, b) => a.order - b.order)
+                                .map((h) => h.name)
+                            }
+                            callback={(f, j, v) => {
+                              handleOperationDaysChange(j, "start", f, i)
+                            }}
+                            disabled={false}
+                            getNestedItem={(opDays) => {
+                              return opDays[i]["start"]
+                            }}
+                          />
+                          <FormDropdown
+                            fieldName="operationDays"
+                            form={form}
+                            subFieldName={"end"}
+                            data={
+                              data &&
+                              data.hours
+                                .sort((a, b) => a.order - b.order)
+                                .map((h) => h.name)
+                            }
+                            callback={(f, j, v) => {
+                              handleOperationDaysChange(j, "end", f, i)
+                            }}
+                            disabled={false}
+                            getNestedItem={(opDays) => {
+                              return opDays[i]["end"]
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+          </div>
+          <div className="columns">
+            <div className="column is-3">
+              <div id="edit-button">
+                <button
+                  className="button is-small is-warning is-rounded"
+                  onClick={() => handleSubmit("EDIT")}
+                  disabled={
+                    !form.checkRequired() ||
+                    !selection.get("capPlan") ||
+                    !selection.get("language")
+                    }
+                >
+                Edit Cap Plan
+                </button>
               </div>
             </div>
-          ))}
-
-          <div id="edit-button">
-            <button
-              className="button is-small is-warning is-rounded"
-              onClick={() => handleSubmit("EDIT")}
-              disabled={
-                !form.checkRequired() ||
-                !selection.get("capPlan") ||
-                !selection.get("language")
-              }
-            >
-              Edit Cap Plan
-            </button>
           </div>
         </div>
+        //remove tab
       ) : tab === 3 && auth.permission(1) ? (
         <div id="remove-tab">
           <div className="columns">
