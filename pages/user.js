@@ -55,8 +55,8 @@ export default function Login() {
   if (data && data.verification) {
     data.verification.forEach(user => {
       if (user.session.expires > 0 && user.session.expires > Date.now()) {
-        console.log(new Date(user.session.expires - 43000000));
-        const diff = Date.now() - (new Date(user.session.expires - 43000000).getTime());
+        console.log(new Date(user.session.expires - 43200000));
+        const diff = Date.now() - (new Date(user.session.expires - 43200000).getTime());
         const minetes = (diff / (1000 * 60)).toFixed(0);
         const hours = (diff / (1000 * 60 * 60)).toFixed(1);
         console.log((diff / (1000 * 60 * 60)).toFixed(1));
