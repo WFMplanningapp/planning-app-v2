@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     console.log(request)
+    
 
     fetch("/api/auth/login", request)
       .then((response) => response.json())
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }) => {
         console.log(data.message)
       })
       .catch((err) => console.log("Something went wrong!"))
+      console.log("Login ");
   }
 
   const logout = () => {
