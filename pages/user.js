@@ -106,7 +106,7 @@ export default function Login() {
                 <title>Planning App | User Admin</title>
             </Head>
         <div className="mt-auto mb-auto">
-          {!auth.permission(3) ? (
+          {!auth.permission(auth.ROLES.SU) ? (
             <div className="message is-danger is-size-5 px-5 py-5">
               <span className="">
                 <FaLock />
@@ -234,13 +234,13 @@ export default function Login() {
                   <br />
                   <button
                     className={
-                      auth.permission(1) ? "button is-primary" : "button is-danger"
+                      auth.permission(auth.ROLES.ADMIN) ? "button is-primary" : "button is-danger"
                     }
                     onClick={handleUpsertUser}
                     type="button"
-                    disabled={!auth.permission(1) || !form.checkRequired()}
+                    disabled={!auth.permission(auth.ROLES.ADMIN) || !form.checkRequired()}
                   >
-                    {auth.permission(1) ? (
+                    {auth.permission(auth.ROLES.ADMIN) ? (
                       <>{bttnMessage} </>
                     ) : (
                       <>
@@ -250,13 +250,13 @@ export default function Login() {
                   </button>
                   <button
                     className={
-                      auth.permission(1) ? "button is-danger ml-5" : "button is-disabled ml-5"
+                      auth.permission(auth.ROLES.ADMIN) ? "button is-danger ml-5" : "button is-disabled ml-5"
                     }
                     onClick={handleDeleteUser}
                     type="button"
-                    disabled={!auth.permission(1) || !deleteBtn}
+                    disabled={!auth.permission(auth.ROLES.ADMIN) || !deleteBtn}
                   >
-                    {auth.permission(1) ? (
+                    {auth.permission(auth.ROLES.ADMIN) ? (
                       <>Delete User </>
                     ) : (
                       <>

@@ -4,6 +4,8 @@ import { useState } from "react"
 
 import { useAuth } from "../contexts/authContext"
 
+import { FaUserCog } from "react-icons/fa"
+
 const Header = () => {
   const [isActive, setisActive] = useState(false)
   const auth = useAuth()
@@ -21,7 +23,12 @@ const Header = () => {
               Planning App
             </a>
           </Link>
-
+          {auth.permission(auth.ROLES.SU) ? 
+                    <Link href="/user">
+                    <a className="navbar-item px-2" href="/">
+                      User Admin <FaUserCog />
+                    </a>
+                  </Link> : <></>}
           <a
             role="button"
             onClick={() => setisActive(!isActive)}

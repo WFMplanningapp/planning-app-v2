@@ -64,6 +64,7 @@ const Report = () => {
     }
 
     console.log("LOBS:", lobs)
+    console.log(auth.permission())
 
     let capPlans = lobs
       .map((lob) =>
