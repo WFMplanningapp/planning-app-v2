@@ -13,8 +13,9 @@ export default async function handler(req, res) {
   if (method === "PUT") {
 
     //USER EXISTS
+    console.log(verification.permission)
 
-    if (verification.verified && verification.permission === 1) {
+    if (verification.verified && verification.permission === 4) {
       
 
       if (password && password.length > 7 && username && permission) {
@@ -86,7 +87,7 @@ export default async function handler(req, res) {
     }
    
   } else if (method === "DELETE") {
-    if (verification.verified && verification.permission === 1) {
+    if (verification.verified && verification.permission === 4) {
       if (username && permission && remove) {
         db.collection("verification").deleteOne({ username: username })
         res.status(200).json({
