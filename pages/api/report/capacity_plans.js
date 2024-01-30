@@ -35,6 +35,7 @@ export default async function handler(req, res) {
 							operationDays: 1,
 							fteHoursWeekly: 1,
 							pricingModel: 1,
+							active: 1,
 
 						},
 					},
@@ -58,6 +59,7 @@ export default async function handler(req, res) {
 							Operation_Days: "$operationDays",
 							FTEHours_Weekly: "$fteHoursWeekly",
 							Pricing_Model: "$pricingModel",
+							Active: "$active",
 						},
 					},
 				])
