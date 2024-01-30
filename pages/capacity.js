@@ -143,7 +143,7 @@ export default function Capacity() {
       <div>
         <h1 className="has-text-centered mb-2 is-size-5">CAPACITY</h1>
         <div className="column">
-          {!auth.permission(3) ? (
+          {!auth.permission(auth.ROLES.GUEST) ? (
             <div className="message is-danger is-size-5 px-5 py-5">
               <span className="">
                 <FaLock />
