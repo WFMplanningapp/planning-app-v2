@@ -64,7 +64,6 @@ const Report = () => {
     }
 
     console.log("LOBS:", lobs)
-    console.log(auth.permission())
 
     let capPlans = lobs
       .map((lob) =>
@@ -123,7 +122,7 @@ const Report = () => {
       <div>
         <h1 className="has-text-centered mb-2 is-size-5">REPORT</h1>
         <div className="column">
-          {!auth.permission(3) ? (
+          {!auth.permission(auth.ROLES.MANAGER) ? (
             <div className="message is-danger is-size-5 px-5 py-5">
               <span className="">
                 <FaLock />
