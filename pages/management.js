@@ -58,7 +58,7 @@ export default function Management() {
 						</div>
 					</div>
 					<div className="column">
-						{!auth.permission(auth.ROLES.SU) ? (
+						{!auth.permission(auth.ROLES.ADMIN) ? (
 							<div className="message is-danger is-size-5 px-5 py-5">
 								<span className="">
 									<FaLock />
