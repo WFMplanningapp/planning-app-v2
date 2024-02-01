@@ -11,6 +11,7 @@ export default async function handler(req, res) {
   let verification = await verifySession(db, headers.authorization)
 
   if (method === "POST") {
+
     if (verification.verified && verifyPermissions(ROLES.MANAGER,null,db,headers.authorization)) {
       if (
         payloads &&
