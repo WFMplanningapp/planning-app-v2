@@ -1,6 +1,6 @@
 import { connectToDatabase } from "../../../lib/mongodb"
 import { hashSync } from "bcrypt"
-import { verifySession } from "../../../lib/verification"
+import { verifySession, verifyPermissions, ROLES } from "../../../lib/verification"
 
 export default async function handler(req, res) {
   const { query, method, body, headers } = req
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     //USER EXISTS
     console.log(verification.permission)
 
-    if (verification.verified && verification.permission === 4) {
+    if (verification.verified && verifyPermissions(ROLES.SU,null,db,headers.authorization)) {
       
 
       if (password && password.length > 7 && username && permission) {
@@ -87,7 +87,7 @@ export default async function handler(req, res) {
     }
    
   } else if (method === "DELETE") {
-    if (verification.verified && verification.permission === 4) {
+    if (verification.verified && verifyPermissions(ROLES.SU,null,db,headers.authorization)) {
       if (username && permission && remove) {
         db.collection("verification").deleteOne({ username: username })
         res.status(200).json({

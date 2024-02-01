@@ -1,5 +1,5 @@
 import { connectToDatabase } from "../../../../lib/mongodb"
-import { verifySession } from "../../../../lib/verification"
+import { verifySession, verifyPermissions, ROLES } from "../../../../lib/verification"
 
 export default async function handler(req, res) {
   const { query, method, body, headers } = req
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   let verification = await verifySession(db, headers.authorization)
 
   if (method === "DELETE") {
-    if (verification.verified && verification.permission <= 1) {
+    if (verification.verified && verifyPermissions(ROLES.ADMIN,null,db,headers.authorization)) {
       if (query.capPlan) {
         let response = await db
           .collection("capEntries")

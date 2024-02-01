@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb"
 import { connectToDatabase } from "../../../../lib/mongodb"
-import { verifySession } from "../../../../lib/verification"
+import { verifySession, verifyPermissions, ROLES } from "../../../../lib/verification"
 
 export default async function handler(req, res) {
 	const { query, method, body, headers } = req
@@ -23,8 +23,7 @@ export default async function handler(req, res) {
 				data: null,
 			})
 		}
-		if (!(verification.verified && verification.permission <= 2)) {
-			console.log(verification.verified, verification.permission)
+		if (!(verification.verified && verifyPermissions(ROLES.MANAGER,null,db,headers.authorization))) {
 			return res.status(401).json(verification)
 		}
 

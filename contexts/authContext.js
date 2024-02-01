@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import Cookies from "js-cookie"
+import { verifyPermissions } from "../lib/verification"
 
 const AuthContext = createContext()
 
@@ -52,23 +53,13 @@ export const AuthProvider = ({ children }) => {
     setLogged(false)
     Cookies.remove("user")
   }
-  
   const ROLES = {
     ADMIN: [1,4],
     MANAGER: [1,2,4],
     GUEST: [1,2,3,4],
     SU: [4],
   }
-  const permission = (p) => {
-    if (!user) return false;
-    
-    const permissions = Object.values(ROLES).filter(oRole => {
-      return oRole.indexOf(user.permission) >= 0;
-    })
-    return permissions.filter(perm => {
-      return perm === p;
-    }).length > 0;
-  }
+  const permission = verifyPermissions
 
   const authorization = () => {
     return user && user.session

@@ -1,4 +1,4 @@
-import { verifySession } from "../../../../lib/verification"
+import { verifySession, verifyPermissions, ROLES } from "../../../../lib/verification"
 import { connectToDatabase } from "../../../../lib/mongodb"
 import { ObjectId } from "mongodb"
 
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
   switch (method) {
     case "POST":
-      if (verification.verified && verification.permission <= 2) {
+      if (verification.verified && verifyPermissions(ROLES.MANAGER,null,db,headers.authorization)) {
         let insert =
           payload && payload.name
             ? await db.collection("projects").insertOne({
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       } else res.status(401).json(verification)
       break
     case "PUT":
-      if (verification.verified && verification.permission <= 2 && target) {
+      if (verification.verified && verifyPermissions(ROLES.MANAGER,null,db,headers.authorization) && target) {
         let update =
           payload && payload.name && target
             ? await db
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       } else res.status(401).json(verification)
       break
     case "DELETE":
-      if (verification.verified && verification.permission <= 1) {
+      if (verification.verified && verifyPermissions(ROLES.ADMIN,null,db,headers.authorization)) {
         let remove = target
           ? await db.collection("projects").deleteOne({ _id: ObjectId(target) })
           : { message: "Nothing to Remove" }
