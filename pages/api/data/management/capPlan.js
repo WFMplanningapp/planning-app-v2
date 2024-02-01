@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
   switch (method) {
     case "POST":
-      if (verification.verified && verification.permission <= 2) {
+      if (verification.verified && verification.permission <= 4) {
         let insert =
           payload && payload.name && lob && language
             ? await db.collection("capPlans").insertOne({
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       } else res.status(401).json(verification)
       break
     case "PUT":
-      if (verification.verified && verification.permission <= 2 && target) {
+      if (verification.verified && verification.permission <= 4 && target) {
         console.log("WILL UPDATE", payload, language)
         let update =
           payload && target
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
       } else res.status(401).json(verification)
       break
     case "DELETE":
-      if (verification.verified && verification.permission <= 1) {
+      if (verification.verified && verification.permission <= 4) {
         let remove = target
           ? await db.collection("capPlans").deleteOne({ _id: ObjectId(target) })
           : { message: "Nothing to Remove" }
