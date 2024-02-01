@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 				data: null,
 			})
 		}
-		if (!(verification.verified && verification.permission <= 2)) {
+		if (!(verification.verified && verification.permission <= 4)) {
 			console.log(verification.verified, verification.permission)
 			return res.status(401).json(verification)
 		}
