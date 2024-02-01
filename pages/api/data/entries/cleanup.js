@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   let verification = await verifySession(db, headers.authorization)
 
   if (method === "DELETE") {
-    if (verification.verified && verification.permission <= 1) {
+    if (verification.verified && verification.permission <= 4) {
       if (query.capPlan) {
         let response = await db
           .collection("capEntries")
