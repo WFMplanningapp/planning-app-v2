@@ -7,6 +7,10 @@ const AuthContext = createContext()
 export const AuthProvider = ({ children }) => {
   const [logged, setLogged] = useState(false)
   const [user, setUser] = useState({})
+  const [allowedSU, setAllowedSU] = useState(false);
+  const [allowedAdmin, setAllowedAdmin] = useState(false);
+  const [allowedManager, setAllowedManager] = useState(false);
+  const [allowedGuest, setAllowedGuest] = useState(false);
 
   useEffect(() => {
     let cookie = Cookies.get("user")
@@ -18,6 +22,31 @@ export const AuthProvider = ({ children }) => {
       console.log("NO COOKIE")
     }
   }, [])
+  
+  useEffect(() => {
+    verifyPermissions(ROLES.SU, user).then((result) => {
+      setAllowedSU(result)
+      console.log(result)
+    })
+  })
+  useEffect(() => {
+    verifyPermissions(ROLES.ADMIN, user).then((result) => {
+      setAllowedAdmin(result)
+      console.log(result)
+    })
+  })
+  useEffect(() => {
+    verifyPermissions(ROLES.MANAGER, user).then((result) => {
+      setAllowedManager(result)
+      console.log(result)
+    })
+  })
+  useEffect(() => {
+    verifyPermissions(ROLES.GUEST, user).then((result) => {
+      setAllowedGuest(result)
+      console.log(result)
+    })
+  })
 
   const login = async ({ username, password }) => {
     const request = {
@@ -59,6 +88,7 @@ export const AuthProvider = ({ children }) => {
     GUEST: [1,2,3,4],
     SU: [4],
   }
+
   const permission = verifyPermissions
 
   const authorization = () => {
@@ -132,6 +162,10 @@ export const AuthProvider = ({ children }) => {
       value={{
         logged,
         user,
+        allowedSU,
+        allowedAdmin,
+        allowedManager,
+        allowedGuest,
         login,
         logout,
         ROLES,

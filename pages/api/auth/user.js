@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   if (method === "PUT") {
 
     //USER EXISTS
-    console.log(verification.permission)
+  
 
     if (verification.verified && verifyPermissions(ROLES.SU,null,db,headers.authorization)) {
       

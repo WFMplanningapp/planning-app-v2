@@ -252,7 +252,7 @@ const ProjectManagement = ({ data }) => {
             </button>
           </div>
         </div>
-      ) : tab === 3 && auth.permission(auth.ROLES.ADMIN) ? (
+      ) : tab === 3 && auth.allowedAdmin ? (
         <div id="remove-tab">
           <div className="columns">
             <div className="column field">

@@ -181,7 +181,7 @@ const EntriesManagement = ({ data }) => {
 
   return (
     <>
-      {auth.permission(auth.ROLES.ADMIN) ? (
+      {auth.allowedAdmin ? (
         <div>
           {/*////////////////////////////////////////////////////// BULK UPLOAD ////////////////////////////////////////////////*/}
           <div className="columns is-multiline">

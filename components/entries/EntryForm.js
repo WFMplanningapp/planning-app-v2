@@ -358,12 +358,12 @@ const EntryForm = ({ selection, week }) => {
               <button
                 type="button"
                 className={`button is-fullwidth ${
-                  auth.permission(auth.ROLES.GUEST) ? "is-primary" : "is-danger"
+                  auth.allowedGuest ? "is-primary" : "is-danger"
                 }`}
                 onClick={handleSubmit}
-                disabled={!auth.permission(auth.ROLES.GUEST) || !loaded}
+                disabled={!auth.allowedGuest || !loaded}
               >
-                {auth.permission(auth.ROLES.GUEST) ? (
+                {auth.allowedGuest ? (
                   "SUBMIT"
                 ) : (
                   <span>
