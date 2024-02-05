@@ -23,7 +23,9 @@ export default async function handler(req, res) {
 				data: null,
 			})
 		}
+
 		if (!(verification.verified && verifyPermissions(ROLES.MANAGER,null,db,headers.authorization))) {
+
 			return res.status(401).json(verification)
 		}
 
