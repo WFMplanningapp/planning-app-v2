@@ -23,7 +23,7 @@ const Header = () => {
               Planning App
             </a>
           </Link>
-          {auth.permission(auth.ROLES.SU) ? 
+          {auth.allowedSU ? 
                     <Link href="/user">
                     <a className="navbar-item px-2" href="/">
                       User Admin <FaUserCog />

@@ -1,7 +1,7 @@
 import Head from "next/head"
 import { useAuth } from "../contexts/authContext"
 import useForm from "../hooks/useForm"
-
+import { useState, useEffect } from "react"
 import { FaUser, FaLock } from "react-icons/fa"
 
 const formFields = [
@@ -24,6 +24,19 @@ export default function Login() {
 
     form.resetAll()
   }
+  const [accessLevel, setAccessLevel] = useState("No Permissions set yet!")
+
+  useEffect(() => {
+    if (auth.user && auth.user.permission === 4){
+      setAccessLevel("Super User");
+    }else if(auth.user && auth.user.permission === 3){
+      setAccessLevel("Viewer")
+    }else if(auth.user && auth.user.permission === 2){
+      setAccessLevel("Manager")
+    }else if(auth.user && auth.user.permission === 1){
+      setAccessLevel("Admin")
+    }
+  })
 
   const handleLogout = () => {
     auth.logout()
@@ -73,6 +86,13 @@ export default function Login() {
                       value={form.get("password") || ""}
                       type="password"
                       placeholder="Password"
+                      onKeyDown={(e) => {
+                        const { key, keyCode} = e;
+                        if (keyCode === 13){
+                          handleLogin()
+                        }
+                      } 
+                      }
                     />
                   </div>
                 </div>
@@ -80,6 +100,7 @@ export default function Login() {
                 <button
                   className="button is-primary"
                   onClick={handleLogin}
+                  
                   type="button"
                 >
                   LOG IN
@@ -92,7 +113,7 @@ export default function Login() {
                   {" "}
                   <FaUser /> User: {auth.user.username}
                 </p>
-                <p>Permission: {auth.user.permission}</p>
+                <p>Permission: {accessLevel}</p>
 
                 <br></br>
 

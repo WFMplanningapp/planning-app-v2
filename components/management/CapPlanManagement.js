@@ -841,7 +841,7 @@ const CapPlanManagement = ({ data }) => {
           </div>
         </div>
         //remove tab
-      ) : tab === 3 && auth.permission(auth.ROLES.ADMIN) ? (
+      ) : tab === 3 && auth.allowedAdmin ? (
         <div id="remove-tab">
           <div className="columns">
             <div className="column field">

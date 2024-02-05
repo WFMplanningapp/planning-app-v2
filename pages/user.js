@@ -1,5 +1,5 @@
 import Head from "next/head"
-import { useState } from "react"
+import { Component, useEffect, useState } from "react"
 import { useAuth } from "../contexts/authContext"
 import useForm from "../hooks/useForm"
 import StructureDropdown from "../components/selection/StructureDropdownUN"
@@ -51,6 +51,8 @@ export default function Login() {
 
     const auth = useAuth()
 
+
+
   const loggedUsr = [];
   if (data && data.verification) {
     data.verification.forEach(user => {
@@ -96,17 +98,16 @@ export default function Login() {
     }
 
   }
-
   const listItemUsr = loggedUsr.map(user => <p style={{ color: `${user.color}` }}>{user.name}</p> )
   const listItemHrs = loggedUsr.map(user => <p style={{ color: `${user.color}` }}>{user.loggedHrs}</p> )
-
+  
     return (
         <>
             <Head>
                 <title>Planning App | User Admin</title>
             </Head>
         <div className="mt-auto mb-auto">
-          {!auth.permission(auth.ROLES.SU) ? (
+          {!auth.allowedSU ? (
             <div className="message is-danger is-size-5 px-5 py-5">
               <span className="">
                 <FaLock />
@@ -234,13 +235,13 @@ export default function Login() {
                   <br />
                   <button
                     className={
-                      auth.permission(auth.ROLES.ADMIN) ? "button is-primary" : "button is-danger"
+                      auth.allowedSU ? "button is-primary" : "button is-danger"
                     }
                     onClick={handleUpsertUser}
                     type="button"
-                    disabled={!auth.permission(auth.ROLES.ADMIN) || !form.checkRequired()}
+                    disabled={!auth.allowedSU || !form.checkRequired()}
                   >
-                    {auth.permission(auth.ROLES.ADMIN) ? (
+                    {auth.allowedSU ? (
                       <>{bttnMessage} </>
                     ) : (
                       <>
@@ -250,13 +251,13 @@ export default function Login() {
                   </button>
                   <button
                     className={
-                      auth.permission(auth.ROLES.ADMIN) ? "button is-danger ml-5" : "button is-disabled ml-5"
+                      auth.allowedSU ? "button is-danger ml-5" : "button is-disabled ml-5"
                     }
                     onClick={handleDeleteUser}
                     type="button"
-                    disabled={!auth.permission(auth.ROLES.ADMIN) || !deleteBtn}
+                    disabled={!auth.allowedSU || !deleteBtn}
                   >
-                    {auth.permission(auth.ROLES.ADMIN) ? (
+                    {auth.allowedSU ? (
                       <>Delete User </>
                     ) : (
                       <>

@@ -89,12 +89,12 @@ const PlannedForm = ({ selection, week, channel, toggle }) => {
               <button
                 type="button"
                 className={`button is-fullwidth ${
-                  auth.permission(auth.ROLES.MANAGER) ? "is-primary" : "is-danger"
+                  auth.allowedManager ? "is-primary" : "is-danger"
                 }`}
                 onClick={handleSubmit}
-                disabled={!auth.permission(auth.ROLES.MANAGER)}
+                disabled={!auth.allowedManager}
               >
-                {auth.permission(auth.ROLES.MANAGER) ? (
+                {auth.allowedManager ? (
                   "SUBMIT"
                 ) : (
                   <span>

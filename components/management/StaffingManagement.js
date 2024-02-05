@@ -114,7 +114,7 @@ const StaffingManagement = ({ data }) => {
 
 	return (
 		<>
-			{auth.permission(auth.ROLES.MANAGER) ? (
+			{auth.allowedManager ? (
 				<div>
 					<div id="selection" className="columns">
 						<div className="column is-12 field">
