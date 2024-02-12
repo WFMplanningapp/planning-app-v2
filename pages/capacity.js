@@ -132,12 +132,16 @@ export default function Capacity() {
       <Head>
         <title>Planning App | Capacity</title>
       </Head>
-      <EntriesModal
+      {entrySelection.get("entryWeek") ?
+      (<EntriesModal
         selection={selection}
         week={entrySelection.get("entryWeek")}
         toggle={handleToggle}
         active={active}
-      />
+        weeks={data.weeks.sort((a, b) =>
+          a.firstDate > b.firstDate ? 1 : a.firstDate < b.firstDate ? -1 : 0
+        )}
+      />) : null }
 
 
       <div>

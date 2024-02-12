@@ -8,6 +8,7 @@ import useData from "../hooks/useData"
 import { FaLock } from "react-icons/fa"
 import StaffingManagement from "../components/management/StaffingManagement"
 import EntriesManagement from "../components/management/EntriesManagement"
+import moment from "moment"
 
 export default function Management() {
 	const [screen, setScreen] = useState("projects")
@@ -16,6 +17,8 @@ export default function Management() {
 
 	const auth = useAuth()
 
+	const weekNum = moment("09-02-2024", "DDMMYYYY").format("YYYY" + 'w' + "WW");
+	console.log(weekNum);
 	return (
 		<>
 			<Head>

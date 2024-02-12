@@ -3,8 +3,10 @@ import { useAuth } from "../../contexts/authContext"
 import useForm from "../../hooks/useForm"
 import StructureDropdown from "../selection/StructureDropdown"
 import FormDropdown from "../selection/FormDropdown"
-
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
 import { FaLock } from "react-icons/fa"
+import moment from "moment"
 
 const selectionFields = [
   { name: "project", default: null, required: true, type: "object", level: 1 },
@@ -284,6 +286,8 @@ const CapPlanManagement = ({ data }) => {
 
     form.set("operationDays", operationDays)
   }
+  const [startDate, setStartDate] = useState("");
+  
 
   return (
     <>
@@ -402,14 +406,19 @@ const CapPlanManagement = ({ data }) => {
               <div className="column is-3">
                 <label className="label">First Week</label>
                 <div className="control">
-                  <input
-                    className="input is-small"
-                    onChange={(e) => form.set("firstWeek", e.target.value)}
-                    value={form.get("firstWeek") || ""}
-                    type="text"
-                    placeholder="First Week (code)"
-                    required
-                  />
+                <DatePicker
+                selected={startDate}
+                dateFormat={"YYYY'w'w"}
+                onChange={(date) => {
+                  let year = moment(date).format("YYYY");
+                  let week = moment(date).isoWeek();
+                  let weekCode = year + "w" + week;
+                  setStartDate(date)
+                 form.set("firstWeek", weekCode)
+                  
+                }}
+                required
+                />
                 </div>
               </div>
               <div className="column is-3">
@@ -651,14 +660,19 @@ const CapPlanManagement = ({ data }) => {
               <div className="column is-3">
                 <label className="label">First Week</label>
                 <div className="control">
-                  <input
-                    className="input is-small"
-                    onChange={(e) => form.set("firstWeek", e.target.value)}
-                    value={form.get("firstWeek") || ""}
-                    type="text"
-                    placeholder="First Week (code)"
-                    required
-                  />
+                <DatePicker
+                selected={startDate}
+                dateFormat={"YYYY'w'w"}
+                onChange={(date) => {
+                  let year = moment(date).format("YYYY");
+                  let week = moment(date).isoWeek();
+                  let weekCode = year + "w" + week;
+                  setStartDate(date)
+                 form.set("firstWeek", weekCode)
+                  
+                }}
+                required
+                />
                 </div>
               </div>
               <div className="column is-3">
