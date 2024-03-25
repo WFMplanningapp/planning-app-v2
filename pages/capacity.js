@@ -60,6 +60,14 @@ export default function Capacity() {
     "fields",
     "weeks",
   ])
+ 
+  if(data && data.fields){
+    console.log(data.fields.sort(
+      (a, b) => parseInt(a.order) - parseInt(b.order)
+    ));
+  }else{
+    console.log('no fields yet');
+  }
 
   const weeks = useWeeks(
     data.weeks &&
