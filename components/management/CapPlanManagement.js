@@ -4,9 +4,15 @@ import useForm from "../../hooks/useForm"
 import StructureDropdown from "../selection/StructureDropdown"
 import FormDropdown from "../selection/FormDropdown"
 import DatePicker from "react-datepicker"
+import { registerLocale, setDefaultLocale } from "react-datepicker"
+import { enGB } from "date-fns/locale"
 import "react-datepicker/dist/react-datepicker.css"
 import { FaLock } from "react-icons/fa"
 import moment from "moment"
+import { first } from "lodash"
+
+registerLocale("en-GB", enGB);
+setDefaultLocale("en-GB");
 
 const selectionFields = [
   { name: "project", default: null, required: true, type: "object", level: 1 },
@@ -97,6 +103,12 @@ const weekdays = [
   "Saturday",
   "Sunday",
 ]
+
+const conaDaMae = (form) => {
+  const firstDate = form.get("firstWeek").toUpperCase().split("W");
+  console.log(firstDate);
+  return firstDate[1] < 10 && firstDate[1].length == 1 ? moment(`${firstDate[0]}W0${firstDate[1]}`).toDate() : moment(form.get("firstWeek").toUpperCase()).toDate();
+}
 
 const generateOperationDays = () => {
   return [
@@ -408,11 +420,12 @@ const CapPlanManagement = ({ data }) => {
                 <div className="control">
                 <DatePicker
                 selected={startDate}
-                dateFormat={"YYYY'w'w"}
+                locale="en-GB"
+                dateFormat={"YYYY'w'ww"}
                 onChange={(date) => {
                   let year = moment(date).format("YYYY");
-                  let week = moment(date).isoWeek();
-                  let weekCode = year + "w" + week;
+                  let week =moment(date).isoWeek() < 10 ? `0${moment(date).isoWeek()}` : moment(date).isoWeek();
+                  let weekCode = year + "W" + week;
                   setStartDate(date)
                  form.set("firstWeek", weekCode)
                   
@@ -482,6 +495,7 @@ const CapPlanManagement = ({ data }) => {
                       onChange={() => {
                         form.set("active", !form.get("active"))
                       }}
+                      required
                     ></input>
                     Active
                   </label>
@@ -661,15 +675,16 @@ const CapPlanManagement = ({ data }) => {
                 <label className="label">First Week</label>
                 <div className="control">
                 <DatePicker
-                selected={startDate}
-                dateFormat={"YYYY'w'w"}
+                selected={ form.get("firstWeek") ?  conaDaMae(form) : '' }
+                locale="en-GB"
+                dateFormat={"YYYY'w'ww"}
                 onChange={(date) => {
+                  console.log(`on change ${date}`)
                   let year = moment(date).format("YYYY");
-                  let week = moment(date).isoWeek();
-                  let weekCode = year + "w" + week;
+                  let week = moment(date).isoWeek() < 10 ? `0${moment(date).isoWeek()}` : moment(date).isoWeek();
+                  let weekCode = year + "W" + week;
                   setStartDate(date)
                  form.set("firstWeek", weekCode)
-                  
                 }}
                 required
                 />
