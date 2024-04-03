@@ -104,7 +104,7 @@ const weekdays = [
   "Sunday",
 ]
 
-const conaDaMae = (form) => {
+const editGetDate = (form) => {
   const firstDate = form.get("firstWeek").toUpperCase().split("W");
   console.log(firstDate);
   return firstDate[1] < 10 && firstDate[1].length == 1 ? moment(`${firstDate[0]}W0${firstDate[1]}`).toDate() : moment(form.get("firstWeek").toUpperCase()).toDate();
@@ -276,7 +276,9 @@ const CapPlanManagement = ({ data }) => {
     return value.match(/([0-9]*\.{0,1}[0-9]{0,2})/s)[0]
   }
 
-  const handleOperationDaysChange = (value, key, form, dayIndex) => {
+    let allOperationDaysClosed = form.get("operationDays") ? form.get("operationDays").some(e => e['status'] === 'Open') : "";
+  
+    const handleOperationDaysChange = (value, key, form, dayIndex) => {
     let operationDays = form.get("operationDays")
     let changedDay = operationDays[dayIndex]
     switch (key) {
@@ -475,14 +477,14 @@ const CapPlanManagement = ({ data }) => {
               </div>
             </div>
             <div className="columns">
-              <div className="column is-3">
+              <div className="column is-2">
                 <label className="label">Days of Operation</label>
               </div>
               <div className="column is-1">
                 <label className="label">Status</label>
               </div>
 
-              <div className="column is-3">
+              <div className="column is-2">
                 <label className="label">Hours of Operation</label>
               </div>
               <div className="column is-12 ">
@@ -491,11 +493,11 @@ const CapPlanManagement = ({ data }) => {
                     <input
                       type="checkbox"
                       className="mx-2"
-                      checked={form.get("active") || false}
+                      checked={form.get("active") || true}
                       onChange={() => {
                         form.set("active", !form.get("active"))
                       }}
-                      required
+                      disabled
                     ></input>
                     Active
                   </label>
@@ -505,7 +507,7 @@ const CapPlanManagement = ({ data }) => {
             {weekdays.map((w, i) => (
               <div key={w + "-add"}>
                 <div className="columns">
-                  <div className="column is-3">
+                  <div className="column is-2">
                     <div className="control">
                       <input
                         className="input is-small"
@@ -592,6 +594,7 @@ const CapPlanManagement = ({ data }) => {
                   className="button is-small is-success is-rounded"
                   onClick={() => handleSubmit("ADD")}
                   disabled={
+                    !allOperationDaysClosed ||
                     !form.checkRequired() ||
                     !selection.get("lob") ||
                     !selection.get("language")
@@ -675,7 +678,7 @@ const CapPlanManagement = ({ data }) => {
                 <label className="label">First Week</label>
                 <div className="control">
                 <DatePicker
-                selected={ form.get("firstWeek") ?  conaDaMae(form) : '' }
+                selected={ form.get("firstWeek") ?  editGetDate(form) : '' }
                 locale="en-GB"
                 dateFormat={"YYYY'w'ww"}
                 onChange={(date) => {
@@ -746,14 +749,14 @@ const CapPlanManagement = ({ data }) => {
               </div>
               </div>
               <div className="columns">
-                <div className="column is-3">
+                <div className="column is-2">
                   <label className="label">Days of Operation</label>
                 </div>
                 <div className="column is-1">
                   <label className="label">Status</label>
                 </div>
 
-                <div className="column is-3">
+                <div className="column is-2">
                   <label className="label">Hours of Operation</label>
                 </div>
                 <div className="column is-12 ">
@@ -775,7 +778,7 @@ const CapPlanManagement = ({ data }) => {
               {weekdays.map((w, i) => (
                 <div key={w + "-edit"}>
                   <div className="columns">
-                    <div className="column is-3">
+                    <div className="column is-2">
                       <div className="control">
                         <input
                           className="input is-small"
@@ -806,7 +809,7 @@ const CapPlanManagement = ({ data }) => {
 
                     {form.get("operationDays") &&
                       form.get("operationDays")[i].status == "Open" ? (
-                      <div className="column is-3">
+                      <div className="column is-2">
                         <div className="control">
                           <FormDropdown
                             fieldName="operationDays"
