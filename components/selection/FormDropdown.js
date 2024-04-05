@@ -6,6 +6,7 @@ const FormDropdown = ({
   subFieldName,
   data,
   disabled,
+  className,
   form,
   callback,
   reset,
@@ -33,6 +34,7 @@ const FormDropdown = ({
   return (
     <div className="select is-small is-rounded">
       <select
+        className={className}
         style={{ minWidth: "40px" }}
         disabled={disabled}
         onChange={(e) => {
