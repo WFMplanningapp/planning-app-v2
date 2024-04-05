@@ -106,7 +106,6 @@ const weekdays = [
 
 const editGetDate = (form) => {
   const firstDate = form.get("firstWeek").toUpperCase().split("W");
-  console.log(firstDate);
   return firstDate[1] < 10 && firstDate[1].length == 1 ? moment(`${firstDate[0]}W0${firstDate[1]}`).toDate() : moment(form.get("firstWeek").toUpperCase()).toDate();
 }
 
@@ -180,7 +179,7 @@ const CapPlanManagement = ({ data }) => {
         })
           .then((response) => response.json())
           .then((data) => {
-            console.log(data.message)
+            alert(data.message);
             form.resetAll()
             form.set("operationDays", generateOperationDays())
             selection.resetAll()
@@ -207,7 +206,7 @@ const CapPlanManagement = ({ data }) => {
         )
           .then((response) => response.json())
           .then((data) => {
-            console.log(data.message)
+            alert(data.message);
             form.resetAll()
             form.set("operationDays", generateOperationDays())
             selection.resetAll()
@@ -230,7 +229,7 @@ const CapPlanManagement = ({ data }) => {
         )
           .then((response) => response.json())
           .then((data) => {
-            console.log(data.message)
+            alert(data.message);
             form.resetAll()
             form.set("operationDays", generateOperationDays())
           })
@@ -426,8 +425,8 @@ const CapPlanManagement = ({ data }) => {
                 dateFormat={"YYYY'w'ww"}
                 onChange={(date) => {
                   let year = moment(date).format("YYYY");
-                  let week =moment(date).isoWeek() < 10 ? `0${moment(date).isoWeek()}` : moment(date).isoWeek();
-                  let weekCode = year + "W" + week;
+                  let week =moment(date).isoWeek();
+                  let weekCode = year + "w" + week;
                   setStartDate(date)
                  form.set("firstWeek", weekCode)
                   
@@ -468,10 +467,11 @@ const CapPlanManagement = ({ data }) => {
                 <label className="label">Pricing Model</label>
                 <div className="control">
                   <FormDropdown
-                    fieldName="pricingModel"
+                    fieldName="pricing Model"
                     form={form}
                     data={data && data.pms.map((pms) => pms.name)}
                     disabled={false}
+                    style={ 'maxWidth: "74px"' }
                   />
                 </div>
               </div>
@@ -541,6 +541,7 @@ const CapPlanManagement = ({ data }) => {
                     <div className="column is-3">
                       <div className="control">
                         <FormDropdown
+                          className={"workHours"}
                           fieldName="operationDays"
                           subFieldName="start"
                           form={form}
@@ -684,8 +685,8 @@ const CapPlanManagement = ({ data }) => {
                 onChange={(date) => {
                   console.log(`on change ${date}`)
                   let year = moment(date).format("YYYY");
-                  let week = moment(date).isoWeek() < 10 ? `0${moment(date).isoWeek()}` : moment(date).isoWeek();
-                  let weekCode = year + "W" + week;
+                  let week = moment(date).isoWeek();
+                  let weekCode = year + "w" + week;
                   setStartDate(date)
                  form.set("firstWeek", weekCode)
                 }}
@@ -809,7 +810,7 @@ const CapPlanManagement = ({ data }) => {
 
                     {form.get("operationDays") &&
                       form.get("operationDays")[i].status == "Open" ? (
-                      <div className="column is-2">
+                      <div className="column is-3">
                         <div className="control">
                           <FormDropdown
                             fieldName="operationDays"
