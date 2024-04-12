@@ -469,7 +469,7 @@ const CapPlanManagement = ({ data }) => {
                   <FormDropdown
                     fieldName="pricing Model"
                     form={form}
-                    data={data && data.pms.map((pms) => pms.name)}
+                    data={data && data.pms && data.pms.map((pms) => pms.name)}
                     disabled={false}
                     style={ 'maxWidth: "74px"' }
                   />
@@ -874,7 +874,7 @@ const CapPlanManagement = ({ data }) => {
           </div>
         </div>
         //remove tab
-      ) : tab === 3 && auth.allowedAdmin ? (
+      ) : tab === 3 && auth.allowedManager ? (
         <div id="remove-tab">
           <div className="columns">
             <div className="column field">
