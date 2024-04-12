@@ -4,10 +4,13 @@ import useForm from "../hooks/useForm"
 import { useState, useEffect } from "react"
 import { FaUser, FaLock } from "react-icons/fa"
 
+
 const formFields = [
   { name: "username", default: "", required: true, type: "text" },
   { name: "password", default: "", required: true, type: "password" },
 ]
+
+
 
 export default function Login() {
   const form = useForm({
@@ -24,9 +27,11 @@ export default function Login() {
 
     form.resetAll()
   }
-  const [accessLevel, setAccessLevel] = useState("No Permissions set yet!")
 
+  const [accessLevel, setAccessLevel] = useState("No Permissions set yet!")
+  const [redirectState, setRedirectState] = useState(false);
   useEffect(() => {
+    
     if (auth.user && auth.user.permission === 4){
       setAccessLevel("Super User");
     }else if(auth.user && auth.user.permission === 3){
@@ -37,7 +42,7 @@ export default function Login() {
       setAccessLevel("Admin")
     }
   })
-
+  
   const handleLogout = () => {
     auth.logout()
     form.resetAll()
@@ -53,6 +58,7 @@ export default function Login() {
       <Head>
         <title>Planning App | Login</title>
       </Head>
+      
       <div className="mt-auto mb-auto">
         <div className="columns">
           <div className="column is-two-fifths has-text-centered mx-auto px-6 pb-5 pt-4 card">

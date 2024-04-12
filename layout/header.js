@@ -25,7 +25,7 @@ const Header = () => {
           </Link>
           {auth.allowedSU ? 
                     <Link href="/user">
-                    <a className="navbar-item px-2" href="/">
+                    <a className="navbar-item user px-2" href="/">
                       User Admin <FaUserCog />
                     </a>
                   </Link> : <></>}

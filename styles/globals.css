@@ -64,9 +64,115 @@ padding-top: calc(0.5em - 1px);
 border-color: #485fc7;
     box-shadow: 0 0 0 0.125em rgba(72, 95, 199, 0.25);
 }
+
 .react-datepicker__input-container input:hover {
 border-color: #b5b5b5;
 }
+
 .react-datepicker__input-container input:focus-visible {
   outline: none;
+}
+
+.navbar-item.user svg{
+  margin-left: 5px;
+}
+
+.footer {
+  background-position: 50% 50% !important;
+  background-image: url(/static/Insights-banner-midnight.svg) !important;
+      background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.panel-heading {
+  background-position: 34% 38% !important;
+  background-image: url(/static/Insights-banner-midnight.svg) !important;
+    background-repeat: no-repeat;
+    background-size: 100%;
+    color: white !important;
+}
+
+.has-text-primary {
+  color: rgb(139 240 187) !important;
+}
+
+a.panel-block:hover{
+  background-color: #EBEBF1 !important;
+}
+
+.tabs li.is-active a {
+  border-bottom-color: rgb(74 74 249) !important;
+  color: rgb(74 74 249) !important;
+}
+
+.navbar-link:not(.is-arrowless)::after{
+  border-color: rgb(74 74 249) !important;
+  transition-property: transform !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition-duration: 150ms !important;
+}
+
+.navbar-link:not(.is-arrowless):hover:after{
+  transform: rotate(135deg) !important;
+  transition-property: transform !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition-duration: 150ms !important;
+}
+
+.navbar-link:not(.is-arrowless):focus-within:after, .navbar-link:not(.is-arrowless):focus:after{
+  transform: rotate(135deg) !important;
+}
+
+.navbar-link:not(.is-arrowless):focus-within, .navbar-link:not(.is-arrowless):focus {
+  color: rgb(74 74 249) !important;
+  background-color: #ebebf123 !important;
+}
+
+a.navbar-item:hover, .navbar-link:not(.is-arrowless):hover{
+  color: rgb(74 74 249) !important;
+  background-color: #ebebf123 !important;
+  backdrop-filter:blur(3px);
+    transition: backdrop-filter 0.2s ease-in-out;
+}
+
+.button.is-success{
+  background-color: rgb(139 240 187) !important;
+  color: rgb(9 9 45) !important;
+}
+
+.button.is-rounded:hover:enabled{
+  filter: brightness(0.9);
+    transition: filter 0.2s ease-in-out;
+}
+
+.columns:last-child {
+  margin-bottom: unset !important;
+}
+
+.columns {
+  margin-top: 1rem !important;
+}
+header {
+  background-position: 50% 50% !important;
+  background-image: url(/static/Insights-banner-clear.svg) !important;
+      background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.navbar.container{
+  background-color: transparent !important;
+}
+
+.button.is-primary {
+  background-color: rgb(139 240 187) !important;
+  color: rgb(9 9 45) !important;
+}
+
+div > h1.has-text-centered{
+  margin-top: 1rem !important;
+  font-size: 2rem !important;
+  font-weight: 600 !important;
+  color: rgb(77, 77, 211) !important;
 }
