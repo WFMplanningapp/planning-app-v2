@@ -126,12 +126,12 @@ a.panel-block:hover{
 
 .navbar-link:not(.is-arrowless):focus-within, .navbar-link:not(.is-arrowless):focus {
   color: rgb(74 74 249) !important;
-  background-color: #ebebf123 !important;
+  background-color: #ebebf153 !important;
 }
 
 a.navbar-item:hover, .navbar-link:not(.is-arrowless):hover{
   color: rgb(74 74 249) !important;
-  background-color: #ebebf123 !important;
+  background-color: #ebebf153 !important;
   backdrop-filter:blur(3px);
     transition: backdrop-filter 0.2s ease-in-out;
 }
@@ -175,4 +175,21 @@ div > h1.has-text-centered{
   font-size: 2rem !important;
   font-weight: 600 !important;
   color: rgb(77, 77, 211) !important;
+}
+.navbar-item.has-dropdown:hover .navbar-link {
+  color: rgb(74 74 249) !important;
+  background-color: #ebebf153 !important;
+  backdrop-filter:blur(3px);
+    transition: backdrop-filter 0.2s ease-in-out;
+}
+.navbar-item.has-dropdown:hover .navbar-link:after {
+  transform: rotate(135deg) !important;
+
+}
+@media screen and (min-width: 1024px) {
+
+}
+
+option:hover{
+  background-color: #ebebf1 ;
 }

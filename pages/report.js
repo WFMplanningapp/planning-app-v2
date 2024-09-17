@@ -228,7 +228,8 @@ const Report = () => {
                 selection.setMany({
                   ...selection.getForm(),
                   fromWeek: weeks.getWeekRelative(parseFloat("-8")),
-                  toWeek: weeks.getWeekRelative(parseFloat("16")),
+                  toWeek: weeks.getWeekRelative( data.weeks.length - data.weeks.indexOf(weeks.getCurrentWeek()) < 17 ? 
+                    (data.weeks.length - data.weeks.indexOf(weeks.getCurrentWeek()))-1 : parseFloat("16") ),
                 })
               }
             >
