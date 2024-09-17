@@ -278,15 +278,16 @@ export default function Capacity() {
                   }}
                 />
                 <button
-                  className="button is-small is-rounded is-info"
-                  onClick={() =>
-                    selection.setMany({
-                      ...selection.getForm(),
-                      fromWeek: weeks.getWeekRelative(parseFloat("-8")),
-                      toWeek: weeks.getWeekRelative(parseFloat("16")),
-                    })
-                  }
-                >
+              className="button is-small is-rounded is-info"
+              onClick={() =>
+                selection.setMany({
+                  ...selection.getForm(),
+                  fromWeek: weeks.getWeekRelative(parseFloat("-8")),
+                  toWeek: weeks.getWeekRelative( data.weeks.length - data.weeks.indexOf(weeks.getCurrentWeek()) < 17 ? 
+                    (data.weeks.length - data.weeks.indexOf(weeks.getCurrentWeek()))-1 : parseFloat("16") ),
+                })
+              }
+            >
                   Auto Weeks
                 </button>
               </div>
