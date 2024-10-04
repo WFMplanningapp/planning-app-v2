@@ -215,25 +215,32 @@ const CapPlanManagement = ({ data }) => {
         break
 
       case "REMOVE":
-        await fetch(
-          `/api/data/management/capPlan?id=${
-            selection.get("capPlan") && selection.get("capPlan")._id
-          }`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: auth.authorization(),
-            },
-          }
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            alert(data.message);
-            form.resetAll()
-            form.set("operationDays", generateOperationDays())
-          })
-          .catch((err) => console.log(err))
+        if (data && selection.get("capPlan") && data.capEntries.find(
+          (entry) => entry.capPlan === selection.get("capPlan")._id
+        )){
+          alert("There are still entries for this capPlan, please clean up entries before removing the capPlan")
+        } else {
+          await fetch(
+            `/api/data/management/capPlan?id=${
+              selection.get("capPlan") && selection.get("capPlan")._id
+            }`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: auth.authorization(),
+              },
+            }
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              alert(data.message);
+              form.resetAll()
+              form.set("operationDays", generateOperationDays())
+            })
+            .catch((err) => console.log(err))
+
+        }
         break
 
       case "CLEANUP":
