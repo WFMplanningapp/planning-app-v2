@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "../../contexts/authContext"
 import useForm from "../../hooks/useForm"
 import StructureDropdown from "../selection/StructureDropdown"
@@ -6,9 +6,9 @@ import StructureDropdown from "../selection/StructureDropdown"
 import { FaLock } from "react-icons/fa"
 
 const selectionFields = [
-  { name: "project", default: null, required: true, type: "object", level: 1 },
+    { name: "project", default: null, required: true, type: "object", level: 1 },
     { name: "lob", default: null, required: true, type: "object", level: 2 },
-    { name: "country", default: null, required: true, type: "object", level: 3 }
+    { name: "country", default: "", required: true, type: "object", level: 3 }
 ]
 
 const formFields = [
@@ -60,6 +60,20 @@ const LobManagement = ({ data }) => {
     fields: formFields,
   })
 
+  useEffect(() =>{
+    if (selection.get("lob")) {
+      const lob = selection.get("lob")
+      selection.set(
+        "country",
+        data &&
+          selection.get("lob") &&
+          data.countries.find(
+            (country) => country.name === selection.get("lob").country
+          )
+      )
+  }
+},[selection.get("lob")])
+
   //HANDLERS
   const handleSubmit = async (action) => {
     let payload = {
@@ -107,27 +121,36 @@ const LobManagement = ({ data }) => {
         break
 
       case "REMOVE":
-        await fetch(
-          `/api/data/management/lob?id=${
-            selection.get("lob") && selection.get("lob")._id
-          }`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: auth.authorization(),
-            },
-          }
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            console.log(data.message)
-            form.resetAll()
-          })
-          .catch((err) => console.log(err))
+        if (data && selection.get("lob") && data.capPlans.find(
+          (plan) => plan.lob === selection.get("lob")._id
+        )){
+          alert("The Lob you're trying to remove still has CapPlans associated with it. Delete/edit them first")
+        }else{
+          await fetch(
+            `/api/data/management/lob?id=${
+              selection.get("lob") && selection.get("lob")._id
+            }`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: auth.authorization(),
+              },
+            }
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              alert(data.message)
+              form.resetAll()
+            })
+            .catch((err) => console.log(err))
+          
+
+        }
         break
     }
     selection.resetOne("lob")
+    selection.resetOne("country")
     data.refresh()
   }
   return (
@@ -274,6 +297,7 @@ const LobManagement = ({ data }) => {
                 reset={["lob"]}
                 callback={(f) => {
                   f.resetAll()
+                  selection.resetOne("country")
                 }}
               />
               <StructureDropdown

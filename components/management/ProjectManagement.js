@@ -89,24 +89,31 @@ const ProjectManagement = ({ data }) => {
         break
 
       case "REMOVE":
-        await fetch(
-          `/api/data/management/project?id=${
-            selection.get("project") && selection.get("project")._id
-          }`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: auth.authorization(),
-            },
-          }
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            console.log(data.message)
-            form.resetAll()
-          })
-          .catch((err) => console.log(err))
+        if (data && selection.get("project") && data.lobs.find(
+          (lob) => lob.project === selection.get("project")._id
+        )){
+          alert("There are still capPlan/s associated with this project. Please delete them before proceeding")
+        } else {
+          await fetch(
+            `/api/data/management/project?id=${
+              selection.get("project") && selection.get("project")._id
+            }`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: auth.authorization(),
+              },
+            }
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              console.log(data.message)
+              form.resetAll()
+            })
+            .catch((err) => console.log(err))
+        }
+        
         break
     }
     selection.resetOne("project")

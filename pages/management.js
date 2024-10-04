@@ -13,7 +13,7 @@ import moment from "moment"
 export default function Management() {
 	const [screen, setScreen] = useState("projects")
 
-	const data = useData(["countries", "projects", "lobs", "capPlans", "languages", "fields", "dow", "hours","pms"])
+	const data = useData(["countries", "projects", "lobs", "capPlans", "languages", "fields", "dow", "hours","pms", "capEntries"])
 
 	const auth = useAuth()
 
