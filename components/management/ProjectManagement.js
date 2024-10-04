@@ -92,7 +92,7 @@ const ProjectManagement = ({ data }) => {
         if (data && selection.get("project") && data.lobs.find(
           (lob) => lob.project === selection.get("project")._id
         )){
-          alert("There are still capPlan/s associated with this project. Please delete them before proceeding")
+          alert("There are still one or more Lob/s associated with this Project. Please delete them before proceeding")
         } else {
           await fetch(
             `/api/data/management/project?id=${
