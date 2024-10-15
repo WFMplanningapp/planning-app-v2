@@ -193,3 +193,45 @@ div > h1.has-text-centered{
 option:hover{
   background-color: #ebebf1 ;
 }
+.loaderGigi {
+  width: 48px;
+  height: 48px;
+  display: inline-block;
+  position: relative;
+}
+.loaderGigi::after,
+.loaderGigi::before {
+  content: '';  
+  box-sizing: border-box;
+  width: 48px;
+  height: 48px;
+  border: 4px solid #ebebf1;
+  position: absolute;
+  left: 0;
+  top: 0;
+  animation: animloader 2s ease-in-out infinite;
+}
+.loaderGigi::after {
+  border-color: #4d4dd3;
+  animation-delay: 1s;
+}
+
+@keyframes animloader {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+.loaderContainer{
+    width: 100%;
+    height: 300px;
+    padding: 10px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

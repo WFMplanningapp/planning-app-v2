@@ -355,6 +355,7 @@ const CapPlanManagement = ({ data }) => {
       {/*TABS*/}
       {tab === 1 ? (
         /** ADD */
+        data && data.projects ? 
         <div id="add-tab">
           <div id="add-selection" className="columns">
             <div className="column field">
@@ -614,8 +615,10 @@ const CapPlanManagement = ({ data }) => {
             </div>
           </div>
         </div>
+        :  <div class="loaderContainer"><span class="loaderGigi"></span></div>
       ) : tab === 2 ? (
         /** EDIT */
+        data && data.projects ? 
         <div id="edit-tab">
           <div id="edit-selection" className="columns">
             <div className="column field">
@@ -720,11 +723,11 @@ const CapPlanManagement = ({ data }) => {
                   structureName="language"
                   selection={selection}
                   form={selection}
-                  data={
+                  data={ data && data.languages ? 
                     data &&
                     data.languages.sort((a, b) =>
                       a.name > b.name ? 1 : a.name < b.name ? -1 : 0
-                    )
+                    ) : ""
                   }
                   disabled={!selection.get("language")}
                 />
@@ -880,8 +883,10 @@ const CapPlanManagement = ({ data }) => {
             </div>
           </div>
         </div>
+        : <div class="loaderContainer"><span class="loaderGigi"></span></div>
         //remove tab
       ) : tab === 3 && auth.allowedManager ? (
+        data && data.projects ?
         <div id="remove-tab">
           <div className="columns">
             <div className="column field">
@@ -954,6 +959,7 @@ const CapPlanManagement = ({ data }) => {
             </button>
           </div>
         </div>
+        :  <div class="loaderContainer"><span class="loaderGigi"></span></div>
       ) : (
         <div className="message is-danger is-size-5 px-5 py-5">
           <span className="">
