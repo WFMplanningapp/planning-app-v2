@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useAuth } from "../../contexts/authContext"
 import useForm from "../../hooks/useForm"
 import StructureDropdown from "../selection/StructureDropdown"
-
+import FoundeverLogo from "../../static/foundeverlogo"
 import { FaLock } from "react-icons/fa"
 
 const selectionFields = [
@@ -201,6 +201,7 @@ const ProjectManagement = ({ data }) => {
           </div>
         </div>
       ) : tab === 2 ? (
+        data && data.projects ? 
         <div id="edit-tab">
           <div className="columns">
             <div className="column field">
@@ -259,7 +260,14 @@ const ProjectManagement = ({ data }) => {
             </button>
           </div>
         </div>
+        :
+        <div className="loaderContainer">
+              <div className="loaderConstrain">
+                <FoundeverLogo />
+              </div>
+            </div>
       ) : tab === 3 && auth.allowedAdmin ? (
+        data && data.projects ?
         <div id="remove-tab">
           <div className="columns">
             <div className="column field">
@@ -289,6 +297,12 @@ const ProjectManagement = ({ data }) => {
             </button>
           </div>
         </div>
+        : 
+        <div className="loaderContainer">
+              <div className="loaderConstrain">
+                <FoundeverLogo />
+              </div>
+            </div>
       ) : (
         <div className="message is-danger is-size-5 px-5 py-5">
           <span className="">

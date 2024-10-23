@@ -10,6 +10,7 @@ import "react-datepicker/dist/react-datepicker.css"
 import { FaLock } from "react-icons/fa"
 import moment from "moment"
 import { first } from "lodash"
+import FoundeverLogo from "../../static/foundeverlogo"
 
 registerLocale("en-GB", enGB);
 setDefaultLocale("en-GB");
@@ -615,7 +616,11 @@ const CapPlanManagement = ({ data }) => {
             </div>
           </div>
         </div>
-        :  <div class="loaderContainer"><span class="loaderGigi"></span></div>
+        :  <div className="loaderContainer">
+              <div className="loaderConstrain">
+                <FoundeverLogo />
+              </div>
+            </div>
       ) : tab === 2 ? (
         /** EDIT */
         data && data.projects ? 
@@ -883,7 +888,11 @@ const CapPlanManagement = ({ data }) => {
             </div>
           </div>
         </div>
-        : <div class="loaderContainer"><span class="loaderGigi"></span></div>
+        : <div className="loaderContainer">
+        <div className="loaderConstrain">
+          <FoundeverLogo />
+        </div>
+      </div>
         //remove tab
       ) : tab === 3 && auth.allowedManager ? (
         data && data.projects ?
