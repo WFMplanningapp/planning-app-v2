@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "../../contexts/authContext"
-
+import FoundeverLogo from "../../static/foundeverlogo"
 import { FaLock } from "react-icons/fa"
 import CSVUploader from "../files/CSVUploader"
 
@@ -182,6 +182,7 @@ const EntriesManagement = ({ data }) => {
   return (
     <>
       {auth.allowedAdmin ? (
+        data && data.projects ?
         <div>
           {/*////////////////////////////////////////////////////// BULK UPLOAD ////////////////////////////////////////////////*/}
           <div className="columns is-multiline">
@@ -351,6 +352,12 @@ const EntriesManagement = ({ data }) => {
             </div>
           </div>
         </div>
+        :
+        <div className="loaderContainer">
+              <div className="loaderConstrain">
+                <FoundeverLogo />
+              </div>
+            </div>
       ) : (
         <div className="message is-danger is-size-5 px-5 py-5">
           <span className="">

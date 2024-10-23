@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useAuth } from "../../contexts/authContext"
 import useForm from "../../hooks/useForm"
 import StructureDropdown from "../selection/StructureDropdown"
-
+import FoundeverLogo from "../../static/foundeverlogo"
 import { FaLock } from "react-icons/fa"
 import CSVUploader from "../files/CSVUploader"
 import Heatmap from "../staffing/Heatmap"
@@ -115,6 +115,7 @@ const StaffingManagement = ({ data }) => {
 	return (
 		<>
 			{auth.allowedManager ? (
+				data && data.projects ?
 				<div>
 					<div id="selection" className="columns">
 						<div className="column is-12 field">
@@ -500,6 +501,12 @@ const StaffingManagement = ({ data }) => {
 					<br></br>
 					<br></br>
 				</div>
+				:
+				<div className="loaderContainer">
+              		<div className="loaderConstrain">
+                		<FoundeverLogo />
+              		</div>
+            	</div>
 			) : (
 				<div className="message is-danger is-size-5 px-5 py-5">
 					<span className="">

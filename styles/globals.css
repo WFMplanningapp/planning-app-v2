@@ -193,45 +193,159 @@ div > h1.has-text-centered{
 option:hover{
   background-color: #ebebf1 ;
 }
-.loaderGigi {
-  width: 48px;
-  height: 48px;
-  display: inline-block;
-  position: relative;
-}
-.loaderGigi::after,
-.loaderGigi::before {
-  content: '';  
-  box-sizing: border-box;
-  width: 48px;
-  height: 48px;
-  border: 4px solid #ebebf1;
-  position: absolute;
-  left: 0;
-  top: 0;
-  animation: animloader 2s ease-in-out infinite;
-}
-.loaderGigi::after {
-  border-color: #4d4dd3;
-  animation-delay: 1s;
+.innerPath {
+  stroke-dasharray: 175;
+  stroke-dashoffset: -175;
+  animation: dash 2.5s linear infinite;
+  stroke-linecap: round;
 }
 
-@keyframes animloader {
-  0% {
-    transform: scale(0);
-    opacity: 1;
-  }
+.line1 {
+  stroke-dasharray: 102;
+  stroke-dashoffset: -102;
+  animation: dashLine1 6s linear infinite;
+}
+
+.line2 {
+  stroke-dasharray: 174;
+  stroke-dashoffset: -174;
+  animation: dashLine2 6s linear 0.5s infinite;
+}
+
+.line3 {
+  stroke-dasharray: 76;
+  stroke-dashoffset: 76;
+  animation: dashLine3 6s linear 1s infinite;
+}
+
+.line4 {
+  stroke-dasharray: 76;
+  stroke-dashoffset: 76;
+  animation: dashLine4 6s linear 2s infinite;
+}
+
+.line5 {
+  stroke-dasharray: 44;
+  stroke-dashoffset: -44;
+  animation: dashLine5 6s linear 1.5s infinite;
+}
+
+
+@keyframes dash {
   100% {
-    transform: scale(1);
-    opacity: 0;
+      stroke-dashoffset: 175;
   }
 }
+
+@keyframes dashLine1 {
+  8.33% {
+      stroke-dashoffset: 0;
+  }
+
+  49.99% {
+      stroke-dashoffset: 0;
+  }
+
+  58.33% {
+      stroke-dashoffset: 102;
+  }
+
+  100% {
+      stroke-dashoffset: 102;
+  }
+}
+
+@keyframes dashLine2 {
+  8.33% {
+      stroke-dashoffset: 0;
+  }
+
+  49.99% {
+      stroke-dashoffset: 0;
+  }
+
+  58.33% {
+      stroke-dashoffset: 174;
+  }
+
+  100% {
+      stroke-dashoffset: 174;
+  }
+}
+
+@keyframes dashLine3 {
+  8.33% {
+      stroke-dashoffset: 0;
+  }
+
+  49.99% {
+      stroke-dashoffset: 0;
+  }
+
+  58.33% {
+      stroke-dashoffset: -76;
+  }
+
+  100% {
+      stroke-dashoffset: -76;
+  }
+}
+
+@keyframes dashLine4 {
+  8.33% {
+      stroke-dashoffset: 0;
+  }
+
+  49.99% {
+      stroke-dashoffset: 0;
+  }
+
+  58.33% {
+      stroke-dashoffset: -76;
+  }
+
+  100% {
+      stroke-dashoffset: -76;
+  }
+}
+
+@keyframes dashLine5 {
+  8.33% {
+      stroke-dashoffset: 0;
+  }
+
+  49.99% {
+      stroke-dashoffset: 0;
+  }
+
+  58.33% {
+      stroke-dashoffset: 44;
+  }
+
+  100% {
+      stroke-dashoffset: 44;
+  }
+}
+
+@keyframes gigi-mud-progress-linear-striped-loading {
+  0% {
+      background-position: 0 0;
+  }
+
+  100% {
+      background-position: 300px 0;
+  }
+}
+
 .loaderContainer{
     width: 100%;
-    height: 300px;
+    height: 200px;
     padding: 10px;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+.loaderConstrain{
+  width: 60px;
 }
