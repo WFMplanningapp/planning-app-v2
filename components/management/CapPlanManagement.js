@@ -158,9 +158,9 @@ const CapPlanManagement = ({ data }) => {
       selection.set(
         "country",
         data &&
-          selection.get("lob") &&
+          selection.get("capPlan") &&
           data.countries.find(
-            (country) => country.name === selection.get("lob").country
+            (country) => country.name === selection.get("capPlan").country
           )
       )
       form.setMany({
