@@ -20,6 +20,7 @@ const selectionFields = [
   { name: "lob", default: null, required: true, type: "object", level: 2 },
   { name: "capPlan", default: null, required: true, type: "object", level: 3 },
   { name: "language", default: "", required: true, type: "object", level: 3 },
+  { name: "country", default: "", required: true, type: "object", level: 3 }
 ]
 
 const formFields = [
@@ -84,6 +85,14 @@ const formFields = [
     type: "text",
     label: "Pricing Model",
   },
+  {
+    name: "country",
+    default: "",
+    required: true,
+    type: "text",
+    label: "Country",
+    placeholder: "Country",
+},
 ]
 
 const status = [
@@ -144,6 +153,14 @@ const CapPlanManagement = ({ data }) => {
           selection.get("capPlan") &&
           data.languages.find(
             (lang) => lang._id === selection.get("capPlan").language
+          )
+      )
+      selection.set(
+        "country",
+        data &&
+          selection.get("lob") &&
+          data.countries.find(
+            (country) => country.name === selection.get("lob").country
           )
       )
       form.setMany({
@@ -426,6 +443,23 @@ const CapPlanManagement = ({ data }) => {
                 </div>
               </div>
               <div className="column is-3">
+                          <label className="label">Country</label>
+                          <div className="control is-small">
+                              <StructureDropdown
+                                  structureName="country"
+                                  selection={selection}
+                                  form={form}
+                                  data={data && data.countries}
+                                  disabled={false}
+                                  callback={(f, s) => {
+                                      f.set(
+                                          "country", s.name
+                                      )
+                                  }}
+                              />
+                          </div>
+                      </div>
+              <div className="column is-3">
                 <label className="label">First Week</label>
                 <div className="control">
                 <DatePicker
@@ -689,7 +723,23 @@ const CapPlanManagement = ({ data }) => {
                   />
                 </div>
               </div>
-
+              <div className="column is-3">
+                              <label className="label">Country</label>
+                              <div className="control is-small">
+                                  <StructureDropdown
+                                      structureName="country"
+                                      selection={selection}
+                                      form={form}
+                                      data={data && data.countries}
+                                      disabled={false}
+                                      callback={(f, s) => {
+                                          f.set(
+                                              "country", s.name
+                                          )
+                                      }}
+                                  />
+                              </div>
+                          </div>
               <div className="column is-3">
                 <label className="label">First Week</label>
                 <div className="control">

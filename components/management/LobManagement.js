@@ -8,7 +8,6 @@ import { FaLock } from "react-icons/fa"
 const selectionFields = [
     { name: "project", default: null, required: true, type: "object", level: 1 },
     { name: "lob", default: null, required: true, type: "object", level: 2 },
-    { name: "country", default: "", required: true, type: "object", level: 3 }
 ]
 
 const formFields = [
@@ -36,14 +35,6 @@ const formFields = [
     label: "OCP Weeks",
     placeholder: "OCP Weeks",
     },
-    {
-        name: "country",
-        default: "",
-        required: true,
-        type: "text",
-        label: "Country",
-        placeholder: "Country",
-    },
 ]
 
 const LobManagement = ({ data }) => {
@@ -59,20 +50,6 @@ const LobManagement = ({ data }) => {
   const form = useForm({
     fields: formFields,
   })
-
-  useEffect(() =>{
-    if (selection.get("lob")) {
-      const lob = selection.get("lob")
-      selection.set(
-        "country",
-        data &&
-          selection.get("lob") &&
-          data.countries.find(
-            (country) => country.name === selection.get("lob").country
-          )
-      )
-  }
-},[selection.get("lob")])
 
   //HANDLERS
   const handleSubmit = async (action) => {
@@ -150,7 +127,6 @@ const LobManagement = ({ data }) => {
         break
     }
     selection.resetOne("lob")
-    selection.resetOne("country")
     data.refresh()
   }
   return (
@@ -163,7 +139,7 @@ const LobManagement = ({ data }) => {
                 setTab(1)
                 form.resetAll()
                 selection.resetAll()
-                selectionFields[2].required = true
+                selectionFields[1].required = true
               }}
             >
               Add
@@ -255,23 +231,6 @@ const LobManagement = ({ data }) => {
                 />
               </div>
                       </div>
-                      <div className="column is-3">
-                          <label className="label">Country</label>
-                          <div className="control is-small">
-                              <StructureDropdown
-                                  structureName="country"
-                                  selection={selection}
-                                  form={form}
-                                  data={data && data.countries}
-                                  disabled={false}
-                                  callback={(f, s) => {
-                                      f.set(
-                                          "country", s.name
-                                      )
-                                  }}
-                              />
-                          </div>
-                      </div>
           </div>
           <div id="add-button">
             <button
@@ -298,7 +257,6 @@ const LobManagement = ({ data }) => {
                 reset={["lob"]}
                 callback={(f) => {
                   f.resetAll()
-                  selection.resetOne("country")
                 }}
               />
               <StructureDropdown
@@ -362,23 +320,6 @@ const LobManagement = ({ data }) => {
                   required
                 />
               </div>
-                          </div>
-                          <div className="column is-3">
-                              <label className="label">Country</label>
-                              <div className="control is-small">
-                                  <StructureDropdown
-                                      structureName="country"
-                                      selection={selection}
-                                      form={form}
-                                      data={data && data.countries}
-                                      disabled={false}
-                                      callback={(f, s) => {
-                                          f.set(
-                                              "country", s.name
-                                          )
-                                      }}
-                                  />
-                              </div>
                           </div>
           </div>
           <div id="edit-button">
