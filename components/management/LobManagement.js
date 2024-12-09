@@ -36,14 +36,14 @@ const formFields = [
     label: "OCP Weeks",
     placeholder: "OCP Weeks",
     },
-    {
-        name: "country",
-        default: "",
-        required: true,
-        type: "text",
-        label: "Country",
-        placeholder: "Country",
-    },
+    // {
+    //     name: "country",
+    //     default: "",
+    //     required: true,
+    //     type: "text",
+    //     label: "Country",
+    //     placeholder: "Country",
+    // },
 ]
 
 const LobManagement = ({ data }) => {
@@ -60,19 +60,19 @@ const LobManagement = ({ data }) => {
     fields: formFields,
   })
 
-  useEffect(() =>{
-    if (selection.get("lob")) {
-      const lob = selection.get("lob")
-      selection.set(
-        "country",
-        data &&
-          selection.get("lob") &&
-          data.countries.find(
-            (country) => country.name === selection.get("lob").country
-          )
-      )
-  }
-},[selection.get("lob")])
+//   useEffect(() =>{
+//     if (selection.get("lob")) {
+//       const lob = selection.get("lob")
+//       selection.set(
+//         "country",
+//         data &&
+//           selection.get("lob") &&
+//           data.countries.find(
+//             (country) => country.name === selection.get("lob").country
+//           )
+//       )
+//   }
+// },[selection.get("lob")])
 
   //HANDLERS
   const handleSubmit = async (action) => {
@@ -255,7 +255,7 @@ const LobManagement = ({ data }) => {
                 />
               </div>
                       </div>
-                      <div className="column is-3">
+                      {/* <div className="column is-3">
                           <label className="label">Country</label>
                           <div className="control is-small">
                               <StructureDropdown
@@ -271,7 +271,7 @@ const LobManagement = ({ data }) => {
                                   }}
                               />
                           </div>
-                      </div>
+                      </div> */}
           </div>
           <div id="add-button">
             <button
@@ -363,7 +363,7 @@ const LobManagement = ({ data }) => {
                 />
               </div>
                           </div>
-                          <div className="column is-3">
+                          {/* <div className="column is-3">
                               <label className="label">Country</label>
                               <div className="control is-small">
                                   <StructureDropdown
@@ -379,7 +379,7 @@ const LobManagement = ({ data }) => {
                                       }}
                                   />
                               </div>
-                          </div>
+                          </div> */}
           </div>
           <div id="edit-button">
             <button
