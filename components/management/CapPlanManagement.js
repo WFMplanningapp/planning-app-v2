@@ -85,14 +85,6 @@ const formFields = [
     type: "text",
     label: "Pricing Model",
   },
-  {
-    name: "country",
-    default: "",
-    required: true,
-    type: "text",
-    label: "Country",
-    placeholder: "Country",
-},
 ]
 
 const status = [
@@ -154,7 +146,7 @@ const CapPlanManagement = ({ data }) => {
           data.languages.find(
             (lang) => lang._id === selection.get("capPlan").language
           )
-      )
+      );
       selection.set(
         "country",
         data &&
@@ -163,6 +155,7 @@ const CapPlanManagement = ({ data }) => {
             (country) => country.name === selection.get("capPlan").country
           )
       )
+      
       form.setMany({
         name: capPlan.name,
         firstWeek: capPlan.firstWeek,
@@ -193,6 +186,7 @@ const CapPlanManagement = ({ data }) => {
             payload,
             lob: selection.get("lob"),
             language: selection.get("language"),
+            country: selection.get("country"),
           }),
         })
           .then((response) => response.json())
@@ -219,6 +213,7 @@ const CapPlanManagement = ({ data }) => {
             body: JSON.stringify({
               payload,
               language: selection.get("language"),
+              country: selection.get("country"),
             }),
           }
         )
@@ -429,7 +424,7 @@ const CapPlanManagement = ({ data }) => {
           </div>
           <div id="add-form">
             <div className="columns is-multiline">
-              <div className="column is-3">
+              <div className="column is-4">
                 <label className="label">Plan Name</label>
                 <div className="control is-small">
                   <input
@@ -442,24 +437,7 @@ const CapPlanManagement = ({ data }) => {
                   />
                 </div>
               </div>
-              <div className="column is-3">
-                          <label className="label">Country</label>
-                          <div className="control is-small">
-                              <StructureDropdown
-                                  structureName="country"
-                                  selection={selection}
-                                  form={form}
-                                  data={data && data.countries}
-                                  disabled={false}
-                                  callback={(f, s) => {
-                                      f.set(
-                                          "country", s.name
-                                      )
-                                  }}
-                              />
-                          </div>
-                      </div>
-              <div className="column is-3">
+              <div className="column is-2">
                 <label className="label">First Week</label>
                 <div className="control">
                 <DatePicker
@@ -478,7 +456,7 @@ const CapPlanManagement = ({ data }) => {
                 />
                 </div>
               </div>
-              <div className="column is-3">
+              <div className="column is-2">
                 <label className="label">Starting HC</label>
                 <div className="control">
                   <input
@@ -488,6 +466,23 @@ const CapPlanManagement = ({ data }) => {
                     type="number"
                     placeholder="Starting HC"
                     required
+                  />
+                </div>
+              </div>
+              <div className="column is-2">
+                <label className="label">Country</label>
+                <div className="control is-small">
+                  <StructureDropdown
+                    structureName="country"
+                    selection={selection}
+                    form={form}
+                    data={data && data.countries}
+                    disabled={false}
+                    callback={(f, s) => {
+                      f.set(
+                       "country", s.name
+                      )
+                    }}
                   />
                 </div>
               </div>
@@ -506,7 +501,7 @@ const CapPlanManagement = ({ data }) => {
                   />
                 </div>
               </div>
-              <div className="column is-3">
+              <div className="column is-2">
                 <label className="label">Pricing Model</label>
                 <div className="control">
                   <FormDropdown
@@ -708,6 +703,7 @@ const CapPlanManagement = ({ data }) => {
               />
             </div>
           </div>
+
           <div id="edit-form">
             <div className="columns is-multiline">
               <div className="column is-3">
@@ -723,24 +719,8 @@ const CapPlanManagement = ({ data }) => {
                   />
                 </div>
               </div>
-              <div className="column is-3">
-                              <label className="label">Country</label>
-                              <div className="control is-small">
-                                  <StructureDropdown
-                                      structureName="country"
-                                      selection={selection}
-                                      form={form}
-                                      data={data && data.countries}
-                                      disabled={false}
-                                      callback={(f, s) => {
-                                          f.set(
-                                              "country", s.name
-                                          )
-                                      }}
-                                  />
-                              </div>
-                          </div>
-              <div className="column is-3">
+
+              <div className="column is-2">
                 <label className="label">First Week</label>
                 <div className="control">
                 <DatePicker
@@ -759,7 +739,8 @@ const CapPlanManagement = ({ data }) => {
                 />
                 </div>
               </div>
-              <div className="column is-3">
+
+              <div className="column is-2">
                 <label className="label">Starting HC</label>
                 <div className="control">
                   <input
@@ -772,7 +753,7 @@ const CapPlanManagement = ({ data }) => {
                   />
                 </div>
               </div>
-              <div className="column is-3">
+              <div className="column is-2">
                 <label className="label">Language</label>
                 <StructureDropdown
                   structureName="language"
@@ -786,11 +767,28 @@ const CapPlanManagement = ({ data }) => {
                   }
                   disabled={!selection.get("language")}
                 />
+                </div>
               </div>
-            </div>
-
+              <div className="column is-2">
+                <label className="label">Country</label>
+                <div className="control is-small">
+                  <StructureDropdown
+                    structureName="country"
+                    selection={selection}
+                    form={form}
+                    data={data && data.countries}
+                    disabled={false}
+                    callback={(f, s) => {
+                      f.set(
+                       "country", s.name
+                      )
+                    }}
+                  />
+                </div>
+              </div>
+            
             <div className="columns is-multiline">
-              <div className="column is-3">
+              <div className="column is-2">
                 <label className="label">FTE Hours Weekly</label>
                 <div className="control is-small">
                   <input
@@ -929,7 +927,8 @@ const CapPlanManagement = ({ data }) => {
                   disabled={
                     !form.checkRequired() ||
                     !selection.get("capPlan") ||
-                    !selection.get("language")
+                    !selection.get("language") ||
+                    !selection.get("country")
                     }
                 >
                 Edit Cap Plan

@@ -180,28 +180,51 @@ export default function Capacity() {
                   callback={(f) => {
                     f.resetAll()
                   }}
-                              />
-                              <StructureDropdown
-                                  structureName="country"
-                                  selection={selection}
-                                  data={data &&
-                                      data.countries &&
-                                      selection.get("project") &&
-                                      data.countries.filter((country) => {
-                                          const selectedProject = selection.get("project")._id;
-                                          const projectLobs = data.lobs.filter((lob) => lob.project === selectedProject);
-                                          console.log(projectLobs);
-                                          return projectLobs.find(lob => lob.country === country.name);
-                                      })}
-                                  disabled={!selection.get("project")}
-                                  reset={["lob", "capPlan"]}
-                                  callback={(f) => {
-                                      f.resetAll()
-                                  }}
-                              />
-                <StructureDropdown
-                  structureName="lob"
-                  selection={selection}
+              />
+              <StructureDropdown
+                structureName="country"
+                selection={selection}
+                  data={data && data.countries && selection.get("project") && 
+                  data.countries.filter((country) => {
+                    const selectedProjectId = selection.get("project")._id;
+
+                  // Get LOBs related to the selected project
+                  const projectLobs = data.lobs.filter((lob) => lob.project === selectedProjectId);
+
+                  // Get LOB IDs
+                  const lobIds = projectLobs.map(lob => lob._id);
+
+                  // Get CapPlans related to the LOBs
+                  const lobCapPlans = data.capPlans.filter((capPlan) => lobIds.includes(capPlan.lob));
+
+                // Check if there's any capPlan for the current country
+                return lobCapPlans.some(capPlan => capPlan.country === country.name);
+                  })
+                  }
+                disabled={!selection.get("project")}
+                  reset={["lob", "capPlan"]}
+                    callback={(f) => {
+	                f.resetAll()
+                }}                
+              />
+<StructureDropdown
+   structureName="lob"
+   selection={selection}
+     reset={["capPlan"]}
+         data={
+           data &&
+              selection.get("project") &&
+                  data.lobs.filter(
+                     (lob) => lob.project === selection.get("project")._id
+                 )
+              }
+          disabled={!selection.get("country") || data.lobs.filter( 
+		  (lob) => lob.project === selection.get("project")._id
+           ).length <= 0 }
+       />
+              {/* <StructureDropdown
+                structureName="lob"
+                selection={selection}
                   reset={["capPlan"]}
                   data={
                     data &&
@@ -213,7 +236,7 @@ export default function Capacity() {
                                   disabled={!selection.get("country") || data.lobs.filter(
                                       (lob) => lob.country === selection.get("country").name && lob.project === selection.get("project")._id
                                   ).length <= 0 }
-                />
+                /> */}
                 <StructureDropdown
                   structureName="capPlan"
                   selection={selection}
