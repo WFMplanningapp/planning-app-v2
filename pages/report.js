@@ -69,7 +69,7 @@ const Report = () => {
       .map((lob) =>
         data.capPlans
           .filter((capPlan) => capPlan.lob === lob._id)
-          .map((capPlan) => ({ _id: capPlan._id, name: capPlan.name }))
+          .map((capPlan) => ({ _id: capPlan._id, name: capPlan.name, country: capPlan.country}))
       )
 
       .flat()
@@ -90,6 +90,7 @@ const Report = () => {
               week_start: weekly.firstDate,
               cap_plan_name: weekly.capPlan,
               cap_plan_id: weekly.capPlanId,
+              cap_plan_country: weekly.country,
             }
 
             fields.forEach((field) => {
@@ -146,7 +147,7 @@ const Report = () => {
                           f.resetAll()
                       }}
                               />
-                      <StructureDropdown
+                      {/* <StructureDropdown
                           structureName="country"
                           selection={selection}
                           data={data &&
@@ -163,26 +164,24 @@ const Report = () => {
                           callback={(f) => {
                               f.resetAll()
                           }}
-                      />
+                      /> */}
             <StructureDropdown
               structureName="lob"
               selection={selection}
               reset={["capPlan"]}
               data={
                 data &&
-                selection.get("country") && [
+                selection.get("project") && [
                   { name: "SELECT ALL" },
                   ...data.lobs.filter(
-                      (lob) => lob.country === selection.get("country").name && lob.project === selection.get("project")._id
+                      (lob) => lob.project === selection.get("project")._id
                   ),
                 ]
               }
               callback={(f) => {
                 setGenerated(false)
               }}
-                          disabled={!selection.get("country") || data.lobs.filter(
-                              (lob) => lob.country === selection.get("country").name && lob.project === selection.get("project")._id
-                          ).length <= 0}
+                          disabled={!selection.get("project")}
             />
           </div>
         </div>
@@ -227,9 +226,9 @@ const Report = () => {
               onClick={() =>
                 selection.setMany({
                   ...selection.getForm(),
-                  fromWeek: weeks.getWeekRelative(parseFloat("-8")),
-                  toWeek: weeks.getWeekRelative( data.weeks.length - data.weeks.indexOf(weeks.getCurrentWeek()) < 17 ? 
-                    (data.weeks.length - data.weeks.indexOf(weeks.getCurrentWeek()))-1 : parseFloat("16") ),
+                  fromWeek: weeks.getWeekRelative(parseFloat("-2")),
+                  toWeek: weeks.getWeekRelative( data.weeks.length - data.weeks.indexOf(weeks.getCurrentWeek()) < 52 ? 
+                    (data.weeks.length - data.weeks.indexOf(weeks.getCurrentWeek()))-1 : parseFloat("52") ),
                 })
               }
             >

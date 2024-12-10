@@ -170,7 +170,12 @@ export default function Capacity() {
                       <StructureDropdown
                         structureName="project"
                         selection={selection}
-                        data={data && data.projects}
+                        data={
+                          data && data.projects 
+                              ? [...data.projects].sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by name
+                              : []
+                      }
+                        // data={data && data.projects}
                         disabled={false}
                         reset={["lob", "country", "capPlan"]}
                         callback={(f) => {
@@ -188,6 +193,7 @@ export default function Capacity() {
                             (lob) =>
                               lob.project === selection.get("project")._id
                           )
+                          .sort((a,b) => a.name.localeCompare(b.name))
                         }
                         disabled={
                           !selection.get("project") ||
@@ -210,7 +216,9 @@ export default function Capacity() {
                             console.log (capPlanLobs)
 
                             return capPlanLobs.find(capPlan => capPlan.country === country.name);
-                          })}
+                          })
+                        .sort((a,b) => a.name.localeCompare(b.name))
+                      }
                             
                           //   const selectedProjectId =
                           //     selection.get("lob")._id;
@@ -268,6 +276,7 @@ export default function Capacity() {
                             (capPlan) =>
                               capPlan.lob === selection.get("lob")._id
                           )
+                          .sort((a,b) => a.name.localeCompare(b.name))
                         }
                         disabled={!selection.get("country")}
                       />
@@ -335,15 +344,15 @@ export default function Capacity() {
                         onClick={() =>
                           selection.setMany({
                             ...selection.getForm(),
-                            fromWeek: weeks.getWeekRelative(parseFloat("-8")),
+                            fromWeek: weeks.getWeekRelative(parseFloat("-2")),
                             toWeek: weeks.getWeekRelative(
                               data.weeks.length -
                                 data.weeks.indexOf(weeks.getCurrentWeek()) <
-                                17
+                                9
                                 ? data.weeks.length -
                                     data.weeks.indexOf(weeks.getCurrentWeek()) -
                                     1
-                                : parseFloat("16")
+                                : parseFloat("9")
                             ),
                           })
                         }

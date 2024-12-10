@@ -1,6 +1,7 @@
 import { connectToDatabase } from "../../../lib/mongodb"
 import { generateCapacity } from "../../../lib/capacityCalculations"
 import { ObjectId } from "mongodb"
+import { isObjectLike } from "lodash"
 
 export default async function handler(req, res) {
   const { query, method } = req
@@ -66,6 +67,7 @@ export default async function handler(req, res) {
               week: weekly.week.code,
               capPlan: item.capPlan.name,
               capPlanId: item.capPlan._id,
+              country: item.capPlan.country,
               Comment: null,
             }))
         )
