@@ -36,6 +36,7 @@ export default async function handler(req, res) {
 							fteHoursWeekly: 1,
 							pricingModel: 1,
 							active: 1,
+							country: 1,
 
 						},
 					},
@@ -55,7 +56,7 @@ export default async function handler(req, res) {
 							Lob_Name: "$lobDoc.name",
 							CapPlan_Name: "$name",
 							Language: "$langDoc.set",
-							Country: "$lobDoc.country",
+							Country: "$country",
 							Operation_Days: "$operationDays",
 							FTEHours_Weekly: "$fteHoursWeekly",
 							Pricing_Model: "$pricingModel",
