@@ -161,6 +161,7 @@ const CapPlanManagement = ({ data }) => {
         firstWeek: capPlan.firstWeek,
         startingHC: capPlan.startingHC,
         active: capPlan.active,
+        country: capPlan.country,
         fteHoursWeekly: capPlan.fteHoursWeekly,
         operationDays: capPlan.operationDays || generateOperationDays(),
         pricingModel: capPlan.pricingModel || "",
