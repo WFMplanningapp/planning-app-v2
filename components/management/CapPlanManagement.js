@@ -85,6 +85,14 @@ const formFields = [
     type: "text",
     label: "Pricing Model",
   },
+  {
+    name: "country",
+    default: "",
+    required: true,
+    type: "text",
+    label: "country",
+  },
+
 ]
 
 const status = [
