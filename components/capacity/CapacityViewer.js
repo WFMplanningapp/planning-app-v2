@@ -1,6 +1,34 @@
-import { FaExclamationCircle } from "react-icons/fa"
+import React, { useState } from 'react';
 
 const CapacityViewer = ({ capacity, fields, currentWeek, withStaff }) => {
+  const [expandedTypes, setExpandedTypes] = useState({
+    capacity: true,
+    staffing: true,
+    Attrition: true,
+    training: true,
+  });
+
+  const groupFieldsByType = (fields) => {
+    return fields.reduce((acc, field) => {
+      if (!acc[field.type]) {
+        acc[field.type] = [];
+      }
+      acc[field.type].push(field);
+      return acc;
+    }, {});
+  };
+
+  const groupedFields = groupFieldsByType(
+    fields.filter((field) => (withStaff ? true : field.order < 1000))
+  );
+
+  const toggleTypeExpansion = (fieldType) => {
+    setExpandedTypes((prev) => ({
+      ...prev,
+      [fieldType]: !prev[fieldType],
+    }));
+  };
+
   return (
     <div className="columns is-gapless is-size-7 is-mobile">
       <div className="column is-narrow table-container has-text-right">
@@ -16,34 +44,42 @@ const CapacityViewer = ({ capacity, fields, currentWeek, withStaff }) => {
             </tr>
           </tfoot>
           <tbody>
-            {fields &&
-              fields
-                .filter((field) => (withStaff ? 1 : field.order < 1000))
-                .map((field) => (
-                  <tr key={"weekly-header-row-" + field.internal}>
-                    <th
-                      key={"field-" + field.internal}
-                      className={
-                        field.type === "capacity"
-                          ? "has-text-danger"
-                          : field.type === "staffing"
-                          ? "has-text-link"
-                          : ""
-                      }
-                    >
-                      {field.external + " ->"}
-                    </th>
+            {Object.entries(groupedFields).map(([type, typeFields]) => (
+              <React.Fragment key={`group-${type}`}>
+                <tr>
+                  <th
+                    className={`flex items-center cursor-pointer ${
+                      type === 'capacity'
+                        ? 'has-text-primary'
+                        : type === 'staffing'
+                        ? 'has-text-link'
+                        : type === 'Attrition'
+                        ? 'has-text-danger'
+                        : type === 'training'
+                        ? 'has-text-link'
+                        : ''
+                    }`}
+                    onClick={() => toggleTypeExpansion(type)}
+                  >
+                    <span className="mr-2">
+                      {expandedTypes[type] ? '▼' : '▶'}
+                    </span>
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </th>
+                </tr>
+                {!expandedTypes[type] ? (
+                  <tr>
+                    <td>{typeFields[0].external}</td>
                   </tr>
-                ))}
-            <tr>
-              <th className="has-text-link">{"Has Shrinkage? ->"}</th>
-            </tr>
-            <tr>
-              <th className="has-text-link">{"Has Planned? ->"}</th>
-            </tr>
-            <tr>
-              <th className="has-text-link">{"Has Actual? ->"}</th>
-            </tr>
+                ) : (
+                  typeFields.map((field) => (
+                    <tr key={`field-${field.internal}`}>
+                      <td>{field.external}</td>
+                    </tr>
+                  ))
+                )}
+              </React.Fragment>
+            ))}
           </tbody>
         </table>
       </div>
@@ -52,62 +88,71 @@ const CapacityViewer = ({ capacity, fields, currentWeek, withStaff }) => {
           <thead>
             <tr>
               {capacity &&
-                capacity.map((weekly) => {
-                  return (
-                    <th
-                      key={"weekly-head-" + weekly.week.code}
-                      className={
-                        weekly.week.code === currentWeek.code
-                          ? "is-danger"
-                          : "is-dark"
-                      }
-                      style={{ whiteSpace: "nowrap", cursor: "pointer" }}
-                      title={weekly.Comment}
-                    >
-                      <div className="mx-auto">
-                        {weekly.firstDate}
-                        <FaExclamationCircle
-                          className={`ml-1 ${
-                            weekly.Comment ? "has-text-warning" : "is-hidden"
-                          }`}
-                        />
-                      </div>
-                    </th>
-                  )
-                })}
+                capacity.map((weekly) => (
+                  <th
+                    key={`weekly-head-${weekly.week.code}`}
+                    className={
+                      weekly.week.code === currentWeek.code
+                        ? 'is-danger'
+                        : 'is-dark'
+                    }
+                    style={{ whiteSpace: 'nowrap', cursor: 'pointer' }}
+                    title={weekly.Comment}
+                  >
+                    <div className="mx-auto">{weekly.firstDate}</div>
+                  </th>
+                ))}
             </tr>
           </thead>
           <tfoot>
             <tr>
               {capacity &&
-                capacity.map((weekly) => {
-                  return (
-                    <th
-                      key={"weekly-foot-" + weekly.week.code}
-                      className="is-dark"
-                      style={{ whiteSpace: "nowrap" }}
-                    >
-                      {weekly.firstDate}
-                    </th>
-                  )
-                })}
+                capacity.map((weekly) => (
+                  <th
+                    key={`weekly-foot-${weekly.week.code}`}
+                    className="is-dark"
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    {weekly.firstDate}
+                  </th>
+                ))}
             </tr>
           </tfoot>
           <tbody>
-            {fields &&
-              fields
-                .filter((field) => (withStaff ? 1 : field.order < 1000))
-                .map((field) => (
-                  <tr key={"weekly-body-row-" + field.internal}>
-                    {capacity &&
-                      capacity.map((weekly) => (
+            {Object.entries(groupedFields).map(([type, typeFields]) => (
+              <React.Fragment key={`group-body-${type}`}>
+                <tr>
+                  <th colSpan={capacity.length} style={{ textAlign: 'center' }}>
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </th>
+                </tr>
+                {!expandedTypes[type] ? (
+                  <tr>
+                    {capacity.map((weekly, index) => (
+                      <td
+                        key={`collapsed-${type}-${weekly.week.code}`}
+                        style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
+                      >
+                        {weekly[typeFields[0]?.internal] !== undefined ? (
+                          Math.round(weekly[typeFields[0].internal] * 1000) /
+                          1000
+                        ) : weekly[typeFields[0]?.internal] === 0 ? (
+                          <span className="has-text-primary">0</span>
+                        ) : (
+                          <span className="has-text-light">#</span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ) : (
+                  typeFields.map((field) => (
+                    <tr key={`body-row-${field.internal}`}>
+                      {capacity.map((weekly) => (
                         <td
-                          key={
-                            "weekly-body-" + weekly.week.code + field.internal
-                          }
-                          style={{ whiteSpace: "nowrap", textAlign: "center" }}
+                          key={`weekly-body-${weekly.week.code}-${field.internal}`}
+                          style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
                         >
-                          {weekly[field.internal] ? (
+                          {weekly[field.internal] !== undefined ? (
                             Math.round(weekly[field.internal] * 1000) / 1000
                           ) : weekly[field.internal] === 0 ? (
                             <span className="has-text-primary">0</span>
@@ -116,95 +161,16 @@ const CapacityViewer = ({ capacity, fields, currentWeek, withStaff }) => {
                           )}
                         </td>
                       ))}
-                  </tr>
-                ))}
-            <tr>
-              {capacity &&
-                capacity.map((weekly) => (
-                  <td
-                    key={"weekly-body-" + weekly.week.code + "-has-shrinkage"}
-                    style={{ whiteSpace: "nowrap", textAlign: "center" }}
-                  >
-                    {weekly["hasShrinkage"] ? (
-                      <span
-                        className="has-text-primary"
-                        title={[
-                          "mapping - code - percentage",
-                          ...weekly.pShrinkage.map(
-                            (row) =>
-                              row.mapping +
-                              " - " +
-                              row.code +
-                              " - " +
-                              row.percentage
-                          ),
-                        ].join("\n")}
-                      >
-                        YES
-                      </span>
-                    ) : (
-                      <span className="has-text-light">#</span>
-                    )}
-                  </td>
-                ))}
-            </tr>
-            <tr>
-              {capacity &&
-                capacity.map((weekly) => (
-                  <td
-                    key={"weekly-body-" + weekly.week.code + "-has-planned"}
-                    style={{ whiteSpace: "nowrap", textAlign: "center" }}
-                  >
-                    {weekly["hasPlanned"] ? (
-                      <span
-                        className="has-text-primary"
-                        title={[
-                          "channel - volumes - aht",
-                          ...weekly.planned.map(
-                            (row) =>
-                              row.name + " - " + row.volumes + " - " + row.aht
-                          ),
-                        ].join("\n")}
-                      >
-                        YES
-                      </span>
-                    ) : (
-                      <span className="has-text-light">#</span>
-                    )}
-                  </td>
-                ))}
-            </tr>
-            <tr>
-              {capacity &&
-                capacity.map((weekly) => (
-                  <td
-                    key={"weekly-body-" + weekly.week.code + "-has-actual"}
-                    style={{ whiteSpace: "nowrap", textAlign: "center" }}
-                  >
-                    {weekly["hasActual"] ? (
-                      <span
-                        className="has-text-primary"
-                        title={[
-                          "channel - volumes - aht",
-                          ...weekly.actual.map(
-                            (row) =>
-                              row.name + " - " + row.volumes + " - " + row.aht
-                          ),
-                        ].join("\n")}
-                      >
-                        YES
-                      </span>
-                    ) : (
-                      <span className="has-text-light">#</span>
-                    )}
-                  </td>
-                ))}
-            </tr>
+                    </tr>
+                  ))
+                )}
+              </React.Fragment>
+            ))}
           </tbody>
         </table>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CapacityViewer
+export default CapacityViewer;

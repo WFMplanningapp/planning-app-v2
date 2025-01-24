@@ -5,7 +5,7 @@ import { FaAngleRight, FaAngleLeft } from "react-icons/fa"
 
 const EntriesModal = ({ active, toggle, selection, week, weeks }) => {
 
-  console.log(weeks)
+  //console.log(weeks)
   const [currentWeek, setCurrentWeek] = useState(week)
   const [selectedWeekIdx, setSelectedWeekIdx] = useState(null)
   const [colorLft, setColorLft] = useState("");
@@ -13,16 +13,16 @@ const EntriesModal = ({ active, toggle, selection, week, weeks }) => {
 
 
   useEffect(() => {
-    console.log(week)
+   // console.log(week)
     setCurrentWeek(week)
     setTimeout(selectWeek(week), 0)
   }, [week])
   
   const selectWeek = (week) => {
-    console.log(currentWeek)
+    //console.log(currentWeek)
 
     const weekIndex = weeks.findIndex(smn => {
-      console.log(smn.code === week.code)
+      // console.log(smn.code === week.code)
       return smn.code === week.code
     })
     setSelectedWeekIdx(weekIndex)
@@ -49,7 +49,7 @@ const EntriesModal = ({ active, toggle, selection, week, weeks }) => {
     toggle()
   }
 
-  console.log(currentWeek)
+  // console.log(currentWeek)
   return currentWeek && currentWeek.firstDate ? (
     <div className={`modal ${active ? "is-active" : ""}`}>
       <div className="modal-background"></div>

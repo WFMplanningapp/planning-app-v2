@@ -57,7 +57,7 @@ const EntryForm = ({ selection, week }) => {
         .then((res) => res.json())
         .catch()
 
-      console.log(fetched)
+      // console.log(fetched)
       let entries = fetched.data
 
       if (entries.length === 1) {

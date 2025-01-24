@@ -21,7 +21,7 @@ const WeekDropdown = ({
         disabled={disabled}
         onChange={(e) => {
           let json = JSON.parse(e.target.value)
-          console.log(json)
+          // console.log(json)
           setSelected(json)
           form.set(fieldName, json)
           if (callback && form) {
