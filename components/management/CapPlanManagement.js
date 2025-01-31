@@ -239,7 +239,7 @@ const CapPlanManagement = ({ data }) => {
 
       case 'REMOVE':
         if (
-          data &&
+          data?.capEntries &&
           selection.get('capPlan') &&
           data.capEntries.find(
             (entry) => entry.capPlan === selection.get('capPlan')._id
