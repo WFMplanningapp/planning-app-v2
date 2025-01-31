@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/authContext';
-import FoundeverLogo from '../../static/foundeverlogo';
+import FoundeverLogo from '../foundeverlogo';
 import { FaLock } from 'react-icons/fa';
 import CSVUploader from '../files/CSVUploader';
 

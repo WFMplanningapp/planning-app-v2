@@ -9,8 +9,7 @@ import { enGB } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FaLock } from 'react-icons/fa';
 import moment from 'moment';
-import { first } from 'lodash';
-import FoundeverLogo from '../../static/foundeverlogo';
+import FoundeverLogo from '../foundeverlogo';
 
 registerLocale('en-GB', enGB);
 setDefaultLocale('en-GB');
