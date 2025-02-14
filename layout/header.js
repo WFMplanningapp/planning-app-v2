@@ -1,14 +1,14 @@
-import Link from "next/link"
+import Link from 'next/link';
 
-import { useState } from "react"
+import { useState } from 'react';
 
-import { useAuth } from "../contexts/authContext"
+import { useAuth } from '../contexts/authContext';
 
-import { FaUserCog } from "react-icons/fa"
+import { FaUserCog } from 'react-icons/fa';
 
 const Header = () => {
-  const [isActive, setisActive] = useState(false)
-  const auth = useAuth()
+  const [isActive, setisActive] = useState(false);
+  const auth = useAuth();
 
   return (
     <header>
@@ -23,16 +23,19 @@ const Header = () => {
               Planning App
             </a>
           </Link>
-          {auth.allowedSU ? 
-                    <Link href="/user">
-                    <a className="navbar-item user px-2" href="/">
-                      User Admin <FaUserCog />
-                    </a>
-                  </Link> : <></>}
+          {auth.allowedSU ? (
+            <Link href="/user">
+              <a className="navbar-item user px-2" href="/">
+                User Admin <FaUserCog />
+              </a>
+            </Link>
+          ) : (
+            <></>
+          )}
           <a
             role="button"
             onClick={() => setisActive(!isActive)}
-            className={`navbar-burger burger ${isActive ? "is-active" : ""}`}
+            className={`navbar-burger burger ${isActive ? 'is-active' : ''}`}
             aria-label="menu"
             aria-expanded="false"
             data-target="navbarBasicExample"
@@ -45,12 +48,12 @@ const Header = () => {
 
         <div
           id="navbarBasicExample"
-          className={`navbar-menu ${isActive ? "is-active" : ""}`}
+          className={`navbar-menu ${isActive ? 'is-active' : ''}`}
         >
           <div className="navbar-end">
             <Link href="/login">
               <a className="navbar-item ml-3 has-text-primary">
-                {auth.user && auth.logged ? auth.user.username : "Login"}
+                {auth.user && auth.logged ? auth.user.username : 'Login'}
               </a>
             </Link>
             <Link href="/management">
@@ -75,7 +78,7 @@ const Header = () => {
         </div>
       </nav>
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;
