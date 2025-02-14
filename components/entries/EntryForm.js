@@ -12,6 +12,7 @@ const headcountFields = [
   "rwsOUT",
   "rampDown",
   "inVac",
+  "overtimeFTE",
 ]
 
 const trainingFields = [
