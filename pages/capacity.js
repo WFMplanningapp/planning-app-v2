@@ -423,14 +423,14 @@ export default function Capacity() {
                       grid <FaExternalLinkAlt className="ml-1" />
                     </a>
 
-                    <button
+                    {/* <button
                       className={`button is-small is-rounded ml-auto ${
                         withStaff ? 'is-danger' : 'is-success'
                       }`}
                       onClick={() => setWithStaff(!withStaff)}
                     >
                       Toggle Staffing
-                    </button>
+                    </button> */}
                   </div>
 
                   <br />
@@ -465,15 +465,16 @@ export default function Capacity() {
                       'billableFTE',
                       'budgetFTE',
                       'requiredFTE',
-                      'totalFTE',
+                      'totalHC',
                       'expectedFTE',
                     ]}
+                    bars={['attrPercent', 'fcAttrition']}
                   />
                   <br />
-                  <h3 className="has-text-centered">ACTUALS VS REQUIRED</h3>
+                  <h3 className="has-text-centered">InCenter: ACTUALS VS REQUIRED</h3>
                   <TotalPercentageChart
                     data={capacity.get(weekRange)}
-                    lines={['requiredFTE', 'totalFTE', 'expectedFTE']}
+                    lines={['requiredFTE', 'expectedFTE']}
                   />
                   <br />
                   <h3 className="has-text-centered">ACTUALS VS FINANCIALS</h3>

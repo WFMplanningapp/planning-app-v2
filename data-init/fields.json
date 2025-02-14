@@ -88,7 +88,8 @@
   "persistant": "FALSE",
   "type": "capacity",
   "entry": false
-},{
+},
+{
   "_id": {
     "$oid": "61dc6f3030da0f313a146b9e"
   },
@@ -101,7 +102,8 @@
   "type": "capacity",
   "entry": false,
   "main": true
-},{
+},
+{
   "_id": {
     "$oid": "61eadfd9b3a6a3dd8dd95c62"
   },
@@ -113,7 +115,8 @@
   "persistant": "FALSE",
   "type": "capacity",
   "entry": false
-},{
+}
+,{
   "_id": {
     "$oid": "61dc6f3030da0f313a146ba0"
   },
