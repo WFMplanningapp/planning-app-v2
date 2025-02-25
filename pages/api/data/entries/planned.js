@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
 		let capPlan = await db
 			.collection("capPlans")
-			.findOne({ _id: ObjectId(capPlanId) })
+			.findOne({ _id: new ObjectId(capPlanId) })
 
 		console.log("CapPlan:", capPlan)
 
