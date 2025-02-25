@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       if (verification.verified && verifyPermissions(ROLES.ADMIN,null,db,headers.authorization)) {
 
         let remove = target
-          ? await db.collection("lobs").deleteOne({ _id: new bjectId(target) })
+          ? await db.collection("lobs").deleteOne({ _id: new ObjectId(target) })
           : { message: "Nothing to Remove" }
         res
           .status(200)
