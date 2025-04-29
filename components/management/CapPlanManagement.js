@@ -24,6 +24,22 @@ const selectionFields = [
 
 const formFields = [
   {
+    name: 'hourlycost',
+    level4Only: true, // Indicates this field is only visible to Level 4 users
+    default: 0,
+    required: false,
+    type: 'number',
+    label: 'Hourly Cost',
+  },
+  {
+    name: 'hourlyrate',
+    level4Only: true, // Indicates this field is only visible to Level 4 users
+    default: 0,
+    required: false,
+    type: 'number',
+    label: 'Hourly Rate',
+  },
+  {
     name: 'name',
     default: '',
     required: true,
@@ -135,6 +151,9 @@ const CapPlanManagement = ({ data }) => {
   const [tab, setTab] = useState(1);
 
   const auth = useAuth();
+
+   // Check if the user has Level 4 permission
+   const isLevel4 = auth.user?.permission === 4;
 
   const selection = useForm({
     fields: selectionFields,
@@ -525,6 +544,36 @@ const CapPlanManagement = ({ data }) => {
                     />
                   </div>
                 </div>
+                 {/* Conditionally Render Hourly Cost and Hourly Rate Fields */}
+        {isLevel4 && (
+          <>
+            <div className="column is-3">
+              <label className="label">Hourly Cost</label>
+              <div className="control is-small">
+                <input
+                  className="input is-small"
+                  onChange={(e) => form.set('hourlycost', e.target.value)}
+                  value={form.get('hourlycost') || ''}
+                  type="number"
+                  placeholder="Hourly Cost"
+                />
+              </div>
+            </div>
+
+            <div className="column is-3">
+              <label className="label">Hourly Rate</label>
+              <div className="control is-small">
+                <input
+                  className="input is-small"
+                  onChange={(e) => form.set('hourlyrate', e.target.value)}
+                  value={form.get('hourlyrate') || ''}
+                  type="number"
+                  placeholder="Hourly Rate"
+                />
+              </div>
+            </div>
+          </>
+        )}
               </div>
               <div className="columns">
                 <div className="column is-2">
@@ -785,7 +834,7 @@ const CapPlanManagement = ({ data }) => {
                     disabled={!selection.get('language')}
                   />
                 </div>
-              </div>
+              
               <div className="column is-2">
                 <label className="label">Country</label>
                 <div className="control is-small">
@@ -799,6 +848,7 @@ const CapPlanManagement = ({ data }) => {
                       f.set('country', s.name);
                     }}
                   />
+                  </div>
                 </div>
               </div>
 
@@ -826,6 +876,36 @@ const CapPlanManagement = ({ data }) => {
                     />
                   </div>
                 </div>
+                {/* Conditionally Render Hourly Cost and Hourly Rate Fields */}
+        {isLevel4 && (
+          <>
+            <div className="column is-3">
+              <label className="label">Hourly Cost</label>
+              <div className="control is-small">
+                <input
+                  className="input is-small"
+                  onChange={(e) => form.set('hourlycost', e.target.value)}
+                  value={form.get('hourlycost') || ''}
+                  type="number"
+                  placeholder="Hourly Cost"
+                />
+              </div>
+            </div>
+
+            <div className="column is-3">
+              <label className="label">Hourly Rate</label>
+              <div className="control is-small">
+                <input
+                  className="input is-small"
+                  onChange={(e) => form.set('hourlyrate', e.target.value)}
+                  value={form.get('hourlyrate') || ''}
+                  type="number"
+                  placeholder="Hourly Rate"
+                />
+              </div>
+            </div>
+          </>
+        )}
               </div>
               <div className="columns">
                 <div className="column is-2">
