@@ -192,6 +192,8 @@ const CapPlanManagement = ({ data }) => {
         fteHoursWeekly: capPlan.fteHoursWeekly,
         operationDays: capPlan.operationDays || generateOperationDays(),
         pricingModel: capPlan.pricingModel || '',
+        hourlycost: capPlan.hourlycost,
+        hourlyrate: capPlan.hourlyrate,
       });
     }
   }, [selection.get('capPlan')]);
