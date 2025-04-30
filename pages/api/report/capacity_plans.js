@@ -37,6 +37,8 @@ export default async function handler(req, res) {
 							pricingModel: 1,
 							active: 1,
 							country: 1,
+							hourlyrate: 1,
+							hourlycost: 1,
 
 						},
 					},
@@ -61,6 +63,8 @@ export default async function handler(req, res) {
 							FTEHours_Weekly: "$fteHoursWeekly",
 							Pricing_Model: "$pricingModel",
 							Active: "$active",
+							hourlyrate: "$hourlyrate",
+							hourlycost: "$hourlycost",
 						},
 					},
 				])
