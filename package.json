@@ -1,0 +1,38 @@
+{
+	"private": true,
+	"scripts": {
+		"dev": "next --port 3000",
+		"build": "next build",
+		"start": "next start",
+		"azure:build": "npm run build",
+		"azure:start": "npm run start"
+	},
+	"dependencies": {
+		"@emotion/react": "^11.7.1",
+		"@emotion/styled": "^11.6.0",
+		"@fortawesome/fontawesome-free": "^5.15.4",
+		"@fortawesome/fontawesome-svg-core": "^1.2.36",
+		"@fortawesome/free-brands-svg-icons": "^5.15.4",
+		"@fortawesome/free-solid-svg-icons": "^5.15.4",
+		"@fortawesome/react-fontawesome": "^0.1.16",
+		"@mui/x-data-grid": "^5.2.2",
+		"bcrypt": "^5.0.1",
+		"bulma": "^0.9.3",
+		"js-cookie": "^3.0.1",
+		"lodash": "^4.17.21",
+		"moment": "^2.30.1",
+		"mongodb": "^6.12.0",
+		"next": "latest",
+		"react": "^17.0.2",
+		"react-datepicker": "^6.1.0",
+		"react-dom": "^17.0.2",
+		"react-icons": "^4.3.1",
+		"react-loading": "^2.0.3",
+		"react-papaparse": "^3.18.2",
+		"react-tooltip": "^4.2.21",
+		"recharts": "^2.1.8"
+	},
+	"engines": {
+		"node": "20.x"
+	}
+}

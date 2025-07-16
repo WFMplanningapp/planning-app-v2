@@ -1,0 +1,400 @@
+[{
+  "_id": {
+    "$oid": "60f9f42b808c281674f54597"
+  },
+  "name": "Spanish CS",
+  "set": "Spanish",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "60f9f42b808c281674f54598"
+  },
+  "name": "Spanish Tech",
+  "set": "Spanish",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "60f9fafc808c281674f54599"
+  },
+  "name": "French CS",
+  "set": "French",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "60f9fafc808c281674f5459c"
+  },
+  "name": "German Tech",
+  "set": "German",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "60f9fafc808c281674f5459a"
+  },
+  "name": "French Tech",
+  "set": "French",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "60f9fafc808c281674f5459b"
+  },
+  "name": "German CS",
+  "set": "German",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db4483194"
+  },
+  "name": "Brazilian CS",
+  "set": "Portuguese",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db4483195"
+  },
+  "name": "Brazilian Tech",
+  "set": "Portuguese",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db4483196"
+  },
+  "name": "Spanish + Brazilian Tech",
+  "set": "Spanish",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db4483197"
+  },
+  "name": "Italian CS",
+  "set": "Italian",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db4483198"
+  },
+  "name": "Italian Tech",
+  "set": "Italian",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db4483199"
+  },
+  "name": "Polish CS",
+  "set": "Polish",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db448319a"
+  },
+  "name": "Polish Tech",
+  "set": "Polish",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db448319b"
+  },
+  "name": "Arabic CS",
+  "set": "Arabic",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db448319c"
+  },
+  "name": "Arabic Tech",
+  "set": "Arabic",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db448319d"
+  },
+  "name": "Russian CS",
+  "set": "Russian",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db448319e"
+  },
+  "name": "Russian Tech",
+  "set": "Russian",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db448319f"
+  },
+  "name": "English CS",
+  "set": "English",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db44831a0"
+  },
+  "name": "English Tech",
+  "set": "English",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db44831a1"
+  },
+  "name": "Portuguese CS",
+  "set": "Portuguese",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db44831a2"
+  },
+  "name": "Portuguese Tech",
+  "set": "Portuguese",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db44831a3"
+  },
+  "name": "Spanish + Portuguese CS",
+  "set": "Spanish",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "61279a8f9438ae1db44831a4"
+  },
+  "name": "Spanish + Portuguese Tech",
+  "set": "Spanish",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1de3"
+  },
+  "name": "Dutch CS",
+  "set": "Dutch",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1de4"
+  },
+  "name": "Dutch Tech",
+  "set": "Dutch",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1de5"
+  },
+  "name": "Dutch BE CS",
+  "set": "Dutch",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1de6"
+  },
+  "name": "Dutch BE Tech",
+  "set": "Dutch",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1de7"
+  },
+  "name": "French BE CS",
+  "set": "French",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1de8"
+  },
+  "name": "French BE Tech",
+  "set": "French",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1de9"
+  },
+  "name": "German CH CS",
+  "set": "German",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1dea"
+  },
+  "name": "German CH Tech",
+  "set": "German",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1deb"
+  },
+  "name": "French CH CS",
+  "set": "French",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1dec"
+  },
+  "name": "French CH Tech",
+  "set": "French",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1ded"
+  },
+  "name": "Greek CS",
+  "set": "Greek",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1dee"
+  },
+  "name": "Greek Tech",
+  "set": "Greek",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1def"
+  },
+  "name": "Hungarian CS",
+  "set": "Hungarian",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1df0"
+  },
+  "name": "Hungarian Tech",
+  "set": "Hungarian",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1df1"
+  },
+  "name": "Japanese CS",
+  "set": "Japanese",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1df2"
+  },
+  "name": "Japanese Tech",
+  "set": "Japanese",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1df3"
+  },
+  "name": "Swedish CS",
+  "set": "Swedish",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1df4"
+  },
+  "name": "Swedish Tech",
+  "set": "Swedish",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1df5"
+  },
+  "name": "Norwegian CS",
+  "set": "Norwegian",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "612f469944167e1f48be1df6"
+  },
+  "name": "Norwegian Tech",
+  "set": "Norwegian",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "6138b6da44167e1f48be1df7"
+  },
+  "name": "Dannish CS",
+  "set": "Danish",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "6138b6ec44167e1f48be1df8"
+  },
+  "name": "Dannish Tech",
+  "set": "Danish",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "6138ded444167e1f48be1df9"
+  },
+  "name": "Finnish CS",
+  "set": "Finnish ",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "6138ded744167e1f48be1dfa"
+  },
+  "name": "Finnish Tech",
+  "set": "Finnish ",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "6139dd2544167e1f48be1dfb"
+  },
+  "name": "Spanish + Italian Tech",
+  "set": "Spanish",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "6139dd4c44167e1f48be1dfc"
+  },
+  "name": "Spanish + Italian CS",
+  "set": "Spanish",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "613f83a3cf02723b880eb592"
+  },
+  "name": "Slovenian CS",
+  "set": "Slovenian",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "6153499cbafd4b4480adfd80"
+  },
+  "name": "Czech CS",
+  "set": "Czech",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "615349a2bafd4b4480adfd81"
+  },
+  "name": "Czech Tech",
+  "set": "Czech",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "61534a07bafd4b4480adfd82"
+  },
+  "name": "Ukranian CS",
+  "set": "Ukranian",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "61534a12bafd4b4480adfd83"
+  },
+  "name": "Ukranian Tech",
+  "set": "Ukranian",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "615798840fc60753a8d30dac"
+  },
+  "name": "South Africa French + English CS",
+  "set": "French",
+  "type": "CS"
+},{
+  "_id": {
+    "$oid": "615798a30fc60753a8d30dad"
+  },
+  "name": "South Africa French + English Tech",
+  "set": "French",
+  "type": "Tech"
+},{
+  "_id": {
+    "$oid": "61951cfbe9a5350b21d7ee77"
+  },
+  "name": "Spanish + English CS",
+  "set": "Spanish",
+  "type": "CS"
+}]

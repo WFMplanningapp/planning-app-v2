@@ -1,0 +1,536 @@
+[{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146b98"
+  },
+  "aggAverage": true,
+  "aggregatable": true,
+  "description": "Total number of agents in production",
+  "external": "Total HC",
+  "internal": "totalHC",
+  "order": 100,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146b99"
+  },
+  "aggAverage": true,
+  "aggregatable": true,
+  "description": "Total number of FTE in operation",
+  "external": "Total FTE",
+  "internal": "totalFTE",
+  "order": 101,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false,
+  "main": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146b9a"
+  },
+  "aggregatable": true,
+  "description": "Expected total FTE, considering forecasted attrition",
+  "external": "Expected FTE",
+  "internal": "expectedFTE",
+  "order": 102,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false,
+  "main": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146b9b"
+  },
+  "aggAverage": true,
+  "aggregatable": true,
+  "description": "Calculated Billable FTE for current week",
+  "external": "Billable FTE",
+  "internal": "billableFTE",
+  "order": 103,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false,
+  "main": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146b9d"
+  },
+  "aggregatable": true,
+  "description": "Calculated forecasted Locked FTE",
+  "external": "FC FTE",
+  "internal": "fcFTE",
+  "order": 104,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false
+},{
+  "_id": {
+    "$oid": "61eadfd9b3a6a3dd8dd95c61"
+  },
+  "aggregatable": true,
+  "description": "Calculaled number of required FTE",
+  "external": "Required FTE",
+  "internal": "requiredFTE",
+  "order": 105,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146b9c"
+  },
+  "aggregatable": true,
+  "description": "Calculated Budgeted FTE for current week",
+  "external": "Budget FTE",
+  "internal": "budgetFTE",
+  "order": 106,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false
+},
+{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146b9e"
+  },
+  "aggregatable": true,
+  "description": "Variance between billable FTE and total FTE",
+  "external": "Variance (Bill.)",
+  "internal": "billVar",
+  "order": 107,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false,
+  "main": true
+},
+{
+  "_id": {
+    "$oid": "61eadfd9b3a6a3dd8dd95c62"
+  },
+  "aggregatable": true,
+  "description": "Variance between FC FTE and total FTE",
+  "external": "Variance (FC)",
+  "internal": "fcVar",
+  "order": 108,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false
+}
+,{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146ba0"
+  },
+  "aggregatable": true,
+  "description": "Variance between required FTE and total FTE",
+  "external": "Variance (Req.)",
+  "internal": "reqVar",
+  "order": 109,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146ba2"
+  },
+  "aggregatable": true,
+  "description": "Calculated attrition % of the current week",
+  "external": "Attrition Rate (%)",
+  "internal": "attrPercent",
+  "order": 111,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146ba3"
+  },
+  "aggregatable": true,
+  "description": "Number of trainees in batch (that conclude training)",
+  "external": "Trainees",
+  "internal": "trainees",
+  "order": 112,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false,
+  "main": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146ba4"
+  },
+  "aggregatable": true,
+  "description": "Number of agents in OCP (that concluded training)",
+  "external": "Nesting",
+  "internal": "nesting",
+  "order": 113,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": false,
+  "main": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146ba5"
+  },
+  "aggSum": true,
+  "aggregatable": true,
+  "description": "Permanent leaver from MU",
+  "external": "Attrition",
+  "internal": "attrition",
+  "order": 200,
+  "persistant": "FALSE",
+  "type": "headcount",
+  "entry": true,
+  "main": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146ba6"
+  },
+  "aggregatable": true,
+  "description": "Joiner to MU without training period",
+  "external": "Move In",
+  "internal": "moveIN",
+  "order": 201,
+  "persistant": "FALSE",
+  "type": "headcount",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146ba7"
+  },
+  "aggregatable": true,
+  "description": "Leaver from MU by erosion, internal transfer or upskilling",
+  "external": "Move Out",
+  "internal": "moveOUT",
+  "order": 202,
+  "persistant": "FALSE",
+  "type": "headcount",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146ba8"
+  },
+  "aggregatable": true,
+  "description": "Return to MU after leave",
+  "external": "Leave In",
+  "internal": "loaIN",
+  "order": 203,
+  "persistant": "FALSE",
+  "type": "headcount",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146ba9"
+  },
+  "aggregatable": true,
+  "description": "Temporary leaver from MU",
+  "external": "Leave Out",
+  "internal": "loaOUT",
+  "order": 204,
+  "persistant": "FALSE",
+  "type": "headcount",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146baa"
+  },
+  "aggregatable": true,
+  "description": "Increase total FTE to account for different work schedules",
+  "external": "Part Time In",
+  "internal": "rwsIN",
+  "order": 205,
+  "persistant": "FALSE",
+  "type": "headcount",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146bab"
+  },
+  "aggregatable": true,
+  "description": "Lower total FTE to account for different work schedules",
+  "external": "Part Time Out",
+  "internal": "rwsOUT",
+  "order": 206,
+  "persistant": "FALSE",
+  "type": "headcount",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146bb5"
+  },
+  "aggregatable": false,
+  "description": "Forecasted % of permanent operation leavers",
+  "external": "Planned Attrition Rate",
+  "internal": "fcAttrition",
+  "order": 207,
+  "persistant": "FALSE",
+  "type": "headcount",
+  "entry": true,
+  "main": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146baf"
+  },
+  "aggSum": true,
+  "aggregatable": true,
+  "description": "Number of new hires requested",
+  "external": "Tr. Commit",
+  "internal": "trCommit",
+  "order": 300,
+  "persistant": "FALSE",
+  "type": "training",
+  "entry": true,
+  "main": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146bb0"
+  },
+  "aggSum": true,
+  "aggregatable": true,
+  "description": "Difference between delivered and initial commit (negative for underdelivey!)",
+  "external": "Tr. Gap",
+  "internal": "trGap",
+  "order": 301,
+  "persistant": "FALSE",
+  "type": "training",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146bb1"
+  },
+  "aggSum": true,
+  "aggregatable": true,
+  "description": "Number of attritions during training (applies to batch start, not to the week of actual attrition)",
+  "external": "Tr. Attrition",
+  "internal": "trAttrition",
+  "order": 302,
+  "persistant": "FALSE",
+  "type": "training",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146bb2"
+  },
+  "aggSum": true,
+  "aggregatable": true,
+  "description": "Number of attritions during ocp (applies to batch start, not to the week of actual attrition)",
+  "external": "OCP Attrition",
+  "internal": "ocpAttrition",
+  "order": 303,
+  "persistant": "FALSE",
+  "type": "training",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146bb3"
+  },
+  "aggregatable": false,
+  "description": "Number of OCP weeks. Applies to batch start.",
+  "external": "OCP Weeks",
+  "internal": "ocpWeeks",
+  "order": 304,
+  "persistant": "TRUE",
+  "type": "training",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146bb4"
+  },
+  "aggregatable": false,
+  "description": "Number of training weeks. Applies to batch start.",
+  "external": "Tr. Weeks",
+  "internal": "trWeeks",
+  "order": 305,
+  "persistant": "TRUE",
+  "type": "training",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146bb6"
+  },
+  "aggregatable": false,
+  "description": "Forecasted training attrition in %",
+  "external": "Planned Tr. Attrition Rate",
+  "internal": "fcTrAttrition",
+  "order": 306,
+  "persistant": "TRUE",
+  "type": "training",
+  "entry": true,
+  "main": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146bac"
+  },
+  "aggregatable": false,
+  "description": "Number of billable FTE",
+  "external": "Billable (ENTRY)",
+  "internal": "billable",
+  "order": 400,
+  "persistant": "TRUE",
+  "type": "target",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146bad"
+  },
+  "aggregatable": false,
+  "description": "Number of budgeted FTE",
+  "external": "Budget (ENTRY)",
+  "internal": "budget",
+  "order": 401,
+  "persistant": "TRUE",
+  "type": "target",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61dc6f3030da0f313a146bae"
+  },
+  "aggregatable": false,
+  "description": "Number of required FTE",
+  "external": "Required (ENTRY)",
+  "internal": "required",
+  "order": 402,
+  "persistant": "TRUE",
+  "type": "target",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61eadfd9b3a6a3dd8dd95c63"
+  },
+  "aggregatable": false,
+  "description": "Target FTE Forecast number.",
+  "external": "FC FTE (ENTRY)",
+  "internal": "forecasted",
+  "order": 403,
+  "persistant": "TRUE",
+  "type": "target",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61eadfd9b3a6a3dd8dd95c65"
+  },
+  "aggregatable": true,
+  "external": "Actual Required FTE",
+  "internal": "actRequired",
+  "order": 1001,
+  "persistant": "FALSE",
+  "type": "staffing",
+  "entry": false,
+  "main": true
+},{
+  "_id": {
+    "$oid": "61eadfd9b3a6a3dd8dd95c6c"
+  },
+  "aggregatable": false,
+  "external": "Planned OFF Rate",
+  "internal": "pOff",
+  "order": 1007,
+  "persistant": "FALSE",
+  "type": "staffing",
+  "entry": false
+},{
+  "_id": {
+    "$oid": "61eadfd9b3a6a3dd8dd95c6d"
+  },
+  "aggregatable": false,
+  "external": "Planned ABS Rate",
+  "internal": "pAbs",
+  "order": 1008,
+  "persistant": "FALSE",
+  "type": "staffing",
+  "entry": false
+},{
+  "_id": {
+    "$oid": "61eadfd9b3a6a3dd8dd95c6e"
+  },
+  "aggregatable": false,
+  "external": "Planned AUX Rate",
+  "internal": "pAux",
+  "order": 1009,
+  "persistant": "FALSE",
+  "type": "staffing",
+  "entry": false
+},{
+  "_id": {
+    "$oid": "61eadfd9b3a6a3dd8dd95c70"
+  },
+  "aggregatable": false,
+  "external": "Actual Volumes",
+  "internal": "actVolumes",
+  "order": 1101,
+  "persistant": "FALSE",
+  "type": "actualStaff",
+  "entry": true,
+  "main": true
+},{
+  "_id": {
+    "$oid": "61eadfd9b3a6a3dd8dd95c71"
+  },
+  "aggregatable": false,
+  "external": "Actual OFF Rate",
+  "internal": "actOff",
+  "order": 1102,
+  "persistant": "FALSE",
+  "type": "actualStaff",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61eadfd9b3a6a3dd8dd95c72"
+  },
+  "aggregatable": false,
+  "external": "Actual ABS Rate",
+  "internal": "abs",
+  "order": 1103,
+  "persistant": "FALSE",
+  "type": "actualStaff",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61eadfd9b3a6a3dd8dd95c73"
+  },
+  "aggregatable": false,
+  "external": "Actual AUX Rate",
+  "internal": "aux",
+  "order": 1104,
+  "persistant": "FALSE",
+  "type": "actualStaff",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "61eae095b3a6a3dd8dd95c74"
+  },
+  "aggregatable": false,
+  "description": "Expected % of permanent operation leavers",
+  "external": "Expected Attrition Rate",
+  "internal": "expectedAttrition",
+  "order": 207.1,
+  "persistant": "FALSE",
+  "type": "headcount",
+  "entry": true,
+  "main": true
+},{
+  "_id": {
+    "$oid": "62137f9d6c99492056db4ee9"
+  },
+  "aggregatable": true,
+  "description": "Number of temporary leavers from MU",
+  "external": "In Leave",
+  "internal": "inLOA",
+  "order": 204,
+  "persistant": "FALSE",
+  "type": "capacity",
+  "entry": true
+},{
+  "_id": {
+    "$oid": "630e313df0c30bb739eaa4de"
+  },
+  "aggSum": true,
+  "aggregatable": true,
+  "description": "Permanent leaver from MU",
+  "external": "Ramp Down",
+  "internal": "rampDown",
+  "order": 208,
+  "persistant": "FALSE",
+  "type": "headcount",
+  "entry": true,
+  "main": true
+}
+]
