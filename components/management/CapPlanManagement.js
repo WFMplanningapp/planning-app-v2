@@ -1038,8 +1038,8 @@ const CapPlanManagement = ({ data }) => {
             </div>
           </div>
         ) : (
-          <div class="loaderContainer">
-            <span class="loaderGigi"></span>
+          <div className="loaderContainer">
+            <span className="loaderGigi"></span>
           </div>
         )
       ) : (

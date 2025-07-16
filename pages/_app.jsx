@@ -1,3 +1,4 @@
+import React from 'react';
 import 'bulma/css/bulma.min.css';
 import '../styles/globals.css';
 import 'bulma/css/bulma.css';
@@ -16,11 +17,6 @@ function MyApp({ Component, pageProps }) {
         <link rel="icon" href="/favicon-32x32.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" />
-
-        <link
-          href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700&display=swap"
-          rel="stylesheet"
-        ></link>
       </Head>
 
       <AuthProvider>

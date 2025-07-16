@@ -18,16 +18,12 @@ const Header = () => {
         aria-label="main navigation"
       >
         <div className="navbar-brand ">
-          <Link href="/">
-            <a className="navbar-item px-2" href="/">
-              Planning App
-            </a>
+          <Link href="/" className="navbar-item px-2">
+            Planning App
           </Link>
           {auth.allowedSU ? (
-            <Link href="/user">
-              <a className="navbar-item user px-2" href="/">
-                User Admin <FaUserCog />
-              </a>
+            <Link href="/user" className="navbar-item user px-2">
+              User Admin <FaUserCog />
             </Link>
           ) : (
             <></>
@@ -51,26 +47,24 @@ const Header = () => {
           className={`navbar-menu ${isActive ? 'is-active' : ''}`}
         >
           <div className="navbar-end">
-            <Link href="/login">
-              <a className="navbar-item ml-3 has-text-primary">
-                {auth.user && auth.logged ? auth.user.username : 'Login'}
-              </a>
+            <Link href="/login" className="navbar-item ml-3 has-text-primary">
+              {auth.user && auth.logged ? auth.user.username : 'Login'}
             </Link>
-            <Link href="/management">
-              <a className="navbar-item">Management</a>
+            <Link href="/management" className="navbar-item">
+              Management
             </Link>
 
             <div className="navbar-item has-dropdown is-hoverable">
               <a className="navbar-link">Tools</a>
               <div className="navbar-dropdown">
-                <Link href="/capacity">
-                  <a className="navbar-item">Capacity</a>
+                <Link href="/capacity" className="navbar-item">
+                  Capacity
                 </Link>
-                <Link href="/staffing">
-                  <a className="navbar-item">Staffing</a>
+                <Link href="/staffing" className="navbar-item">
+                  Staffing
                 </Link>
-                <Link href="/report">
-                  <a className="navbar-item">Report</a>
+                <Link href="/report" className="navbar-item">
+                  Report
                 </Link>
               </div>
             </div>
