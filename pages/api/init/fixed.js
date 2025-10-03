@@ -6,7 +6,7 @@ import { ObjectId } from "mongodb"
 
 export default async function handler(req, res) {
 	const { client, db } = await connectToDatabase()
-	console.log(client)
+	//console.log(client)
 
 	if (client) {
 		const options = { upsert: true }

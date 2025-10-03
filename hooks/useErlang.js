@@ -26,7 +26,7 @@ const useErlang = () => {
 	const calculateErlang = (vol, n, aht, targets, shrink) => {
 		const powOverFact = (pow, exp, fact) => {
 			if (fact === 1) {
-				console.log("RETURNED A", vol, n, aht)
+				//console.log("RETURNED A", vol, n, aht)
 				return a
 			}
 			let prod = 1
@@ -72,7 +72,7 @@ const useErlang = () => {
 
 		let a = (vol * aht) / interval
 
-		console.log("A", a)
+		//console.log("A", a)
 
 		let x = powOverFact(a, n, n) * (n / (n - a))
 
@@ -96,7 +96,7 @@ const useErlang = () => {
 			sl = 0
 		}
 
-		console.log("SL", sl)
+		//console.log("SL", sl)
 
 		let occ = (a / n) * (targets.conc || 1)
 
@@ -124,20 +124,20 @@ const useErlang = () => {
 			message = "ASA Target not Met"
 		}
 
-		console.log(message)
+		//console.log(message)
 
-		console.log(
-			"VOL",
-			vol,
-			"AHT",
-			aht,
-			"N",
-			n,
-			"SHRINK",
-			shrink,
-			"TARGETS",
-			targets
-		)
+		// console.log(
+		// 	"VOL",
+		// 	vol,
+		// 	"AHT",
+		// 	aht,
+		// 	"N",
+		// 	n,
+		// 	"SHRINK",
+		// 	shrink,
+		// 	"TARGETS",
+		// 	targets
+		// )
 
 		let agents = shrink ? n / (1 - shrink) : n
 
@@ -187,7 +187,7 @@ const useErlang = () => {
 				if (required.acceptable) {
 					break
 				} else {
-					console.log("For ", n, " -> ", required.message)
+					//console.log("For ", n, " -> ", required.message)
 				}
 			}
 		}
@@ -209,7 +209,7 @@ const useErlang = () => {
 
 			return { hours: hours, volumes: vol, aht: aht, occ: occ }
 		} else {
-			console.log("No Volumes")
+			//console.log("No Volumes")
 			return {}
 		}
 	}
@@ -339,7 +339,7 @@ const useErlang = () => {
 			}
 			return boltOn
 		} else {
-			console.log("Invalid Requirements Array")
+			//console.log("Invalid Requirements Array")
 			return -1
 		}
 	}
@@ -379,7 +379,7 @@ const useErlang = () => {
 				peakReq: peak,
 			}
 		} else if (requirements.total) {
-			console.log(requirements.total)
+			//console.log(requirements.total)
 
 			return {
 				totalReq: requirements.total.hours / fteHours,

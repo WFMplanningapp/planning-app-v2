@@ -13,6 +13,7 @@ export default async function handler(req, res) {
   let selected = query.selected.split(" ")
 
   switch (method) {
+    
     case "GET":
       let weeks = await db
         .collection("weeks")

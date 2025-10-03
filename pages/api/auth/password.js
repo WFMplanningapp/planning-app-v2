@@ -1,5 +1,5 @@
 import { connectToDatabase } from '../../../lib/mongodb';
-import { hashSync } from 'bcrypt';
+import { hashSync } from 'bcryptjs';
 import { verifySession } from '../../../lib/verification';
 
 export default async function handler(req, res) {

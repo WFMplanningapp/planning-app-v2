@@ -95,7 +95,7 @@ const StaffingManagement = ({ data }) => {
     let staffingToCopy = selection.get('capPlan').staffing;
 
     copyTo.forEach((entry) => {
-      console.log(entry.capPlan, staffingToCopy);
+      //console.log(entry.capPlan, staffingToCopy);
       fetch(`/api/data/management/capPlan?id=${entry.capPlan}`, {
         method: 'PUT',
         headers: {

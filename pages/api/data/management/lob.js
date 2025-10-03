@@ -12,7 +12,7 @@ HEADER: authorization base 64 encoded
 export default async function handler(req, res) {
   const { query, method, body, headers } = req
 
-  console.log(query, method, body, headers)
+  //console.log(query, method, body, headers)
 
   const { client, db } = await connectToDatabase()
 
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
                 createdBy: verification.user.username,
               })
             : { message: "Nothing to Insert" }
-        console.log("INSERT", insert) ///////////////////////////
+       // console.log("INSERT", insert)
         res
           .status(200)
           .json({ message: "Insert Completed!", verification, insert })

@@ -26,7 +26,6 @@ const CSVUploader = ({ loadedHandler, removeHandler, header, label }) => {
         config={{ encoding: 'ISO-8859-1' }}
         ref={buttonRef}
         onFileLoad={(csv) => {
-          //console.log(csv)
           loadedHandler(csv.map((entry) => entry.data));
         }}
         onError={(error) => console.log(error)}

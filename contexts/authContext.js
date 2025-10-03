@@ -17,9 +17,9 @@ export const AuthProvider = ({ children }) => {
     if (cookie) {
       setUser(JSON.parse(cookie));
       setLogged(true);
-      console.log('LOGGED IN FROM COOKIE');
+      //console.log('LOGGED IN FROM COOKIE');
     } else {
-      console.log('NO COOKIE');
+      //console.log('NO COOKIE');
     }
   }, []);
 
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       .then((response) => response.json())
       .then((data) => {
         setLogged(data.logged);
-        console.log('DATA USER', data.user);
+        //console.log('DATA USER', data.user);
         setUser(data.user);
         alert(data.message);
         data.user &&

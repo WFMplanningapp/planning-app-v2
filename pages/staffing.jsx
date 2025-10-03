@@ -84,7 +84,7 @@ export default function Staffing() {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data.message)
+        //console.log(data.message)
         alert(data.message)
       })
       .catch((err) => console.log(err))
@@ -637,7 +637,7 @@ export default function Staffing() {
                               >
                                 <button
                                   className="button is-link is-small is-rounded"
-                                  onClick={() => console.log(view.requirements)}
+                                  //onClick={() => console.log(view.requirements)}
                                 >
                                   Download
                                 </button>

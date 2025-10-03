@@ -22,7 +22,7 @@ export default async function handler(req, res) {
       ) {
         let response = await db.collection("capEntries").bulkWrite(
           payloads.map((payload) => {
-            console.log("PAYLOAD:", payload)
+            //console.log("PAYLOAD:", payload)
             return {
               updateOne: {
                 filter: {

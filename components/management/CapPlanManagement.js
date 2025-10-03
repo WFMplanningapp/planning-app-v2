@@ -10,7 +10,6 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { FaLock } from 'react-icons/fa';
 import moment from 'moment';
 import FoundeverLogo from '../foundeverlogo';
-
 registerLocale('en-GB', enGB);
 setDefaultLocale('en-GB');
 
@@ -286,7 +285,7 @@ const CapPlanManagement = ({ data }) => {
           .then((response) => response.json())
           .then((data) => {
             alert(data.message);
-            console.log('deleted: ' + data.response.deletedCount);
+            //console.log('deleted: ' + data.response.deletedCount);
             form.resetAll();
             form.set('operationDays', generateOperationDays());
           })
@@ -305,7 +304,7 @@ const CapPlanManagement = ({ data }) => {
 
   function handleDecimalsOnValue(value) {
     //const regex = /[0-9]*(\.[0-9]{1,2})/s;
-    console.log(value.match(/([0-9]*\.{0,1}[0-9]{0,2})/s)[0]);
+    //console.log(value.match(/([0-9]*\.{0,1}[0-9]{0,2})/s)[0]);
     return value.match(/([0-9]*\.{0,1}[0-9]{0,2})/s)[0];
   }
 

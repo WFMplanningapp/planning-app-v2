@@ -6,7 +6,7 @@ const useWeeks = (weeks) => {
 
   const getWeekRelative = (dif) => {
     let currentWeekIndex = weeks.indexOf(getCurrentWeek())
-    console.log(dif, currentWeekIndex + dif)
+    //console.log(dif, currentWeekIndex + dif)
     return weeks[currentWeekIndex + parseFloat(dif)]
   }
 

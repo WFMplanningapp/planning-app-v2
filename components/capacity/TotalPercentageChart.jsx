@@ -57,6 +57,13 @@ const lineColors = [
 ]
 
 const TotalPercentageChart = ({ data, lines, bars, percentages }) => {
+  
+  // Diagnostic logging — REMOVE or comment out in production!
+  console.log('Chart data sample:', data && data[0]);
+  console.log('Bars:', bars);
+  console.log('Lines:', lines);
+  console.log('Percentages:', percentages);
+  
   return (
     <>
       <ResponsiveContainer width={"99%"} height={500}>

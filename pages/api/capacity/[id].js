@@ -27,6 +27,7 @@ export default async function handler(req, res) {
       if (!capPlan) {
         res.status(404).json({ message: 'Capacity Plan not Found!' });
       }
+      
       let entries = await db
         .collection('capEntries')
         .find({ capPlan: id })

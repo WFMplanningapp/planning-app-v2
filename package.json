@@ -3,7 +3,7 @@
 	"scripts": {
 		"dev": "next --port 3000",
 		"build": "next build",
-		"start": "next start",
+		"start": "node server.js",
 		"azure:build": "npm run build",
 		"azure:start": "npm run start"
 	},
@@ -16,7 +16,7 @@
 		"@fortawesome/free-solid-svg-icons": "^5.15.4",
 		"@fortawesome/react-fontawesome": "^0.1.16",
 		"@mui/x-data-grid": "^5.2.2",
-		"bcrypt": "^5.0.1",
+		"bcryptjs": "^2.4.3",
 		"bulma": "^0.9.3",
 		"js-cookie": "^3.0.1",
 		"lodash": "^4.17.21",

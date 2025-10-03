@@ -7,9 +7,9 @@ query: selected (structureName1+structureName2+....)
 export default async function handler(req, res) {
 	const { query, method, body } = req
 
-	console.log(body)
+	//console.log(body)
 
-	console.log(query)
+	//console.log(query)
 
 	const { client, db } = await connectToDatabase()
 

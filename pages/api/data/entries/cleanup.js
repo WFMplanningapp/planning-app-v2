@@ -4,7 +4,7 @@ import { verifySession, verifyPermissions, ROLES } from "../../../../lib/verific
 export default async function handler(req, res) {
   const { query, method, body, headers } = req
 
-  console.log(headers)
+ // console.log(headers)
 
   let capPlan = query.capPlan
 

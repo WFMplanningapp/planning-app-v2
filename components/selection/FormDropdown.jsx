@@ -39,7 +39,7 @@ const FormDropdown = ({
         disabled={disabled}
         onChange={(e) => {
           let value = e.target.value
-          console.log("Value:", value)
+          //console.log("Value:", value)
           setSelected(value)
 
           if (reset) {

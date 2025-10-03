@@ -12,7 +12,7 @@ HEADER: authorization base 64 encoded
 export default async function handler(req, res) {
   const { query, method, body, headers } = req
 
-  console.log(query, method, body, headers)
+ // console.log(query, method, body, headers)
 
   const { client, db } = await connectToDatabase()
 
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
                 createdBy: verification.user.username,
               })
             : { message: "Nothing to Insert" }
-        console.log("Insert:", insert)
+        //console.log("Insert:", insert)
         if (insert.acknowledged) {
           const firstEntry = await db.collection("capEntries").insertOne({
             week: payload.firstWeek,
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
             createdAt: new Date(),
             createdBy: verification.user.username,
           })
-          console.log("firstEntry:", firstEntry)
+          //console.log("firstEntry:", firstEntry)
         }
         res
           .status(200)
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
       break
     case "PUT":
       if (verification.verified && verifyPermissions(ROLES.MANAGER,null,db,headers.authorization) && target) {
-        console.log("WILL UPDATE", payload, language)
+       // console.log("WILL UPDATE", payload, language)
         let update =
           payload && target
             ? await db.collection("capPlans").updateOne(

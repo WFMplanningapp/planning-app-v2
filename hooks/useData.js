@@ -21,7 +21,7 @@ export default function useData(selected) {
         const fetched = await response.json()
         setData(fetched.data)
       } else {
-        console.log("No initial data!")
+        //console.log("No initial data!")
         return
       }
     }

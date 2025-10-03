@@ -5,7 +5,7 @@ import { verifySession, verifyPermissions, ROLES } from "../../../../lib/verific
 export default async function handler(req, res) {
 	const { query, method, body, headers } = req
 
-	console.log(headers)
+	//console.log(headers)
 
 	let payload = body.payload //{name, volumes, aht}
 
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 			.collection("capPlans")
 			.findOne({ _id: ObjectId(capPlanId) })
 
-		console.log("CapPlan:", capPlan)
+		//console.log("CapPlan:", capPlan)
 
 		let channels = capPlan
 			? capPlan.staffing
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
 				: []
 			: []
 
-		console.log("Channels:", channels)
+		//console.log("Channels:", channels)
 
 		if (!channels.length) {
 			return res.status(406).json({
@@ -61,7 +61,7 @@ export default async function handler(req, res) {
 			.collection("capEntries")
 			.findOne({ capPlan: capPlanId, week: weekCode })
 
-		console.log(entry)
+		//console.log(entry)
 
 		let currentActual = []
 

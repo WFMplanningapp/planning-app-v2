@@ -34,7 +34,7 @@ const CSVUploader = ({ loadedHandler, removeHandler, label }) => {
               return rowObj;
             });
             loadedHandler(output);
-            console.log('Uploader Output', output);
+            //console.log('Uploader Output', output);
           } else {
             console.log('Not CSV');
           }

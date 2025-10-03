@@ -11,7 +11,7 @@ const headcountFields = [
   "rwsIN",
   "rwsOUT",
   "rampDown",
-  "inVac",
+  // "inVac",
   "overtimeFTE",
 ]
 
@@ -24,7 +24,7 @@ const trainingFields = [
   "ocpWeeks",
 ]
 
-const targetFields = ["billable", "forecasted", "budget", "required"]
+const targetFields = ["grossRequirement","inCenterRequirement","productiveRequirement", "budget"]
 
 /*const staffingFields = [
 	"pAHT",
@@ -45,6 +45,7 @@ const EntryForm = ({ selection, week }) => {
   const [entry, setEntry] = useState(null)
   const [loaded, setLoaded] = useState(false)
   const [formInfo, setFormInfo] = useState({})
+  const [lockedRequirementField, setLockedRequirementField] = useState(null)
 
   const auth = useAuth()
 
@@ -64,6 +65,7 @@ const EntryForm = ({ selection, week }) => {
       if (entries.length === 1) {
         setEntry(entries[0])
         setFormInfo({ Comment: entries[0]["Comment"] })
+        
       } else if (entries.length > 1) {
         console.log(
           "Multiple Entries!",
@@ -81,8 +83,133 @@ const EntryForm = ({ selection, week }) => {
   }, [selection, week])
 
   const handleChange = (e, field, changeConfig) => {
+    const requirementFields = ['productiveRequirement', 'inCenterRequirement', 'grossRequirement'];
+    
     if (!changeConfig) {
-      setFormInfo({ ...formInfo, [field]: e.target.value })
+		
+      let newFormInfo = {
+			...entry,     // ensure fallback data from entry
+			...formInfo,  // preserve previously typed values
+			[field]: e.target.value // apply new change
+		};
+      
+      // Function to recalculate requirements based on gross requirement and planned percentages
+      const recalculateRequirements = (currentFormInfo) => {
+        const grossReq = parseFloat(currentFormInfo.grossRequirement || 0);
+        if (grossReq > 0) {
+          // Get planned percentages from current form state
+          const plannedVac = parseFloat(currentFormInfo.plannedVac || (entry && entry.plannedVac) || 0) / 100;
+          const plannedAbs = parseFloat(currentFormInfo.plannedAbs || (entry && entry.plannedAbs) || 0) / 100;
+          const plannedAux = parseFloat(currentFormInfo.plannedAux || (entry && entry.plannedAux) || 0) / 100;
+          
+          // Formula 1: InCenter Requirement = (Gross Req * (1 - PlannedVac)) * (1 - PlannedAbs)
+          const inCenterReq = grossReq * (1 - (plannedVac+plannedAbs));
+          currentFormInfo.inCenterRequirement = inCenterReq.toFixed(2);
+          
+		  
+          // Formula 2: Productive Requirement = InCenter Requirement * (1 - PlannedAux)
+          const productiveReq = inCenterReq * (1 - plannedAux);
+          currentFormInfo.productiveRequirement = productiveReq.toFixed(2);
+        }
+        return currentFormInfo;
+      };
+
+      // If editing gross requirement, calculate InCenter Requirement and Productive Requirement
+      if (field === 'grossRequirement' && e.target.value.trim() !== '') {
+        const grossReq = parseFloat(e.target.value);
+        if (!isNaN(grossReq)) {
+          newFormInfo = recalculateRequirements(newFormInfo);
+        }
+        setLockedRequirementField(field);
+      }
+      // If editing InCenter requirement, calculate Gross Requirement and Productive Requirement
+      else if (field === 'inCenterRequirement' && e.target.value.trim() !== '') {
+        const inCenterReq = parseFloat(e.target.value);
+        if (!isNaN(inCenterReq)) {
+          // Get planned percentages from current form state
+          const plannedVac = parseFloat(newFormInfo.plannedVac || (entry && entry.plannedVac) || 0) / 100;
+          const plannedAbs = parseFloat(newFormInfo.plannedAbs || (entry && entry.plannedAbs) || 0) / 100;
+          const plannedAux = parseFloat(newFormInfo.plannedAux || (entry && entry.plannedAux) || 0) / 100;
+          
+          // Formula to get Gross Requirement: (InCenter Req / (1 - PlannedAbs)) / (1 - PlannedVac)
+          const grossReq = inCenterReq / (1 - (plannedAbs+plannedVac));
+          newFormInfo.grossRequirement = grossReq.toFixed(2);
+          
+          // Formula to get Productive Requirement: InCenter Req * (1 - PlannedAux)
+          const productiveReq = inCenterReq * (1 - plannedAux);
+          newFormInfo.productiveRequirement = productiveReq.toFixed(2);
+        }
+        setLockedRequirementField(field);
+      }
+      // If editing Productive requirement, calculate InCenter Requirement and Gross Requirement
+      else if (field === 'productiveRequirement' && e.target.value.trim() !== '') {
+        const productiveReq = parseFloat(e.target.value);
+        if (!isNaN(productiveReq)) {
+          // Get planned percentages from current form state
+          const plannedVac = parseFloat(newFormInfo.plannedVac || (entry && entry.plannedVac) || 0) / 100;
+          const plannedAbs = parseFloat(newFormInfo.plannedAbs || (entry && entry.plannedAbs) || 0) / 100;
+          const plannedAux = parseFloat(newFormInfo.plannedAux || (entry && entry.plannedAux) || 0) / 100;
+          
+          // Formula to get InCenter Requirement: Productive Req / (1 - PlannedAux)
+          const inCenterReq = productiveReq / (1 - plannedAux);
+          newFormInfo.inCenterRequirement = inCenterReq.toFixed(2);
+          
+          // Formula to get Gross Requirement: (InCenter Req / (1 - PlannedAbs)) / (1 - PlannedVac)
+          const grossReq = inCenterReq / (1 - (plannedAbs+plannedVac));
+          newFormInfo.grossRequirement = grossReq.toFixed(2);
+        }
+        setLockedRequirementField(field);
+      }
+      // If editing planned fields, recalculate based on existing requirement values (form or entry)
+      else if (['plannedVac', 'plannedAbs', 'plannedAux'].includes(field)) {
+        // Check for existing requirement values in form or entry (priority order)
+        const grossReq = parseFloat(formInfo.grossRequirement || (entry && entry.grossRequirement) || 0);
+        const inCenterReq = parseFloat(formInfo.inCenterRequirement || (entry && entry.inCenterRequirement) || 0);
+        const productiveReq = parseFloat(formInfo.productiveRequirement || (entry && entry.productiveRequirement) || 0);
+        
+        // Recalculate based on priority: Gross > InCenter > Productive
+        if (grossReq > 0) {
+          newFormInfo = recalculateRequirements(newFormInfo);
+        } else if (inCenterReq > 0 && !formInfo.productiveRequirement) {
+          // Get planned percentages from current form state
+          const plannedVac = parseFloat(newFormInfo.plannedVac || (entry && entry.plannedVac) || 0) / 100;
+          const plannedAbs = parseFloat(newFormInfo.plannedAbs || (entry && entry.plannedAbs) || 0) / 100;
+          const plannedAux = parseFloat(newFormInfo.plannedAux || (entry && entry.plannedAux) || 0) / 100;
+          
+          // Recalculate Gross and Productive from InCenter
+          const grossReq = inCenterReq / (1 - (plannedAbs+plannedVac));
+          newFormInfo.grossRequirement = grossReq.toFixed(2);
+          
+          const productiveReq = inCenterReq * (1 - plannedAux);
+          newFormInfo.productiveRequirement = productiveReq.toFixed(2);
+        } else if (productiveReq > 0) {
+          // Get planned percentages from current form state
+          const plannedVac = parseFloat(newFormInfo.plannedVac || (entry && entry.plannedVac) || 0) / 100;
+          const plannedAbs = parseFloat(newFormInfo.plannedAbs || (entry && entry.plannedAbs) || 0) / 100;
+          const plannedAux = parseFloat(newFormInfo.plannedAux || (entry && entry.plannedAux) || 0) / 100;
+          
+          // Recalculate InCenter and Gross from Productive
+          const inCenterReq = productiveReq / (1 - plannedAux);
+          newFormInfo.inCenterRequirement = inCenterReq.toFixed(2);
+          
+          const grossReq = inCenterReq / (1 - (plannedAbs+plannedVac));
+          newFormInfo.grossRequirement = grossReq.toFixed(2);
+        }
+      }
+      // If editing a requirement field and it has a value, lock the other requirement fields
+      else if (requirementFields.includes(field) && e.target.value.trim() !== '') {
+        setLockedRequirementField(field);
+      }
+      // If clearing a requirement field, clear all requirement fields and unlock all fields
+      else if (requirementFields.includes(field) && e.target.value.trim() === '') {
+        setLockedRequirementField(null);
+        // Clear all requirement fields when one is cleared
+        newFormInfo.grossRequirement = '';
+        newFormInfo.inCenterRequirement = '';
+        newFormInfo.productiveRequirement = '';
+      }
+      
+      setFormInfo(newFormInfo);
     } else {
       setFormInfo({
         ...formInfo,
@@ -92,6 +219,7 @@ const EntryForm = ({ selection, week }) => {
   }
 
   const handleSubmit = () => {
+		
     let newEntry = {}
 
     if (entry) {
@@ -102,6 +230,15 @@ const EntryForm = ({ selection, week }) => {
     }
 
     newEntry = { ...newEntry, ...formInfo }
+
+    // Remove old field names when new ones are present to avoid duplication
+    if (newEntry.productiveRequirement !== undefined) {
+       newEntry.productiveRequirement = newEntry.productiveRequirement;
+    }
+    if (newEntry.inCenterRequirement !== undefined) {
+      newEntry.inCenterRequirement = newEntry.inCenterRequirement;
+    }
+    
 
     Object.keys(newEntry).forEach((key) => {
       if (newEntry[key] === "delete") {
@@ -123,8 +260,12 @@ const EntryForm = ({ selection, week }) => {
       .then((res) => res.json())
       .then((fetched) => {
         console.log(fetched.message)
+        // Update the readonly fields with the new values from the database
         setEntry(newEntry)
-        setFormInfo({ Comment: newEntry["Comment"] })
+        // Clear all form fields for new entries, but keep the comment
+        setFormInfo({ Comment: newEntry["Comment"] || "" })
+        // Clear the locked field state
+        setLockedRequirementField(null)
       })
       .catch()
 
@@ -211,12 +352,24 @@ const EntryForm = ({ selection, week }) => {
           </div>
           <label>TARGETS</label>
           <div className="columns is-multiline is-mobile pt-2">
-            {targetFields.map((field) => (
+            {targetFields.map((field) => {
+              const fieldLabels = {
+                productiveRequirement: "Productive Requirement",
+                forecasted: "forecasted",
+                budget: "budget",
+                inCenterRequirement: "InCenter Requirement",
+                grossRequirement: "Gross Requirement"
+              };
+              const requirementFields = ['productiveRequirement', 'inCenterRequirement', 'grossRequirement'];
+              const isRequirementField = requirementFields.includes(field);
+              const isLocked = lockedRequirementField && lockedRequirementField !== field && isRequirementField;
+              
+              return (
               <div
                 key={`Col-${field}`}
                 className="column is-6-mobile is-2 py-0"
               >
-                <label>{field}</label>
+                <label>{fieldLabels[field] || field}</label>
                 <div className="field has-addons">
                   <p className="control">
                     <input
@@ -234,17 +387,19 @@ const EntryForm = ({ selection, week }) => {
                     <input
                       className={
                         "input is-rounded is-small " +
-                        (formInfo[field] ? "is-danger" : "")
+                        (formInfo[field] ? "is-danger" : "") +
+                        (isLocked ? " has-background-grey-lighter" : "")
                       }
                       aria-label={field}
                       value={formInfo[field] || ""}
-                      disabled={!week}
+                      disabled={!week || isLocked}
                       onChange={(e) => handleChange(e, field)}
                     />
                   </p>
                 </div>
               </div>
-            ))}
+            )
+            })}
           </div>
 
           <label>ACTUALS</label>

@@ -57,11 +57,11 @@ export default function Login() {
   if (data && data.verification) {
     data.verification.forEach(user => {
       if (user.session.expires > 0 && user.session.expires > Date.now()) {
-        console.log(new Date(user.session.expires - 43200000));
+        //console.log(new Date(user.session.expires - 43200000));
         const diff = Date.now() - (new Date(user.session.expires - 43200000).getTime());
         const minetes = (diff / (1000 * 60)).toFixed(0);
         const hours = (diff / (1000 * 60 * 60)).toFixed(1);
-        console.log((diff / (1000 * 60 * 60)).toFixed(1));
+        //console.log((diff / (1000 * 60 * 60)).toFixed(1));
         loggedUsr.push({
           name: user.username,
           loggedHrs: minetes < 60 ? `${minetes} min` : `${hours} h`,
@@ -86,7 +86,6 @@ export default function Login() {
 
   const handleDeleteUser = () => {
     if (window.confirm("Are you sure you want to Delete?")) {
-      console.log("Burp")
       auth.deleteUser({
         username: form.get("username"),
         permission: form.get("permission"),

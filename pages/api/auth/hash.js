@@ -1,4 +1,4 @@
-import { hashSync, compareSync } from "bcrypt"
+import { hashSync, compareSync } from "bcryptjs"
 
 export default async function handler(req, res) {
   const { query } = req

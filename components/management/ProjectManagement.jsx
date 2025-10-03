@@ -59,7 +59,7 @@ const ProjectManagement = ({ data }) => {
         })
           .then((response) => response.json())
           .then((data) => {
-            console.log(data.message);
+            //console.log(data.message);
             form.resetAll();
           })
           .catch((err) => console.log(err));
@@ -81,7 +81,7 @@ const ProjectManagement = ({ data }) => {
         )
           .then((response) => response.json())
           .then((data) => {
-            console.log(data.message);
+            //console.log(data.message);
             form.resetAll();
           })
           .catch((err) => console.log(err));
@@ -111,7 +111,7 @@ const ProjectManagement = ({ data }) => {
           )
             .then((response) => response.json())
             .then((data) => {
-              console.log(data.message);
+              //console.log(data.message);
               form.resetAll();
             })
             .catch((err) => console.log(err));

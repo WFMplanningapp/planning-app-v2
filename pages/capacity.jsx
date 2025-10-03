@@ -59,13 +59,13 @@ export default function Capacity() {
     'weeks',
   ]);
 
-  if (data && data.fields) {
-    console.log(
-      data.fields.sort((a, b) => parseInt(a.order) - parseInt(b.order))
-    );
-  } else {
-    console.log('no fields yet');
-  }
+  // if (data && data.fields) {
+  // //  console.log (
+  // //     data.fields.sort((a, b) => parseInt(a.order) - parseInt(b.order))
+  // //   );
+  // } else {
+  //   console.log('no fields yet');
+  // }
 
   const weeks = useWeeks(
     data.weeks &&
@@ -219,7 +219,7 @@ export default function Capacity() {
                                 (capPlan) => capPlan.lob === selectedLobs
                               );
 
-                              console.log(capPlanLobs);
+                              //console.log(capPlanLobs);
 
                               return capPlanLobs.find(
                                 (capPlan) => capPlan.country === country.name
@@ -462,9 +462,10 @@ export default function Capacity() {
                   <TotalPercentageChart
                     data={capacity.get(weekRange)}
                     lines={[
-                      'billableFTE',
+                      'productiveRequirement',
                       'budgetFTE',
-                      'requiredFTE',
+                      'inCenterRequirement',
+                      'grossRequirement',
                       'totalHC',
                       'expectedFTE',
                     ]}
@@ -474,13 +475,13 @@ export default function Capacity() {
                   <h3 className="has-text-centered">InCenter: ACTUALS VS REQUIRED</h3>
                   <TotalPercentageChart
                     data={capacity.get(weekRange)}
-                    lines={['requiredFTE', 'expectedFTE']}
+                    lines={['inCenterRequirement', 'expectedFTE']}
                   />
                   <br />
                   <h3 className="has-text-centered">ACTUALS VS FINANCIALS</h3>
                   <TotalPercentageChart
                     data={capacity.get(weekRange)}
-                    lines={['budgetFTE', 'fcFTE', 'totalFTE', 'expectedFTE']}
+                    lines={['budgetFTE', 'grossRequirement', 'expectedFTE']}
                   />
                   <br />
                   <h3 className="has-text-centered">ATTRITION TREND</h3>
