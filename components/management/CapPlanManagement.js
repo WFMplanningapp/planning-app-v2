@@ -32,7 +32,7 @@ const formFields = [
   },
   {
     name: 'active',
-    default: '',
+    default: true,
     required: false,
     type: 'check',
     label: 'Active',
@@ -181,6 +181,7 @@ const CapPlanManagement = ({ data }) => {
     let payload = {
       ...form.getForm(),
     };
+    payload.active = !!payload.active;
 
     switch (action) {
       case 'ADD':

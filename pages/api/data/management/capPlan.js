@@ -59,7 +59,7 @@ export default async function handler(req, res) {
         let update =
           payload && target
             ? await db.collection("capPlans").updateOne(
-                { _id: ObjectId(target) },
+                { _id: new ObjectId(target) },
                 {
                   $set: {
                     ...payload,
@@ -78,7 +78,7 @@ export default async function handler(req, res) {
     case "DELETE":
       if (verification.verified && verifyPermissions(ROLES.ADMIN,null,db,headers.authorization)) {
         let remove = target
-          ? await db.collection("capPlans").deleteOne({ _id: ObjectId(target) })
+          ? await db.collection("capPlans").deleteOne({ _id: new ObjectId(target) })
           : { message: "Nothing to Remove" }
         res
           .status(200)
