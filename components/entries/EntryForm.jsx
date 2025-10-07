@@ -240,11 +240,32 @@ const EntryForm = ({ selection, week }) => {
     }
     
 
-    Object.keys(newEntry).forEach((key) => {
-      if (newEntry[key] === "delete") {
-        newEntry[key] = ""
-      }
-    })
+    const fieldsToDelete = [];
+Object.keys(newEntry).forEach((key) => {
+  if (newEntry[key] === "delete") {
+    fieldsToDelete.push(key);
+    delete newEntry[key]; // Optionally remove from the update payload
+  }
+});
+
+// Now send the list as part of your PATCH request:
+fetch("/api/data/entries/single", {
+  method: "PATCH",
+  headers: {
+    Authorization: auth.authorization(),
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    _id: entry._id,             // Make sure to send this!
+    fieldsToDelete,             // The array of fields to remove
+    payload: newEntry           // Other fields to update, if any
+  }),
+})
+.then((res) => res.json())
+.then((fetched) => {
+  // handle result as before
+});
 
     fetch("/api/data/entries/single", {
       method: "POST",
