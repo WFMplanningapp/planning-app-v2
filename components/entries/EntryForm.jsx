@@ -248,25 +248,28 @@ Object.keys(newEntry).forEach((key) => {
   }
 });
 
-// Now send the list as part of your PATCH request:
-fetch("/api/data/entries/single", {
-  method: "PATCH",
-  headers: {
-    Authorization: auth.authorization(),
-    Accept: "application/json",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    _id: entry._id,             // Make sure to send this!
-    fieldsToDelete,             // The array of fields to remove
-    payload: newEntry           // Other fields to update, if any
-  }),
-})
-.then((res) => res.json())
-.then((fetched) => {
-  // handle result as before
-});
-
+if (entry && entry._id) {
+    // Only PATCH if existing entry
+    fetch("/api/data/entries/single", {
+      method: "PATCH",
+      headers: {
+        Authorization: auth.authorization(),
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        _id: entry._id,
+        fieldsToDelete,
+        payload: newEntry,
+      }),
+    })
+      .then((res) => res.json())
+      .then((fetched) => {
+        console.log(fetched.message)
+      })
+      .catch()
+  } else {
+    // POST for new entries
     fetch("/api/data/entries/single", {
       method: "POST",
       headers: {
@@ -281,19 +284,15 @@ fetch("/api/data/entries/single", {
       .then((res) => res.json())
       .then((fetched) => {
         console.log(fetched.message)
-        // Update the readonly fields with the new values from the database
         setEntry(newEntry)
-        // Clear all form fields for new entries, but keep the comment
         setFormInfo({ Comment: newEntry["Comment"] || "" })
-        // Clear the locked field state
         setLockedRequirementField(null)
       })
       .catch()
-
-    return
   }
-
-  return (
+}
+  
+return (
     <>
       <div>
         <form className="is-size-7">
