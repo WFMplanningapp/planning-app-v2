@@ -4,9 +4,9 @@ import TotalPercentageChart from "./TotalPercentageChart"; // adjust import path
 // Step 1: Define available lines and bars
 const availableLines = [
   { key: 'productiveRequirement', label: 'Productive Requirement' },
-  { key: 'PlanProdFTE', label: 'Planned Prod. FTE' },
+  { key: 'compositeProductiveFTE', label: 'Productive FTE (Actual/Predictive)' },
   { key: 'inCenterRequirement', label: 'InCenter Requirement' },
-  { key: 'expectedFTE', label: 'Expected FTE' },
+  { key: 'compositeInCenterFTE', label: 'InCenter FTE (Actual/Predictive)' },
   { key: 'grossRequirement', label: 'Gross FTE Req.' },
   { key: 'totalFTE', label: 'Total FTE' },
 ];
