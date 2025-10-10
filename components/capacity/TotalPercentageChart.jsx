@@ -1,7 +1,6 @@
 import {
   ComposedChart,
   Line,
-  Area,
   Bar,
   XAxis,
   YAxis,
@@ -9,146 +8,127 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts"
+} from "recharts";
 
-const barColors = [
-  "#7fb069",
-  "#333bbd",
-  "#e6aa68",
-  "#ca3c25",
-  "#1d1a05",
-  "#7fb069",
-  "#333bbd",
-  "#e6aa68",
-  "#ca3c25",
-  "#1d1a05",
-  "#7fb069",
-  "#333bbd",
-  "#e6aa68",
-  "#ca3c25",
-  "#1d1a05",
-  "#7fb069",
-  "#333bbd",
-  "#e6aa68",
-  "#ca3c25",
-  "#1d1a05",
-]
-const lineColors = [
-  "#247ba0",
-  "#70c1b3",
-  "#b2dbbf",
-  "#E3B52d",
-  "#ff1654",
-  "#247ba0",
-  "#70c1b3",
-  "#b2dbbf",
-  "#E3B52d",
-  "#ff1654",
-  "#247ba0",
-  "#70c1b3",
-  "#b2dbbf",
-  "#E3B52d",
-  "#ff1654",
-  "#247ba0",
-  "#70c1b3",
-  "#b2dbbf",
-  "#E3B52d",
-  "#ff1654",
-]
+// ONE: Define your exact color and line style for each important field
+const fieldStyles = {
+  // Gross FTE & Total FTE (blue)
+  grossRequirement:  { color: "#247ba0", dash: "solid", name: "Gross FTE Req." },
+  totalFTE:          { color: "#247ba0", dash: "3 3", name: "Planned Gross FTE" },
 
-const TotalPercentageChart = ({ data, lines, bars, percentages }) => {
-  
-  // Diagnostic logging — REMOVE or comment out in production!
-  console.log('Chart data sample:', data && data[0]);
-  console.log('Bars:', bars);
-  console.log('Lines:', lines);
-  console.log('Percentages:', percentages);
-  
-  return (
-    <>
-      <ResponsiveContainer width={"99%"} height={500}>
-        <ComposedChart
-          data={data}
-          margin={{
-            top: 30,
-            right: -10,
-            left: -10,
-            bottom: 60,
-          }}
-        >
-          <Legend
-            verticalAlign="top"
-            wrapperStyle={{ top: "0" }}
-            height={20}
-            layout="horizontal"
-            style={{ fontSize: "0.5em" }}
-          />
-          <CartesianGrid strokeDasharray="1 1" />
-          <XAxis
-            dataKey="firstDate"
-            allowDataOverflow={false}
-            interval={0} // display all of values, instead of the default 5
-            angle={-60} // force text to be 90, reading towards the graph
-            dx={-6}
-            textAnchor="end" // rather than setting "dy={50}" or something
-            fontSize={11}
-          />
+  // InCenter & Expected (orange)
+  inCenterRequirement: { color: "#e67e22", dash: "solid", name: "InCenter Requirement" },
+  expectedFTE:         { color: "#e67e22", dash: "2 5", name: "Planned InCenter FTE " },
 
-          <YAxis
-            yAxisId="left"
-            orientation="left"
-            type="number"
-            fontSize={11}
-          />
-          <YAxis
+  // Productive & Planned Productive (purple)
+  productiveRequirement: { color: "#8e44ad", dash: "solid", name: "Productive Requirement" },
+  PlanProdFTE:           { color: "#8e44ad", dash: "5 4", name: "Planned Productive FTE" },
+
+  attrPercent:   { color: "#e7298a", name: "Attrition %" },
+  fcAttrition:   { color: "#a6761d", name: "FC Attrition" },
+};
+
+const yAxisLabels = {
+  left: "FTE / Requirement",
+  right: "%",
+};
+
+const TotalPercentageChart = ({
+  data,
+  lines = [
+    'productiveRequirement',
+    'inCenterRequirement',
+    'grossRequirement',
+    'totalHC',
+    'expectedFTE',
+  ],
+  bars = ['attrPercent', 'fcAttrition']
+}) => (
+  <ResponsiveContainer width="99%" height={420}>
+    <ComposedChart
+      data={data}
+      margin={{
+        top: 30,
+        right: 10,
+        left: 0,
+        bottom: 60,
+      }}
+    >
+      <Legend
+        verticalAlign="top"
+        wrapperStyle={{ top: 0, fontSize: 13 }}
+        height={32}
+        iconType="line"
+      />
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis
+        dataKey="firstDate"
+        interval={0}
+        angle={-60}
+        dx={-6}
+        textAnchor="end"
+        fontSize={12}
+        minTickGap={5}
+      />
+      <YAxis
+        yAxisId="left"
+        orientation="left"
+        type="number"
+        fontSize={12}
+        width={44}
+        label={{ value: yAxisLabels.left, angle: -90, position: 'insideLeft', fontSize: 12 }}
+        tickCount={8}
+        allowDecimals
+      />
+      <YAxis
+        yAxisId="right"
+        orientation="right"
+        type="number"
+        fontSize={12}
+        width={44}
+        label={{ value: yAxisLabels.right, angle: 90, position: 'insideRight', fontSize: 12 }}
+        tickCount={8}
+        allowDecimals
+      />
+      <Tooltip
+        formatter={(value, name) =>
+          typeof value === "number"
+            ? [value.toFixed(2), fieldStyles[name]?.name || name]
+            : [value, fieldStyles[name]?.name || name]
+        }
+      />
+
+      {/* BARS (Background, for attrition etc) */}
+      {bars &&
+        bars.map((bar, index) => (
+          <Bar
+            key={`bar-${bar}`}
+            dataKey={bar}
             yAxisId="right"
-            orientation="right"
-            type="number"
-            fontSize={11}
+            fill={fieldStyles[bar]?.color || "#bbb"}
+            opacity={0.18 + 0.14 * index}
+            name={fieldStyles[bar]?.name || bar}
+            barSize={16}
           />
+        ))}
 
-          <Tooltip />
+      {/* LINES (Requirements, FTE etc) */}
+      {lines &&
+        lines.map((line, index) => (
+          <Line
+            key={`line-${line}`}
+            dataKey={line}
+            type="monotone"
+            yAxisId="left"
+            stroke={fieldStyles[line]?.color || "#111"}
+            strokeWidth={2}
+            dot={false}
+            name={fieldStyles[line]?.name || line}
+            strokeDasharray={fieldStyles[line]?.dash || "solid"}
+          />
+        ))}
+    </ComposedChart>
+  </ResponsiveContainer>
+);
 
-          {bars &&
-            bars.map((total, index) => (
-              <Bar
-                key={`bar -${index}`}
-                dataKey={total}
-                style={{ opacity: "0.5" }}
-                yAxisId="left"
-                strokeWidth={1}
-                fill={barColors[index + 3]}
-                stroke={barColors[index + 3]}
-              />
-            ))}
-          {percentages &&
-            percentages.map((percentage, index) => (
-              <Bar
-                key={`percent -${index}`}
-                dataKey={percentage}
-                style={{ opacity: "0.7" }}
-                yAxisId="right"
-                strokeWidth={1}
-                fill={lineColors[index + 4]}
-                stroke={lineColors[index + 4]}
-              />
-            ))}
-
-          {lines &&
-            lines.map((total, index) => (
-              <Line
-                key={`lines-${index}`}
-                dataKey={total}
-                type="monotone"
-                yAxisId="left"
-                stroke={barColors[index + 1]}
-                fill={barColors[index + 1]}
-              />
-            ))}
-        </ComposedChart>
-      </ResponsiveContainer>
-    </>
-  )
-}
-
-export default TotalPercentageChart
+export default TotalPercentageChart;

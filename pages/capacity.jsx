@@ -13,8 +13,11 @@ import WeekDropdown from '../components/selection/WeekDropdown';
 
 import CapacityViewer from '../components/capacity/CapacityViewer';
 import TotalPercentageChart from '../components/capacity/TotalPercentageChart';
+import ToggleableCapacityChart from '../components/capacity/ToggleableCapacityChart';
 import CapacityDataGrid from '../components/capacity/CapacityDataGrid';
 import EntriesModal from '../components/entries/EntriesModal';
+
+
 
 const selectionFields = [
   { name: 'country', default: null, required: true, type: 'object', level: 1 },
@@ -459,32 +462,9 @@ export default function Capacity() {
                     </a>
                   </h2>
                   <h3 className="has-text-centered">OVERALL VISION</h3>
-                  <TotalPercentageChart
-                    data={capacity.get(weekRange)}
-                    lines={[
-                      'productiveRequirement',
-                      'budgetFTE',
-                      'inCenterRequirement',
-                      'grossRequirement',
-                      'totalHC',
-                      'expectedFTE',
-                    ]}
-                    bars={['attrPercent', 'fcAttrition']}
-                  />
+                  <ToggleableCapacityChart data={capacity.get(weekRange)} />
                   <br />
-                  <h3 className="has-text-centered">InCenter: ACTUALS VS REQUIRED</h3>
-                  <TotalPercentageChart
-                    data={capacity.get(weekRange)}
-                    lines={['inCenterRequirement', 'expectedFTE']}
-                  />
-                  <br />
-                  <h3 className="has-text-centered">ACTUALS VS FINANCIALS</h3>
-                  <TotalPercentageChart
-                    data={capacity.get(weekRange)}
-                    lines={['budgetFTE', 'grossRequirement', 'expectedFTE']}
-                  />
-                  <br />
-                  <h3 className="has-text-centered">ATTRITION TREND</h3>
+                <h3 className="has-text-centered">ATTRITION TREND</h3>
                   <TotalPercentageChart
                     data={capacity.get(weekRange)}
                     lines={['expectedAttrition', 'budgetAtt']}

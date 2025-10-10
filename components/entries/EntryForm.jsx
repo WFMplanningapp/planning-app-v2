@@ -48,6 +48,32 @@ const EntryForm = ({ selection, week }) => {
   const [lockedRequirementField, setLockedRequirementField] = useState(null)
 
   const auth = useAuth()
+  
+  // --- THE KEY PART: fetchEntry defined OUTSIDE useEffect, so it's available elsewhere ---
+  const fetchEntry = async () => {
+    let fetched = await fetch(
+      `api/data/find/capEntries?capPlan=${selection.get("capPlan")._id}&week=${week.code}`
+    )
+      .then((res) => res.json())
+      .catch();
+
+    let entries = fetched.data;
+
+    if (entries.length === 1) {
+      setEntry(entries[0]);
+      setFormInfo({ Comment: entries[0]["Comment"] });
+    } else if (entries.length > 1) {
+      console.log(
+        "Multiple Entries!",
+        entries.map((entry) => entry.id)
+      );
+    } else if (entries.length === 0) {
+      setFormInfo({});
+      setEntry(null);
+      console.log("No entry found");
+    }
+    setLoaded(true);
+  };
 
   useEffect(() => {
     const fetchEntry = async () => {
@@ -79,7 +105,7 @@ const EntryForm = ({ selection, week }) => {
       setLoaded(true)
     }
 
-    fetchEntry()
+    fetchEntry();
   }, [selection, week])
 
   const handleChange = (e, field, changeConfig) => {
@@ -266,6 +292,7 @@ if (entry && entry._id) {
       .then((res) => res.json())
       .then((fetched) => {
         console.log(fetched.message)
+        fetchEntry();
       })
       .catch()
   } else {
@@ -287,6 +314,7 @@ if (entry && entry._id) {
         setEntry(newEntry)
         setFormInfo({ Comment: newEntry["Comment"] || "" })
         setLockedRequirementField(null)
+        fetchEntry();
       })
       .catch()
   }
