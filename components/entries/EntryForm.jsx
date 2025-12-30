@@ -4,6 +4,7 @@ import { useAuth } from "../../contexts/authContext"
 
 const headcountFields = [
   "attrition",
+  "fcAttrition",
   "moveIN",
   "moveOUT",
   "loaIN",
@@ -14,6 +15,13 @@ const headcountFields = [
   // "inVac",
   "overtimeFTE",
 ]
+
+const customLabels = {
+  fcAttrition: "Forecasted Attrition in %",
+  overtimeFTE: "Overtime in FTEs"
+  // Add other custom mappings here
+  // fieldName: "Your Custom Label"
+};
 
 const trainingFields = [
   "trCommit",
@@ -331,7 +339,7 @@ return (
                 key={`Col-${field}`}
                 className="column is-6-mobile is-2 py-0"
               >
-                <label>{field}</label>
+                <label>{customLabels[field] || field}</label>
                 <div className="field has-addons">
                   <p className="control">
                     <input

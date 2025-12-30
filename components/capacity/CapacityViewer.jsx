@@ -29,6 +29,20 @@ const CapacityViewer = ({ capacity, fields, currentWeek, withStaff }) => {
     }));
   };
 
+  const percentFields = [
+  "fcAttrition",
+  "attrPercent",
+  "plannedVac",
+  "plannedAbs",
+  "plannedAux",
+  "actVac",
+  "actAbs",
+  "actAux",
+ 
+];
+
+const varianceFields = ["billVar", "reqVar", "fcVar"];
+
   return (
     <div className="columns is-gapless is-size-7 is-mobile">
       <div className="column is-narrow table-container has-text-right">
@@ -134,6 +148,7 @@ const CapacityViewer = ({ capacity, fields, currentWeek, withStaff }) => {
                         style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
                       >
                         {weekly[typeFields[0]?.internal] !== undefined ? (
+
                           Math.round(weekly[typeFields[0].internal] * 1000) /
                           1000
                         ) : weekly[typeFields[0]?.internal] === 0 ? (
@@ -150,10 +165,24 @@ const CapacityViewer = ({ capacity, fields, currentWeek, withStaff }) => {
                       {capacity.map((weekly) => (
                         <td
                           key={`weekly-body-${weekly.week.code}-${field.internal}`}
-                          style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
+                          style={{ 
+                            whiteSpace: 'nowrap', 
+                            textAlign: 'center', 
+                            color: 
+                            varianceFields.includes(field.internal) && weekly[field.internal] < 0
+                            ? '#C0392B'
+                            : undefined
+
+                          }}
                         >
                           {weekly[field.internal] !== undefined ? (
-                            Math.round(weekly[field.internal] * 1000) / 1000
+                            field.internal === "totalHC"
+                            ? Math.round(weekly[field.internal])
+                            : (["actualFTE", "ActProdFTE"].includes(field.internal) && weekly.isFuture)
+                            ? 0
+                            : percentFields.includes(field.internal)
+                            ? (parseFloat(weekly[field.internal])).toFixed(2) + '%'
+                            : Math.round(weekly[field.internal] * 1000) / 1000
                           ) : weekly[field.internal] === 0 ? (
                             <span className="has-text-primary">0</span>
                           ) : (
