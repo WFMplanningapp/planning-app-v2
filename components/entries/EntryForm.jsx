@@ -17,8 +17,9 @@ const headcountFields = [
 ]
 
 const customLabels = {
-  fcAttrition: "Forecasted Attrition in %",
-  overtimeFTE: "Overtime in FTEs"
+  fcAttrition: "Forecasted Attrition (%)",
+  overtimeFTE: "Overtime in FTEs",
+  ocpProductivityPercent: "OCP Productivity (%)",
   // Add other custom mappings here
   // fieldName: "Your Custom Label"
 };
@@ -30,6 +31,7 @@ const trainingFields = [
   "ocpAttrition",
   "trWeeks",
   "ocpWeeks",
+  
 ]
 
 const targetFields = ["grossRequirement","inCenterRequirement","productiveRequirement", "budget"]
@@ -371,41 +373,111 @@ return (
           </div>
           <label>TRAINING</label>
           <div className="columns is-multiline is-mobile pt-2">
-            {trainingFields.map((field) => (
-              <div
-                key={`Col-${field}`}
-                className="column is-6-mobile is-2 py-0"
-              >
-                <label>{field}</label>
-                <div className="field has-addons">
-                  <p className="control">
-                    <input
-                      readOnly={true}
-                      className={`input is-rounded is-small has-text-light ${
-                        entry && entry[field]
-                          ? "has-background-info"
-                          : "has-background-grey-lighter"
-                      }`}
-                      aria-label={field}
-                      value={(entry && entry[field]) || "none"}
-                    />
-                  </p>
-                  <p className="control">
-                    <input
-                      className={
-                        "input is-rounded is-small " +
-                        (formInfo[field] ? "is-danger" : "")
-                      }
-                      aria-label={field}
-                      value={formInfo[field] || ""}
-                      disabled={!week}
-                      onChange={(e) => handleChange(e, field)}
-                    />
-                  </p>
-                </div>
-              </div>
-            ))}
+  {trainingFields.map((field) => {
+    // Render ocpWeeks as usual
+    if (field === "ocpWeeks") {
+      return (
+        <div
+          key={`Col-${field}`}
+          className="column is-6-mobile is-2 py-0"
+        >
+          <label>{customLabels[field] || field}</label>
+          <div className="field has-addons">
+            <p className="control">
+              <input
+                readOnly={true}
+                className={`input is-rounded is-small has-text-light ${
+                  entry && entry[field]
+                    ? "has-background-info"
+                    : "has-background-grey-lighter"
+                }`}
+                aria-label={field}
+                value={(entry && entry[field]) || "none"}
+              />
+            </p>
+            <p className="control">
+              <input
+                className={
+                  "input is-rounded is-small " +
+                  (formInfo[field] ? "is-danger" : "")
+                }
+                aria-label={field}
+                value={formInfo[field] || ""}
+                disabled={!week}
+                onChange={(e) => handleChange(e, field)}
+              />
+            </p>
           </div>
+          {/* ---- Insert OCP Productivity Percent BELOW ---- */}
+          <div className="mt-2">
+            <label>{customLabels.ocpProductivityPercent || "OCP Productivity (%)"}</label>
+            <div className="field has-addons">
+              <p className="control">
+                <input
+                  readOnly={true}
+                  className={`input is-rounded is-small has-text-light ${
+                    entry && entry["ocpProductivityPercent"]
+                      ? "has-background-info"
+                      : "has-background-grey-lighter"
+                  }`}
+                  aria-label="ocpProductivityPercent"
+                  value={(entry && entry["ocpProductivityPercent"]) || "none"}
+                />
+              </p>
+              <p className="control">
+                <input
+                  className={
+                    "input is-rounded is-small " +
+                    (formInfo["ocpProductivityPercent"] ? "is-danger" : "")
+                  }
+                  aria-label="ocpProductivityPercent"
+                  value={formInfo["ocpProductivityPercent"] || ""}
+                  disabled={!week}
+                  onChange={(e) => handleChange(e, "ocpProductivityPercent")}
+                />
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    // Default render (for all other fields)
+    return (
+      <div
+        key={`Col-${field}`}
+        className="column is-6-mobile is-2 py-0"
+      >
+        <label>{customLabels[field] || field}</label>
+        <div className="field has-addons">
+          <p className="control">
+            <input
+              readOnly={true}
+              className={`input is-rounded is-small has-text-light ${
+                entry && entry[field]
+                  ? "has-background-info"
+                  : "has-background-grey-lighter"
+              }`}
+              aria-label={field}
+              value={(entry && entry[field]) || "none"}
+            />
+          </p>
+          <p className="control">
+            <input
+              className={
+                "input is-rounded is-small " +
+                (formInfo[field] ? "is-danger" : "")
+              }
+              aria-label={field}
+              value={formInfo[field] || ""}
+              disabled={!week}
+              onChange={(e) => handleChange(e, field)}
+            />
+          </p>
+        </div>
+      </div>
+    );
+  })}
+</div>
           <label>TARGETS</label>
           <div className="columns is-multiline is-mobile pt-2">
             {targetFields.map((field) => {
