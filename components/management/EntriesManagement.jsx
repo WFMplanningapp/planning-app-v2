@@ -306,78 +306,83 @@ const EntriesManagement = ({ data }) => {
                   removeHandler={() => setUpload([])}
                   loadedHandler={async (csv) => {
                     const missing = v =>
-                      v === undefined || v === null || (typeof v === "string" && v.trim() === "");
+                    v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 
-                    // 1. Prepare keys for bulk fetch
-                    const keys = csv.map(row => ({ capPlan: row.capPlan, week: row.week }));
+                  // 1. Prepare keys for bulk fetch
+                  const keys = csv.map(row => ({ capPlan: row.capPlan, week: row.week }));
 
-                    // 2. Fetch existing entries
-                    let dbEntries = [];
-                    try {
-                      dbEntries = await fetchExistingEntries(keys); // Your helper
-                    } catch(e) {
-                      alert("Error fetching existing planned values from DB.");
-                      setUpload([]);
-                      return;
+                  // 2. Fetch existing entries
+                  let dbEntries = [];
+                  try {
+                    dbEntries = await fetchExistingEntries(keys);
+                  } catch(e) {
+                    alert("Error fetching existing planned values from DB.");
+                    setUpload([]);
+                    return;
+                  }
+
+                  const findDbEntry = (row) =>
+                    dbEntries.find(
+                      dbRow => dbRow.capPlan === row.capPlan && dbRow.week === row.week
+                    ) || {};
+
+                  const warnings = [];
+
+                  const processed = csv.map(row => {
+                    const dbRow = findDbEntry(row);
+
+                    // Fill missing shrinkages from DB if needed
+                    const pVac = !missing(row.plannedVac) ? row.plannedVac : dbRow.plannedVac;
+                    const pAbs = !missing(row.plannedAbs) ? row.plannedAbs : dbRow.plannedAbs;
+                    const pAux = !missing(row.plannedAux) ? row.plannedAux : dbRow.plannedAux;
+
+                    // Warn if any planned shrinkage is missing from both CSV and DB
+                    let missingFields = [];
+                    if (missing(pVac)) missingFields.push('plannedVac');
+                    if (missing(pAbs)) missingFields.push('plannedAbs');
+                    if (missing(pAux)) missingFields.push('plannedAux');
+                    if (missingFields.length) {
+                      warnings.push(`capPlan: ${row.capPlan}, week: ${row.week} (Missing: ${missingFields.join(', ')})`);
                     }
 
-                    const findDbEntry = (row) =>
-                      dbEntries.find(
-                        dbRow => dbRow.capPlan === row.capPlan && dbRow.week === row.week
-                      ) || {};
+                    // Merge DB values and CSV row, and ensure shrinkage fields are filled
+                    const enriched = {
+                      
+                      ...row,
+                      plannedVac: pVac ?? 0,
+                      plannedAbs: pAbs ?? 0,
+                      plannedAux: pAux ?? 0,
+                    };
 
-                    // 3. Track warnings
-                    const warnings = [];
+                    // Check for requirement fields in CSV row only (not DB!)
+                    const hasGross = !missing(row.grossRequirement);
+                    const hasInCenter = !missing(row.inCenterRequirement);
+                    const hasProd = !missing(row.productiveRequirement);
 
-                    // 4. Process each row
-                    const processed = csv.map(row => {
-                      const dbRow = findDbEntry(row);
-
-                      const pVac = !missing(row.plannedVac) ? row.plannedVac : dbRow.plannedVac;
-                      const pAbs = !missing(row.plannedAbs) ? row.plannedAbs : dbRow.plannedAbs;
-                      const pAux = !missing(row.plannedAux) ? row.plannedAux : dbRow.plannedAux;
-
-                      // Warn if any planned shrinkage is missing from both CSV and DB
-                      let missingFields = [];
-                      if (missing(pVac)) missingFields.push('plannedVac');
-                      if (missing(pAbs)) missingFields.push('plannedAbs');
-                      if (missing(pAux)) missingFields.push('plannedAux');
-                      if (missingFields.length) {
-                        warnings.push(`capPlan: ${row.capPlan}, week: ${row.week} (Missing: ${missingFields.join(', ')})`);
-                      }
-
-                      const enriched = {
-                        ...row,
-                        plannedVac: pVac ?? 0,
-                        plannedAbs: pAbs ?? 0,
-                        plannedAux: pAux ?? 0,
+                    if (hasGross || hasInCenter || hasProd) {
+                      // If any requirement field is present in the upload, recalculate all three
+                      const calc = recalculateRequirements(enriched);
+                      return {
+                        ...enriched,
+                        grossRequirement: calc.grossRequirement,
+                        inCenterRequirement: calc.inCenterRequirement,
+                        productiveRequirement: calc.productiveRequirement
                       };
-
-                      const hasGross = !missing(enriched.grossRequirement);
-                      const hasInCenter = !missing(enriched.inCenterRequirement);
-                      const hasProd = !missing(enriched.productiveRequirement);
-
-                      if (!hasGross || !hasInCenter || !hasProd) {
-                        const calc = recalculateRequirements(enriched);
-                        return {
-                          ...enriched,
-                          grossRequirement: hasGross ? enriched.grossRequirement : calc.grossRequirement,
-                          inCenterRequirement: hasInCenter ? enriched.inCenterRequirement : calc.inCenterRequirement,
-                          productiveRequirement: hasProd ? enriched.productiveRequirement : calc.productiveRequirement,
-                        };
-                      }
+                    } else {
+                      // If none are present, keep requirements as-is (preserve DB values)
                       return enriched;
-                    });
-
-                    // 5. Show alert if there are any warnings
-                    if (warnings.length) {
-                      alert(
-                        `Warning: The following entries are missing planned shrinkage data (will be treated as zero for calculation):\n\n`
-                        + warnings.join('\n')
-                      );
                     }
+                  });
 
-                    setUpload(processed);
+                  // 5. Show alert if there are any warnings
+                  if (warnings.length) {
+                    alert(
+                      `Warning: The following entries are missing planned shrinkage data (will be treated as zero for calculation):\n\n`
+                      + warnings.join('\n')
+                    );
+                  }
+
+                  setUpload(processed); 
                   }}
                   label={'capPlan (ObjId) - week (####w#) - [fields...]'}
                 />
