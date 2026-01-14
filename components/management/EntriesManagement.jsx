@@ -382,7 +382,14 @@ const EntriesManagement = ({ data }) => {
                     );
                   }
 
-                  setUpload(processed); 
+                  const sanitized = processed.map(row => {
+                    // Remove unwanted fields
+                    const { totalHC, totalFTE, ...rest } = row;
+                    return rest;
+                  });
+
+                  setUpload(sanitized);
+
                   }}
                   label={'capPlan (ObjId) - week (####w#) - [fields...]'}
                 />
