@@ -170,67 +170,58 @@ const Forecasting = () => {
       <div>
         <h1 className="has-text-centered mb-2 is-size-5">FORECASTING STUDIO</h1>
         <div className="column">
-          {!auth.allowedManager ? (
-            <div className="message is-danger is-size-5 px-5 py-5">
-              <span><FaLock /></span> UNAUTHORIZED ACCESS
+          <Stepper step={step} />
+
+          {step === 1 && (
+            <StepUpload
+              csvText={csvText}
+              setCsvText={setCsvText}
+              onParse={parseData}
+              onLoadSample={loadSampleData}
+            />
+          )}
+
+          {step === 2 && qualityReport && (
+            <StepQuality
+              rawData={rawData}
+              qualityReport={qualityReport}
+              qualityIssues={qualityIssues}
+              onBack={() => setStep(1)}
+              onNext={() => setStep(3)}
+            />
+          )}
+
+          {step === 3 && (
+            <StepConfigure
+              rawData={rawData}
+              forecastDays={forecastDays}
+              setForecastDays={setForecastDays}
+              confidence={confidence}
+              setConfidence={setConfidence}
+              activeModels={activeModels}
+              toggleActiveModel={toggleActiveModel}
+              onBack={() => setStep(2)}
+              onRun={runForecast}
+            />
+          )}
+
+          {step === 4 && results.length > 0 && (
+            <StepResults
+              rawData={rawData}
+              results={results}
+              zeroDayInfo={zeroDayInfo}
+              forecastMeta={forecastMeta}
+              onReconfigure={() => setStep(3)}
+              onNewData={() => setStep(1)}
+            />
+          )}
+
+          {isRunning && (
+            <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(255,255,255,0.9)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+              <div style={{ width: 48, height: 48, border: "4px solid #dbdbdb", borderTopColor: "rgb(74,74,249)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+              <div style={{ color: "rgb(74,74,249)", fontWeight: 600 }}>Running forecast models…</div>
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
-          ) : (
-            <>
-              <Stepper step={step} />
-
-              {step === 1 && (
-                <StepUpload
-                  csvText={csvText}
-                  setCsvText={setCsvText}
-                  onParse={parseData}
-                  onLoadSample={loadSampleData}
-                />
-              )}
-
-              {step === 2 && qualityReport && (
-                <StepQuality
-                  rawData={rawData}
-                  qualityReport={qualityReport}
-                  qualityIssues={qualityIssues}
-                  onBack={() => setStep(1)}
-                  onNext={() => setStep(3)}
-                />
-              )}
-
-              {step === 3 && (
-                <StepConfigure
-                  rawData={rawData}
-                  forecastDays={forecastDays}
-                  setForecastDays={setForecastDays}
-                  confidence={confidence}
-                  setConfidence={setConfidence}
-                  activeModels={activeModels}
-                  toggleActiveModel={toggleActiveModel}
-                  onBack={() => setStep(2)}
-                  onRun={runForecast}
-                />
-              )}
-
-              {step === 4 && results.length > 0 && (
-                <StepResults
-                  rawData={rawData}
-                  results={results}
-                  zeroDayInfo={zeroDayInfo}
-                  forecastMeta={forecastMeta}
-                  onReconfigure={() => setStep(3)}
-                  onNewData={() => setStep(1)}
-                />
-              )}
-
-              {/* Loading overlay */}
-              {isRunning && (
-                <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(255,255,255,0.9)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
-                  <div style={{ width: 48, height: 48, border: "4px solid #dbdbdb", borderTopColor: "rgb(74,74,249)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-                  <div style={{ color: "rgb(74,74,249)", fontWeight: 600 }}>Running forecast models…</div>
-                  <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                </div>
-              )}
-            </>
           )}
         </div>
       </div>
