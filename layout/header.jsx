@@ -1,9 +1,6 @@
 import Link from 'next/link';
-
 import { useState } from 'react';
-
 import { useAuth } from '../contexts/authContext';
-
 import { FaUserCog } from 'react-icons/fa';
 
 const Header = () => {
@@ -65,6 +62,9 @@ const Header = () => {
                 </Link>
                 <Link href="/report" className="navbar-item">
                   Report
+                </Link>
+                <Link href="/forecasting" className="navbar-item">
+                  Forecasting
                 </Link>
               </div>
             </div>
