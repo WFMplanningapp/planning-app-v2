@@ -11,80 +11,65 @@ export default async function handler(req, res) {
   let verification = await verifySession(db, headers.authorization)
 
   if (method === "PUT") {
+    if (verification.verified && verifyPermissions(ROLES.SU, null, db, headers.authorization)) {
 
-    //USER EXISTS
-  
+        // Normalize empty password
+        if (!password || password.trim() === "") password = null;
 
-    if (verification.verified && verifyPermissions(ROLES.SU,null,db,headers.authorization)) {
-      
-
-      if (password && password.length > 7 && username && permission) {
-        let hashed = hashSync(body.password, 10)
-        const options = {
-          upsert: true,
+        // Validate password length if provided
+        if (password && password.length <= 7) {
+            return res.status(422).json({
+                message: "Password must be at least 8 characters!",
+            });
         }
 
-        db.collection("verification").updateOne(
-          {
-            username: username,
-          },
-          {
-            $set: {
-              username: username,
-              password: hashed,
-              permission: permission,
-              name: name,
-              country: country,
-              session: {
-                token: null,
-                expires: 0,
-              },
-            },
-          },
-          options
-        )
+        if (password && username && permission) {
+            let hashed = hashSync(body.password, 10)
+            const options = { upsert: true }
 
-        res.status(200).json({
-          message: "User Created!",
-        })
-      } else if (!password && username && permission && !remove) {
-        const options = {
-          upsert: true,
+            db.collection("verification").updateOne(
+                { username: username },
+                {
+                    $set: {
+                        username: username,
+                        password: hashed,
+                        permission: permission,
+                        name: name,
+                        country: country,
+                        session: { token: null, expires: 0 },
+                    },
+                },
+                options
+            )
+
+            res.status(200).json({ message: "User Created!" })
+
+        } else if (!password && username && permission && !remove) {
+            const options = { upsert: true }
+
+            db.collection("verification").updateOne(
+                { username: username },
+                {
+                    $set: {
+                        username: username,
+                        permission: permission,
+                        name: name,
+                        country: country,
+                    },
+                },
+                options
+            )
+
+            res.status(200).json({ message: "User Updated!" })
+
+        } else {
+            res.status(422).json({ message: "Missing or invalid fields!" })
         }
 
-        db.collection("verification").updateOne(
-          {
-            username: username,
-          },
-          {
-            $set: {
-              username: username,
-              permission: permission,
-              name: name,
-              country: country,
-              session: {
-                token: null,
-                expires: 0,
-              },
-            },
-          },
-          options
-        )
-
-        res.status(200).json({
-          message: "User Updated!",
-        })
-      } else {
-        res.status(422).json({
-          message: "Missing or invalid fields!",
-        })
-      }
-    } //NOT VERIFIED
-    else {
-      res.status(401).json({
-        message: "Unauthorized!",
-      })
+    } else {
+        res.status(401).json({ message: "Unauthorized!" })
     }
+
    
   } else if (method === "DELETE") {
     if (verification.verified && verifyPermissions(ROLES.SU,null,db,headers.authorization)) {

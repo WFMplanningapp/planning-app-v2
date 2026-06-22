@@ -9,7 +9,7 @@ import { FaUser, FaLock, FaIdBadge, FaGlobeAmericas, FaClock } from "react-icons
 import { each } from "lodash"
 
 const selectionFields = [
-    { name: "user", default: null, required: true, type: "object", level: 1 },
+    { name: "username", default: null, required: true, type: "object", level: 1 },
 ]
 
 

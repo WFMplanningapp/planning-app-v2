@@ -62,9 +62,11 @@ const useForm = ({ fields, callback }) => {
     if (found) {
       dispatch({ type: "UPDATE_FIELD", id: fieldName, payload: value })
     } else {
-      console.log("Field does not exist")
+      console.warn(`Field "${fieldName}" does not exist in form fields:`,
+        fields.map(f => f.name)
+      )
     }
-  }
+}
 
   const setMany = (formObj) => {
     //setForm(formObj)

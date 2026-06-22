@@ -12,41 +12,37 @@ export const AuthProvider = ({ children }) => {
   const [allowedManager, setAllowedManager] = useState(false);
   const [allowedGuest, setAllowedGuest] = useState(false);
 
+  const ROLES = {
+    ADMIN: [1, 4],
+    MANAGER: [1, 2, 4],
+    GUEST: [1, 2, 3, 4],
+    SU: [4],
+  };
+
+  // Load user from cookie on mount
   useEffect(() => {
     let cookie = Cookies.get('user');
     if (cookie) {
       setUser(JSON.parse(cookie));
       setLogged(true);
-      //console.log('LOGGED IN FROM COOKIE');
-    } else {
-      //console.log('NO COOKIE');
     }
   }, []);
 
+  // Verify all permissions in a single hook — only when user changes
   useEffect(() => {
-    verifyPermissions(ROLES.SU, user).then((result) => {
-      setAllowedSU(result);
-      // console.log(result)
-    });
-  });
-  useEffect(() => {
-    verifyPermissions(ROLES.ADMIN, user).then((result) => {
-      setAllowedAdmin(result);
-      // console.log(result)
-    });
-  });
-  useEffect(() => {
-    verifyPermissions(ROLES.MANAGER, user).then((result) => {
-      setAllowedManager(result);
-      // console.log(result)
-    });
-  });
-  useEffect(() => {
-    verifyPermissions(ROLES.GUEST, user).then((result) => {
-      setAllowedGuest(result);
-      // console.log(result)
-    });
-  });
+    if (!user) return;
+
+    verifyPermissions(ROLES.SU, user).then(setAllowedSU);
+    verifyPermissions(ROLES.ADMIN, user).then(setAllowedAdmin);
+    verifyPermissions(ROLES.MANAGER, user).then(setAllowedManager);
+    verifyPermissions(ROLES.GUEST, user).then(setAllowedGuest);
+  }, [user]);
+
+  const authorization = () => {
+    return user && user.session
+      ? Buffer.from(user.username + ':' + user.session.token).toString('base64')
+      : null;
+  };
 
   const login = async ({ username, password }) => {
     const request = {
@@ -57,13 +53,10 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ password: password, username: username }),
     };
 
-    // console.log(request)
-
     fetch('/api/auth/login', request)
       .then((response) => response.json())
       .then((data) => {
         setLogged(data.logged);
-        //console.log('DATA USER', data.user);
         setUser(data.user);
         alert(data.message);
         data.user &&
@@ -72,7 +65,6 @@ export const AuthProvider = ({ children }) => {
               data.user.session.expires - new Date().getTime() / 3600000
             ),
           });
-        // console.log(data.message);
       })
       .catch((err) => console.log('Something went wrong!'));
   };
@@ -82,20 +74,8 @@ export const AuthProvider = ({ children }) => {
     setLogged(false);
     Cookies.remove('user');
   };
-  const ROLES = {
-    ADMIN: [1, 4],
-    MANAGER: [1, 2, 4],
-    GUEST: [1, 2, 3, 4],
-    SU: [4],
-  };
 
   const permission = verifyPermissions;
-
-  const authorization = () => {
-    return user && user.session
-      ? Buffer.from(user.username + ':' + user.session.token).toString('base64')
-      : null;
-  };
 
   const resetPassword = (newPassword) => {
     const request = {
@@ -106,8 +86,6 @@ export const AuthProvider = ({ children }) => {
       },
       body: JSON.stringify({ password: newPassword }),
     };
-
-    console.log(request);
 
     fetch('/api/auth/password', request)
       .then((response) => response.json())
@@ -127,8 +105,6 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ username, password, permission, name, country }),
     };
 
-    console.log(request);
-
     fetch('/api/auth/user', request)
       .then((response) => response.json())
       .then((data) => {
@@ -146,8 +122,6 @@ export const AuthProvider = ({ children }) => {
       },
       body: JSON.stringify({ username, permission, remove }),
     };
-
-    console.log(request);
 
     fetch('/api/auth/user', request)
       .then((response) => response.json())
