@@ -1,5 +1,6 @@
 import { connectToDatabase } from "../../../../lib/mongodb"
 import { verifySession, verifyPermissions, ROLES } from "../../../../lib/verification"
+import { validateBulkPayloads } from "../../../../lib/fieldValidation"
 
 export default async function handler(req, res) {
   const { query, method, body, headers } = req
@@ -12,7 +13,7 @@ export default async function handler(req, res) {
 
   if (method === "POST") {
 
-    if (verification.verified && verifyPermissions(ROLES.MANAGER,null,db,headers.authorization)) {
+    if (verification.verified && verifyPermissions(ROLES.MANAGER, null, db, headers.authorization)) {
       if (
         payloads &&
         Array.isArray(payloads) &&
@@ -20,9 +21,25 @@ export default async function handler(req, res) {
         payloads[0].capPlan &&
         payloads[0].week
       ) {
+        // ============================
+        // SERVER-SIDE VALIDATION
+        // ============================
+        const validation = validateBulkPayloads(payloads);
+
+        if (!validation.valid) {
+          const errorDetails = validation.invalidRows.map((row) => ({
+            row: row.rowIndex,
+            issues: row.errors.map((e) => `${e.field}: "${e.value}" — ${e.error}`),
+          }));
+
+          return res.status(400).json({
+            message: `Validation failed: ${validation.errorCount} error(s) in ${validation.invalidRows.length} row(s).`,
+            errors: errorDetails,
+          });
+        }
+
         let response = await db.collection("capEntries").bulkWrite(
           payloads.map((payload) => {
-            //console.log("PAYLOAD:", payload)
             return {
               updateOne: {
                 filter: {
@@ -57,7 +74,6 @@ export default async function handler(req, res) {
       res.status(401).json(verification)
     }
   } else {
-    //BAD REQUEST
     res.status(405).json({ message: "Method not Allowed, use POST only" })
   }
 }

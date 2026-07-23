@@ -90,18 +90,9 @@ const Report = () => {
             };
 
             fields.forEach((field) => {
-              switch (field.payload.internal) {
-                case "plannedAbs":
-                case "plannedVac":
-				case "plannedAux":
-                case "actAbs":
-                case "actVac":
-				case "actAux":
-                  projection[field.payload.internal] = weekly[field.payload.internal] / 100 || null;
-                  break;
-                default:
+              
                   projection[field.payload.internal] = weekly[field.payload.internal] || null;
-              }
+              
             });
             return projection;
           })

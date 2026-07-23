@@ -3,18 +3,17 @@ import { useAuth } from '../../contexts/authContext';
 import FoundeverLogo from '../foundeverlogo';
 import { FaLock } from 'react-icons/fa';
 import CSVUploader from '../files/CSVUploader';
+import { validateFieldValue } from '../../lib/fieldValidation';
 
 // Utility function to fetch existing entries for a list of (capPlan, week)
 async function fetchExistingEntries(keys) {
-  // keys = array of { capPlan, week }
-  // You'll need to create the /api/data/entries/bulkFetch endpoint (see below)
   const response = await fetch('/api/data/entries/bulkFetch', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' }, // Add auth if required
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ keys }),
   });
   if (!response.ok) throw new Error('Failed to fetch existing entries');
-  return await response.json(); // Should be an array of objects (same structure as MongoDB docs)
+  return await response.json();
 }
 
 function recalculateRequirements(row) {
@@ -27,7 +26,6 @@ function recalculateRequirements(row) {
   let inCenter = parseNum(row.inCenterRequirement);
   let productive = parseNum(row.productiveRequirement);
 
-  // If all are blank/NaN, return all empty
   if (
     (isNaN(gross) || gross === 0) &&
     (isNaN(inCenter) || inCenter === 0) &&
@@ -40,7 +38,6 @@ function recalculateRequirements(row) {
     };
   }
 
-  // Otherwise, proceed as normal
   if (!isNaN(gross) && gross > 0) {
     inCenter = gross * (1 - (plannedVac + plannedAbs));
     productive = inCenter * (1 - plannedAux);
@@ -59,9 +56,52 @@ function recalculateRequirements(row) {
   };
 }
 
+// ============================
+// BULK VALIDATION
+// ============================
+const SKIP_VALIDATION_FIELDS = ['capPlan', 'lob', 'project', 'week'];
+
+function validateBulkUpload(rows) {
+  const validRows = [];
+  const invalidRows = [];
+  const errorSummary = [];
+
+  rows.forEach((row, rowIndex) => {
+    const rowErrors = [];
+
+    Object.keys(row).forEach((field) => {
+      if (SKIP_VALIDATION_FIELDS.includes(field)) return;
+
+      const value = row[field];
+
+      if (value === undefined || value === null || String(value).trim() === '') return;
+
+      const { valid, error } = validateFieldValue(field, String(value).trim());
+
+      if (!valid) {
+        rowErrors.push({ field, value, error });
+      }
+    });
+
+    if (rowErrors.length > 0) {
+      invalidRows.push({ rowIndex: rowIndex + 1, row, errors: rowErrors });
+      rowErrors.forEach(({ field, value, error }) => {
+        errorSummary.push(
+          `Row ${rowIndex + 1} → "${field}": value "${value}" — ${error}`
+        );
+      });
+    } else {
+      validRows.push(row);
+    }
+  });
+
+  return { validRows, invalidRows, errorSummary };
+}
+
 const EntriesManagement = ({ data }) => {
   const [upload, setUpload] = useState([]);
   const [valid, setValid] = useState(false);
+  const [validationErrors, setValidationErrors] = useState([]);
 
   const [staffUpload, setStaffUpload] = useState([]);
   const [staffValid, setStaffValid] = useState(false);
@@ -73,19 +113,15 @@ const EntriesManagement = ({ data }) => {
       let hasInvalidField = false;
       let hasWeek = 0;
       let hasTarget = 0;
-      
-      // Check for conflicting requirement fields (including legacy field names)
+
       const requirementFields = ['grossRequirement', 'inCenterRequirement', 'productiveRequirement', 'billable', 'required'];
       const fieldMapping = {
-        //'productiveRequirement': 'productiveRequirement',
-        //'inCenterRequirement': 'inCenterRequirement',
         'grossRequirement': 'grossRequirement',
-        'inCenterRequirement': 'inCenterRequirement', 
+        'inCenterRequirement': 'inCenterRequirement',
         'productiveRequirement': 'productiveRequirement'
       };
       const presentRequirementFields = [];
-      
-      
+
       Object.keys(upload[0]).forEach((key) => {
         if (['capPlan', 'lob', 'project'].includes(key)) {
           hasTarget++;
@@ -101,7 +137,6 @@ const EntriesManagement = ({ data }) => {
         }
       });
 
-      // Map legacy field names to new field names
       upload.forEach(row => {
         Object.keys(row).forEach(key => {
           if (fieldMapping[key] && fieldMapping[key] !== key) {
@@ -111,37 +146,12 @@ const EntriesManagement = ({ data }) => {
         });
       });
 
-      // After mapping, check for conflicts again
       const mappedRequirementFields = [];
       Object.keys(upload[0]).forEach((key) => {
         if (['grossRequirement', 'inCenterRequirement', 'productiveRequirement'].includes(key)) {
           mappedRequirementFields.push(key);
         }
       });
-
-      // If multiple requirement fields are present, prioritize and remove others
-      
-      /*
-      // ...this block can be removed if you're filling fields automatically
-
-      if (mappedRequirementFields.length > 1) {
-        // Priority order: grossRequirement > inCenterRequirement > productiveRequirement
-        const priority = ['grossRequirement', 'inCenterRequirement', 'productiveRequirement'];
-        const selectedField = mappedRequirementFields.find(field => priority.includes(field)) || mappedRequirementFields[0];
-        
-        // Remove conflicting fields from all upload rows
-        upload.forEach(row => {
-          mappedRequirementFields.forEach(field => {
-            if (field !== selectedField) {
-              delete row[field];
-            }
-          });
-        });
-        
-        alert(`Multiple requirement fields detected. Using ${selectedField} and ignoring others to prevent calculation conflicts.`);
-      }
-      
-      */
 
       let valid = hasTarget === 1 && hasWeek === 1 && !hasInvalidField;
 
@@ -176,8 +186,6 @@ const EntriesManagement = ({ data }) => {
         }
       });
 
-      // console.log(hasTarget, hasWeek, hasName, hasInvalidField)
-
       let valid =
         hasTarget === 1 && hasWeek === 1 && hasName === 1 && !hasInvalidField;
 
@@ -191,9 +199,8 @@ const EntriesManagement = ({ data }) => {
     staffUpload[0] ? setStaffValid(isValid(staffUpload)) : setStaffValid(false);
   }, [staffUpload]);
 
-  //HANDLERS
+  // HANDLERS
   const handleSubmit = async (type) => {
-    //console.log('UPLOAD LENGTH', upload.length);
     if (type === 'standard') {
       if (upload.length <= 500) {
         await fetch(`/api/data/entries/bulk`, {
@@ -206,15 +213,12 @@ const EntriesManagement = ({ data }) => {
         })
           .then((response) => response.json())
           .then((data) => {
-           // console.log(data.message);
             alert(data.message);
           })
           .catch((err) => console.log(err));
       } else {
         let mult = Math.trunc(upload.length / 500);
-        //console.log('MULT', upload.length);
         for (let i = 0; i <= mult; i++) {
-          //console.log('FETCH #', i);
           await fetch(`/api/data/entries/bulk`, {
             method: 'POST',
             headers: {
@@ -227,7 +231,6 @@ const EntriesManagement = ({ data }) => {
           })
             .then((response) => response.json())
             .then((data) => {
-              //console.log(data.message);
               if (i === mult) {
                 alert(`Uploaded ${mult + 1} batches!`);
               }
@@ -259,9 +262,7 @@ const EntriesManagement = ({ data }) => {
           }
         )
           .then((response) => response.json())
-          .then((data) => {
-            //console.log(data.message);
-          })
+          .then((data) => {})
           .catch((err) => console.log(err))
       );
     } else if (type === 'actual') {
@@ -303,93 +304,121 @@ const EntriesManagement = ({ data }) => {
               <div className="column">
                 <label className="label">Bulk Upload</label>
                 <CSVUploader
-                  removeHandler={() => setUpload([])}
+                  removeHandler={() => {
+                    setUpload([]);
+                    setValidationErrors([]);
+                  }}
                   loadedHandler={async (csv) => {
                     const missing = v =>
-                    v === undefined || v === null || (typeof v === "string" && v.trim() === "");
+                      v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 
-                  // 1. Prepare keys for bulk fetch
-                  const keys = csv.map(row => ({ capPlan: row.capPlan, week: row.week }));
+                    // ============================
+                    // STEP 1: VALIDATE RAW CSV FIRST
+                    // ============================
+                    const { validRows: _, invalidRows, errorSummary } = validateBulkUpload(csv);
 
-                  // 2. Fetch existing entries
-                  let dbEntries = [];
-                  try {
-                    dbEntries = await fetchExistingEntries(keys);
-                  } catch(e) {
-                    alert("Error fetching existing planned values from DB.");
-                    setUpload([]);
-                    return;
-                  }
+                    if (invalidRows.length > 0) {
+                      const maxDisplay = 20;
+                      const displayErrors = errorSummary.slice(0, maxDisplay);
+                      const remaining = errorSummary.length - maxDisplay;
 
-                  const findDbEntry = (row) =>
-                    dbEntries.find(
-                      dbRow => dbRow.capPlan === row.capPlan && dbRow.week === row.week
-                    ) || {};
+                      let alertMsg =
+                        `⚠️ Validation Failed — ${invalidRows.length} row(s) contain invalid data.\n\n` +
+                        `The following issues were found:\n\n` +
+                        displayErrors.join('\n');
 
-                  const warnings = [];
+                      if (remaining > 0) {
+                        alertMsg += `\n\n...and ${remaining} more error(s). Please fix your CSV and re-upload.`;
+                      }
 
-                  const processed = csv.map(row => {
-                    const dbRow = findDbEntry(row);
+                      alertMsg += `\n\n❌ Upload blocked. Please fix your CSV and re-upload.`;
 
-                    // Fill missing shrinkages from DB if needed
-                    const pVac = !missing(row.plannedVac) ? row.plannedVac : dbRow.plannedVac;
-                    const pAbs = !missing(row.plannedAbs) ? row.plannedAbs : dbRow.plannedAbs;
-                    const pAux = !missing(row.plannedAux) ? row.plannedAux : dbRow.plannedAux;
-
-                    // Warn if any planned shrinkage is missing from both CSV and DB
-                    let missingFields = [];
-                    if (missing(pVac)) missingFields.push('plannedVac');
-                    if (missing(pAbs)) missingFields.push('plannedAbs');
-                    if (missing(pAux)) missingFields.push('plannedAux');
-                    if (missingFields.length) {
-                      warnings.push(`capPlan: ${row.capPlan}, week: ${row.week} (Missing: ${missingFields.join(', ')})`);
+                      alert(alertMsg);
+                      setValidationErrors(errorSummary);
+                      setUpload([]);
+                      return;
                     }
 
-                    // Merge DB values and CSV row, and ensure shrinkage fields are filled
-                    const enriched = {
-                      
-                      ...row,
-                      plannedVac: pVac ?? 0,
-                      plannedAbs: pAbs ?? 0,
-                      plannedAux: pAux ?? 0,
-                    };
+                    // ============================
+                    // STEP 2: FETCH DB ENTRIES
+                    // ============================
+                    const keys = csv.map(row => ({ capPlan: row.capPlan, week: row.week }));
 
-                    // Check for requirement fields in CSV row only (not DB!)
-                    const hasGross = !missing(row.grossRequirement);
-                    const hasInCenter = !missing(row.inCenterRequirement);
-                    const hasProd = !missing(row.productiveRequirement);
+                    let dbEntries = [];
+                    try {
+                      dbEntries = await fetchExistingEntries(keys);
+                    } catch (e) {
+                      alert("Error fetching existing planned values from DB.");
+                      setUpload([]);
+                      return;
+                    }
 
-                    if (hasGross || hasInCenter || hasProd) {
-                      // If any requirement field is present in the upload, recalculate all three
-                      const calc = recalculateRequirements(enriched);
-                      return {
-                        ...enriched,
-                        grossRequirement: calc.grossRequirement,
-                        inCenterRequirement: calc.inCenterRequirement,
-                        productiveRequirement: calc.productiveRequirement
+                    const findDbEntry = (row) =>
+                      dbEntries.find(
+                        dbRow => dbRow.capPlan === row.capPlan && dbRow.week === row.week
+                      ) || {};
+
+                    const warnings = [];
+
+                    // ============================
+                    // STEP 3: ENRICH & RECALCULATE
+                    // ============================
+                    const processed = csv.map(row => {
+                      const dbRow = findDbEntry(row);
+
+                      const pVac = !missing(row.plannedVac) ? row.plannedVac : dbRow.plannedVac;
+                      const pAbs = !missing(row.plannedAbs) ? row.plannedAbs : dbRow.plannedAbs;
+                      const pAux = !missing(row.plannedAux) ? row.plannedAux : dbRow.plannedAux;
+
+                      let missingFields = [];
+                      if (missing(pVac)) missingFields.push('plannedVac');
+                      if (missing(pAbs)) missingFields.push('plannedAbs');
+                      if (missing(pAux)) missingFields.push('plannedAux');
+                      if (missingFields.length) {
+                        warnings.push(`capPlan: ${row.capPlan}, week: ${row.week} (Missing: ${missingFields.join(', ')})`);
+                      }
+
+                      const enriched = {
+                        ...row,
+                        plannedVac: pVac ?? 0,
+                        plannedAbs: pAbs ?? 0,
+                        plannedAux: pAux ?? 0,
                       };
-                    } else {
-                      // If none are present, keep requirements as-is (preserve DB values)
-                      return enriched;
+
+                      const hasGross = !missing(row.grossRequirement);
+                      const hasInCenter = !missing(row.inCenterRequirement);
+                      const hasProd = !missing(row.productiveRequirement);
+
+                      if (hasGross || hasInCenter || hasProd) {
+                        const calc = recalculateRequirements(enriched);
+                        return {
+                          ...enriched,
+                          grossRequirement: calc.grossRequirement,
+                          inCenterRequirement: calc.inCenterRequirement,
+                          productiveRequirement: calc.productiveRequirement
+                        };
+                      } else {
+                        return enriched;
+                      }
+                    });
+
+                    if (warnings.length) {
+                      alert(
+                        `Warning: The following entries are missing planned shrinkage data (will be treated as zero for calculation):\n\n`
+                        + warnings.join('\n')
+                      );
                     }
-                  });
 
-                  // 5. Show alert if there are any warnings
-                  if (warnings.length) {
-                    alert(
-                      `Warning: The following entries are missing planned shrinkage data (will be treated as zero for calculation):\n\n`
-                      + warnings.join('\n')
-                    );
-                  }
+                    // ============================
+                    // STEP 4: SANITIZE & SET
+                    // ============================
+                    const sanitized = processed.map(row => {
+                      const { totalHC, totalFTE, ...rest } = row;
+                      return rest;
+                    });
 
-                  const sanitized = processed.map(row => {
-                    // Remove unwanted fields
-                    const { totalHC, totalFTE, ...rest } = row;
-                    return rest;
-                  });
-
-                  setUpload(sanitized);
-
+                    setValidationErrors([]);
+                    setUpload(sanitized);
                   }}
                   label={'capPlan (ObjId) - week (####w#) - [fields...]'}
                 />
@@ -401,13 +430,40 @@ const EntriesManagement = ({ data }) => {
                   disabled={
                     !(
                       valid &&
-                      upload[0] &&
+                      upload &&
                       Object.keys(upload[0]).includes('capPlan')
                     )
                   }
                 >
                   Upload
                 </button>
+
+                {/* VALIDATION ERROR DISPLAY */}
+                {validationErrors.length > 0 && (
+                  <div
+                    className="notification is-danger is-light mt-3"
+                    style={{
+                      maxHeight: '250px',
+                      overflowY: 'auto',
+                      fontSize: '0.8em',
+                    }}
+                  >
+                    <button
+                      className="delete"
+                      onClick={() => setValidationErrors([])}
+                    ></button>
+                    <p className="has-text-weight-bold mb-2">
+                      ⚠️ {validationErrors.length} validation error(s) found in CSV:
+                    </p>
+                    <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
+                      {validationErrors.map((err, idx) => (
+                        <li key={`val-err-${idx}`} className="mb-1">
+                          ❌ {err}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <br></br>
                 <br></br>
@@ -480,7 +536,7 @@ const EntriesManagement = ({ data }) => {
                   disabled={
                     !(
                       staffValid &&
-                      staffUpload[0] &&
+                      staffUpload &&
                       Object.keys(staffUpload[0]).includes('capPlan')
                     )
                   }
@@ -495,7 +551,7 @@ const EntriesManagement = ({ data }) => {
                   disabled={
                     !(
                       staffValid &&
-                      staffUpload[0] &&
+                      staffUpload &&
                       Object.keys(staffUpload[0]).includes('capPlan')
                     )
                   }
