@@ -24,10 +24,26 @@ export default async function handler(req, res) {
 			})
 		}
 
-		if (!(verification.verified && verifyPermissions(ROLES.MANAGER,null,db,headers.authorization))) {
+		if (!verification.verified) {
+			return res
+				.status(401)
+				.json(verification);
+			}
 
-			return res.status(401).json(verification)
-		}
+			const permitted =
+			await verifyPermissions(
+				ROLES.MANAGER,
+				null,
+				db,
+				headers.authorization
+			);
+
+			if (!permitted) {
+			return res.status(403).json({
+				message:
+				"Manager permission is required to update actual data.",
+			});
+			}
 
 		let capPlan = await db
 			.collection("capPlans")

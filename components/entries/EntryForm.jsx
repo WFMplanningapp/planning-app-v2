@@ -28,6 +28,69 @@ const actualFields = ["actVac", "actAbs", "actAux"]
 
 const plannedFields = ["plannedVac", "plannedAbs", "plannedAux"]
 
+const calculatedOutputSections = [
+  {
+    title: "ENGINE REQUIREMENTS",
+    fields: [
+      {
+        internal: "engineGrossReq",
+        label: "Gross Requirement",
+        format: "number",
+      },
+      {
+        internal: "engineInCenterReq",
+        label: "In-Center Requirement",
+        format: "number",
+      },
+      {
+        internal: "engineProductiveReq",
+        label: "Productive Requirement",
+        format: "number",
+      },
+    ],
+  },
+  {
+    title: "ENGINE HOURS",
+    fields: [
+      {
+        internal: "engineHoursGross",
+        label: "Gross Hours",
+        format: "number",
+      },
+      {
+        internal: "engineHoursInCenter",
+        label: "In-Center Hours",
+        format: "number",
+      },
+      {
+        internal: "engineHoursProductive",
+        label: "Productive Hours",
+        format: "number",
+      },
+    ],
+  },
+  {
+    title: "PLANNED SHRINKAGE",
+    fields: [
+      {
+        internal: "enginePlannedShrinkageInternal",
+        label: "Internal",
+        format: "percent",
+      },
+      {
+        internal: "enginePlannedShrinkageExternal",
+        label: "External",
+        format: "percent",
+      },
+      {
+        internal: "enginePlannedShrinkageCombined",
+        label: "Combined",
+        format: "percent",
+      },
+    ],
+  },
+]
+
 // ============================
 // COMPONENT
 // ============================
@@ -307,6 +370,45 @@ const EntryForm = ({ selection, week }) => {
   // RENDER HELPERS
   // ============================
 
+  const formatCalculatedValue = (value, format) => {
+    if (
+      value === undefined ||
+      value === null ||
+      value === ""
+    ) {
+      return "Not calculated"
+    }
+
+    const numericValue = Number(value)
+
+    if (!Number.isFinite(numericValue)) {
+      return String(value)
+    }
+
+    if (format === "percent") {
+      return `${numericValue.toFixed(2)}%`
+    }
+
+    return (
+      Math.round(
+        numericValue * 1000
+      ) / 1000
+    ).toLocaleString(undefined, {
+      maximumFractionDigits: 3,
+    })
+  }
+
+  const hasCalculatedOutputs =
+    calculatedOutputSections.some(
+      (section) =>
+        section.fields.some(
+          (field) =>
+            entry?.[field.internal] !== undefined &&
+            entry?.[field.internal] !== null
+        )
+    )
+
+
   const renderReadOnlyInput = (field, showPercent = false) => (
     <p className="control">
       <input
@@ -365,6 +467,121 @@ const EntryForm = ({ selection, week }) => {
     <>
       <div>
         <form className="is-size-7">
+
+          {/* CAPACITY PLANNER OUTPUTS */}
+          <div
+            className="box mb-4"
+            style={{
+              borderLeft: "4px solid #4b4bf9",
+              backgroundColor: "#f3f3f7",
+            }}
+          >
+            <div className="is-flex is-align-items-center is-justify-content-space-between mb-3">
+              <div>
+                <label className="label mb-1">
+                  CAPACITY PLANNER OUTPUTS
+                </label>
+
+                <p className="is-size-7 has-text-grey">
+                  Calculated results are read-only. Update their source
+                  assumptions in Capacity Planner and recalculate the week.
+                </p>
+              </div>
+
+              <span
+                className={`tag is-rounded ${
+                  hasCalculatedOutputs
+                    ? "is-success is-light"
+                    : "is-warning is-light"
+                }`}
+              >
+                {hasCalculatedOutputs
+                  ? "Calculated"
+                  : "Not calculated"}
+              </span>
+            </div>
+
+            <div className="columns is-multiline">
+              {calculatedOutputSections.map((section) => (
+                <div
+                  key={section.title}
+                  className="column is-12-mobile is-6-tablet is-3-desktop"
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      padding: "0.75rem",
+                      border: "1px solid #d9d9e3",
+                      borderRadius: "6px",
+                      backgroundColor: "#ffffff",
+                    }}
+                  >
+                    <p
+                      className="has-text-weight-semibold mb-2"
+                      style={{
+                        color: "#4b4bf9",
+                      }}
+                    >
+                      {section.title}
+                    </p>
+
+                    {section.fields.map((field) => (
+                      <div
+                        key={field.internal}
+                        className="is-flex is-justify-content-space-between"
+                        style={{
+                          gap: "1rem",
+                          padding: "0.3rem 0",
+                          borderBottom: "1px solid #f3f3f7",
+                        }}
+                      >
+                        <span>{field.label}</span>
+
+                        <span
+                          className="has-text-weight-semibold"
+                          title={field.internal}
+                          style={{
+                            whiteSpace: "nowrap",
+                            color:
+                              entry?.[field.internal] === undefined ||
+                              entry?.[field.internal] === null
+                                ? "#77778c"
+                                : "#09092d",
+                          }}
+                        >
+                          {formatCalculatedValue(
+                            entry?.[field.internal],
+                            field.format
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {entry?.engineCalculatedAt && (
+              <div className="is-size-7 has-text-grey mt-2">
+                Engine version:{" "}
+                <strong>
+                  {entry.engineVersion || "Unknown"}
+                </strong>
+                {" · "}
+                Calculated by:{" "}
+                <strong>
+                  {entry.engineCalculatedBy || "Unknown"}
+                </strong>
+                {" · "}
+                Calculated at:{" "}
+                <strong>
+                  {new Date(
+                    entry.engineCalculatedAt
+                  ).toLocaleString()}
+                </strong>
+              </div>
+            )}
+          </div>
 
           {/* HEADCOUNT */}
           <label>HEADCOUNT</label>

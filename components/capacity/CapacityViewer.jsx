@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 
 const CapacityViewer = ({ capacity, fields, currentWeek, withStaff }) => {
+  
   const [expandedTypes, setExpandedTypes] = useState({
     capacity: true,
     staffing: true,
     Attrition: true,
     training: true,
+    hours: true,
+    'planned shrinkage': true,
+    'effective shrinkage': true,
   });
 
   const groupFieldsByType = (fields) => {
@@ -40,6 +44,50 @@ const CapacityViewer = ({ capacity, fields, currentWeek, withStaff }) => {
   "actAux",
  
 ];
+
+const formatCapacityValue = (weekly, field) => {
+  if (!field) {
+    return null;
+  }
+
+  const value = weekly[field.internal];
+
+  if (
+    value === undefined ||
+    value === null ||
+    value === ''
+  ) {
+    return null;
+  }
+
+  const numericValue = Number(value);
+
+  // Preserve non-numeric values if a future field
+  // intentionally contains display text.
+  if (!Number.isFinite(numericValue)) {
+    return String(value);
+  }
+
+  if (field.internal === 'totalHC') {
+    return Math.round(numericValue);
+  }
+
+  if (
+    ['actualFTE', 'ActProdFTE'].includes(field.internal) &&
+    weekly.isFuture
+  ) {
+    return 0;
+  }
+
+  if (
+    field.format === 'percent' ||
+    percentFields.includes(field.internal)
+  ) {
+    return `${numericValue.toFixed(2)}%`;
+  }
+
+  return Math.round(numericValue * 1000) / 1000;
+};
 
 const varianceFields = ["billVar", "reqVar", "fcVar"];
 
@@ -142,22 +190,30 @@ const varianceFields = ["billVar", "reqVar", "fcVar"];
                 </tr>
                 {!expandedTypes[type] ? (
                   <tr>
-                    {capacity.map((weekly, index) => (
-                      <td
-                        key={`collapsed-${type}-${weekly.week.code}`}
-                        style={{ whiteSpace: 'nowrap', textAlign: 'center' }}
-                      >
-                        {weekly[typeFields[0]?.internal] !== undefined ? (
+                    {capacity.map((weekly) => {
+                      const field = typeFields[0];
+                      const formattedValue = formatCapacityValue(weekly, field);
 
-                          Math.round(weekly[typeFields[0].internal] * 1000) /
-                          1000
-                        ) : weekly[typeFields[0]?.internal] === 0 ? (
-                          <span className="has-text-primary">0</span>
-                        ) : (
-                          <span className="has-text-light">#</span>
-                        )}
-                      </td>
-                    ))}
+                      return (
+                        <td
+                          key={`collapsed-${type}-${weekly.week.code}`}
+                          style={{
+                            whiteSpace: 'nowrap',
+                            textAlign: 'center',
+                          }}
+                        >
+                          {formattedValue !== null ? (
+                            formattedValue === 0 ? (
+                              <span className="has-text-primary">0</span>
+                            ) : (
+                              formattedValue
+                            )
+                          ) : (
+                            <span className="has-text-light">#</span>
+                          )}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ) : (
                   typeFields.map((field) => (
@@ -175,19 +231,24 @@ const varianceFields = ["billVar", "reqVar", "fcVar"];
 
                           }}
                         >
-                          {weekly[field.internal] !== undefined ? (
-                            field.internal === "totalHC"
-                            ? Math.round(weekly[field.internal])
-                            : (["actualFTE", "ActProdFTE"].includes(field.internal) && weekly.isFuture)
-                            ? 0
-                            : percentFields.includes(field.internal)
-                            ? (parseFloat(weekly[field.internal])).toFixed(2) + '%'
-                            : Math.round(weekly[field.internal] * 1000) / 1000
-                          ) : weekly[field.internal] === 0 ? (
-                            <span className="has-text-primary">0</span>
-                          ) : (
-                            <span className="has-text-light">#</span>
-                          )}
+                          {(() => {
+                            const formattedValue =
+                              formatCapacityValue(weekly, field);
+
+                            if (formattedValue === null) {
+                              return (
+                                <span className="has-text-light">#</span>
+                              );
+                            }
+
+                            if (formattedValue === 0) {
+                              return (
+                                <span className="has-text-primary">0</span>
+                              );
+                            }
+
+                            return formattedValue;
+                          })()}
                         </td>
                       ))}
                     </tr>

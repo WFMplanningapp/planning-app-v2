@@ -22,54 +22,152 @@ export default async function handler(req, res) {
   let payload = body.payload
 
   switch (method) {
-    case "POST":
-
-      if (verification.verified && verifyPermissions(ROLES.MANAGER,null,db,headers.authorization)) {
-
-        let insert =
-          payload && payload.name
-            ? await db.collection("projects").insertOne({
+  case "POST": {
+    if (
+      verification.verified &&
+      (await verifyPermissions(
+        ROLES.MANAGER,
+        null,
+        db,
+        headers.authorization
+      ))
+    ) {
+      const insert =
+        payload && payload.name
+          ? await db
+              .collection("projects")
+              .insertOne({
                 ...payload,
                 createdAt: new Date(),
-                createdBy: verification.user.username,
+                createdBy:
+                  verification.user
+                    .username,
               })
-            : { message: "Nothing to Insert" }
-        res
-          .status(200)
-          .json({ message: "Insert Completed!", verification, insert })
-      } else res.status(401).json(verification)
-      break
-    case "PUT":
+          : {
+              message:
+                "Nothing to Insert",
+            };
 
-      if (verification.verified && verifyPermissions(ROLES.MANAGER,null,db,headers.authorization) && target) {
+      return res.status(200).json({
+        message: "Insert Completed!",
+        verification,
+        insert,
+      });
+    }
 
-        let update =
-          payload && payload.name && target
-            ? await db
-                .collection("projects")
-                .updateOne({ _id: new ObjectId(target) }, { $set: {...payload, lastUpdated: new Date, updatedBy: verification.user.username} })
-            : { message: "Nothing to Update" }
-        res
-          .status(200)
-          .json({ message: "Update Completed!", verification, update })
-      } else res.status(401).json(verification)
-      break
-    case "DELETE":
+    return res
+      .status(
+        verification.verified
+          ? 403
+          : 401
+      )
+      .json(verification);
+  }
 
-      if (verification.verified && verifyPermissions(ROLES.ADMIN,null,db,headers.authorization)) {
+  case "PUT": {
+    if (
+      verification.verified &&
+      (await verifyPermissions(
+        ROLES.MANAGER,
+        null,
+        db,
+        headers.authorization
+      )) &&
+      target
+    ) {
+      const update =
+        payload &&
+        payload.name &&
+        target
+          ? await db
+              .collection("projects")
+              .updateOne(
+                {
+                  _id: new ObjectId(
+                    target
+                  ),
+                },
+                {
+                  $set: {
+                    ...payload,
+                    lastUpdated:
+                      new Date(),
+                    updatedBy:
+                      verification.user
+                        .username,
+                  },
+                }
+              )
+          : {
+              message:
+                "Nothing to Update",
+            };
 
-        let remove = target
-          ? await db.collection("projects").deleteOne({ _id: new ObjectId(target) })
-          : { message: "Nothing to Remove" }
-        res
-          .status(200)
-          .json({ message: "Remove Completed!", verification, remove })
-      } else res.status(401).json(verification)
-      break
+      return res.status(200).json({
+        message: "Update Completed!",
+        verification,
+        update,
+      });
+    }
 
-    default:
-      res
-        .status(405)
-        .json({ message: "Method not Allowed, use POST, PUT or DELETE only" })
+    return res
+      .status(
+        verification.verified
+          ? 403
+          : 401
+      )
+      .json(verification);
+  }
+
+  case "DELETE": {
+    if (
+      verification.verified &&
+      (await verifyPermissions(
+        ROLES.ADMIN,
+        null,
+        db,
+        headers.authorization
+      ))
+    ) {
+      const remove = target
+        ? await db
+            .collection("projects")
+            .deleteOne({
+              _id: new ObjectId(
+                target
+              ),
+            })
+        : {
+            message:
+              "Nothing to Remove",
+          };
+
+      return res.status(200).json({
+        message: "Remove Completed!",
+        verification,
+        remove,
+      });
+    }
+
+    return res
+      .status(
+        verification.verified
+          ? 403
+          : 401
+      )
+      .json(verification);
+  }
+
+  default:
+    res.setHeader("Allow", [
+      "POST",
+      "PUT",
+      "DELETE",
+    ]);
+
+    return res.status(405).json({
+      message:
+        "Method not Allowed, use POST, PUT or DELETE only",
+    });
   }
 }

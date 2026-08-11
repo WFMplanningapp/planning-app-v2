@@ -1,7 +1,7 @@
-import Link from 'next/link';
-import { useState } from 'react';
-import { useAuth } from '../contexts/authContext';
-import { FaUserCog } from 'react-icons/fa';
+import Link from "next/link";
+import { useState } from "react";
+import { useAuth } from "../contexts/authContext";
+import { FaUserCog } from "react-icons/fa";
 
 const Header = () => {
   const [isActive, setisActive] = useState(false);
@@ -28,7 +28,7 @@ const Header = () => {
           <a
             role="button"
             onClick={() => setisActive(!isActive)}
-            className={`navbar-burger burger ${isActive ? 'is-active' : ''}`}
+            className={`navbar-burger burger ${isActive ? "is-active" : ""}`}
             aria-label="menu"
             aria-expanded="false"
             data-target="navbarBasicExample"
@@ -41,11 +41,11 @@ const Header = () => {
 
         <div
           id="navbarBasicExample"
-          className={`navbar-menu ${isActive ? 'is-active' : ''}`}
+          className={`navbar-menu ${isActive ? "is-active" : ""}`}
         >
           <div className="navbar-end">
             <Link href="/login" className="navbar-item ml-3 has-text-primary">
-              {auth.user && auth.logged ? auth.user.username : 'Login'}
+              {auth.user && auth.logged ? auth.user.username : "Login"}
             </Link>
             <Link href="/management" className="navbar-item">
               Management
@@ -65,6 +65,10 @@ const Header = () => {
                 </Link>
                 <Link href="/forecasting" className="navbar-item">
                   Forecasting
+                </Link>
+                <hr className="navbar-divider" />
+                <Link href="/capacity-planner" className="navbar-item">
+                  <strong className="has-text-info">Capacity Planner</strong>
                 </Link>
               </div>
             </div>

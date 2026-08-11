@@ -14,7 +14,15 @@ export default async function handler(req, res) {
 
   if (method === "POST") {
 
-    if (verification.verified && verifyPermissions(ROLES.GUEST, null, db, headers.authorization)) {
+    if (
+      verification.verified &&
+      (await verifyPermissions(
+        ROLES.GUEST,
+        null,
+        db,
+        headers.authorization
+      ))
+    ) {
 
       if (payload) {
         delete payload._id
@@ -66,6 +74,27 @@ export default async function handler(req, res) {
       res.status(401).json(verification)
     }
   } else if (method === "PATCH") {
+    if (!verification.verified) {
+      return res
+        .status(401)
+        .json(verification);
+    }
+
+    const permitted =
+      await verifyPermissions(
+        ROLES.GUEST,
+        null,
+        db,
+        headers.authorization
+      );
+
+    if (!permitted) {
+      return res.status(403).json({
+        message:
+          "Permission is required to update this entry.",
+      });
+    }
+    
     const { _id, fieldsToDelete, payload } = body;
     console.log("PATCH received:", { _id, fieldsToDelete, payload });
 

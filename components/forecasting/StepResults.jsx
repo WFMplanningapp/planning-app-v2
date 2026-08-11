@@ -230,10 +230,18 @@ const StepResults = ({ rawData, results, zeroDayInfo, forecastMeta, onReconfigur
             </table>
           </div>
         )}
+
+        {/* ── Action Buttons ── */}
         <div className="buttons mt-4">
-          <button className="button is-primary is-rounded" onClick={() => setShowExportModal(true)}>📥 Export Forecast</button>
-          <button className="button is-rounded" onClick={onReconfigure}>⚙️ Reconfigure</button>
-          <button className="button is-rounded" onClick={onNewData}>🔄 New Data</button>
+          <button className="button is-primary is-rounded" onClick={() => setShowExportModal(true)}>
+            📥 Export Forecast
+          </button>
+          <button className="button is-rounded" onClick={onReconfigure}>
+            ⚙️ Reconfigure
+          </button>
+          <button className="button is-rounded" onClick={onNewData}>
+            🔄 New Data
+          </button>
         </div>
       </div>
 
