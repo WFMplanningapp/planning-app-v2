@@ -13,7 +13,15 @@ export default async function handler(req, res) {
 
   if (method === "POST") {
 
-    if (verification.verified && verifyPermissions(ROLES.MANAGER, null, db, headers.authorization)) {
+    if (
+      verification.verified &&
+      (await verifyPermissions(
+        ROLES.MANAGER,
+        null,
+        db,
+        headers.authorization
+      ))
+    ) {
       if (
         payloads &&
         Array.isArray(payloads) &&

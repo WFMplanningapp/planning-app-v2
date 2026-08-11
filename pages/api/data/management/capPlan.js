@@ -24,71 +24,185 @@ export default async function handler(req, res) {
   let language = body.language
 
   switch (method) {
-    case "POST":
-      if (verification.verified && verifyPermissions(ROLES.MANAGER,null,db,headers.authorization)) {
-        let insert =
-          payload && payload.name && lob && language
-            ? await db.collection("capPlans").insertOne({
+  case "POST": {
+    if (
+      verification.verified &&
+      (await verifyPermissions(
+        ROLES.MANAGER,
+        null,
+        db,
+        headers.authorization
+      ))
+    ) {
+      const insert =
+        payload &&
+        payload.name &&
+        lob &&
+        language
+          ? await db
+              .collection("capPlans")
+              .insertOne({
                 ...payload,
                 lob: lob._id,
                 language: language._id,
                 createdAt: new Date(),
-                createdBy: verification.user.username,
+                createdBy:
+                  verification.user
+                    .username,
               })
-            : { message: "Nothing to Insert" }
-        //console.log("Insert:", insert)
-        if (insert.acknowledged) {
-          const firstEntry = await db.collection("capEntries").insertOne({
+          : {
+              message:
+                "Nothing to Insert",
+            };
+
+      if (insert.acknowledged) {
+        await db
+          .collection("capEntries")
+          .insertOne({
             week: payload.firstWeek,
-            capPlan: insert.insertedId.toString(),
-            ocpWeeks: lob.ocpWeeks || 0,
-            trWeeks: lob.trWeeks || 0,
+
+            capPlan:
+              insert.insertedId.toString(),
+
+            ocpWeeks:
+              lob.ocpWeeks || 0,
+
+            trWeeks:
+              lob.trWeeks || 0,
+
             createdAt: new Date(),
-            createdBy: verification.user.username,
-          })
-          //console.log("firstEntry:", firstEntry)
-        }
-        res
-          .status(200)
-          .json({ message: "Insert Completed!", verification, insert })
-      } else res.status(401).json(verification)
-      break
-    case "PUT":
-      if (verification.verified && verifyPermissions(ROLES.MANAGER,null,db,headers.authorization) && target) {
-       // console.log("WILL UPDATE", payload, language)
-        let update =
-          payload && target
-            ? await db.collection("capPlans").updateOne(
-                { _id: new ObjectId(target) },
+
+            createdBy:
+              verification.user
+                .username,
+          });
+      }
+
+      return res.status(200).json({
+        message: "Insert Completed!",
+        verification,
+        insert,
+      });
+    }
+
+    return res
+      .status(
+        verification.verified
+          ? 403
+          : 401
+      )
+      .json(verification);
+  }
+
+  case "PUT": {
+    if (
+      verification.verified &&
+      (await verifyPermissions(
+        ROLES.MANAGER,
+        null,
+        db,
+        headers.authorization
+      )) &&
+      target
+    ) {
+      const update =
+        payload &&
+        language &&
+        target
+          ? await db
+              .collection("capPlans")
+              .updateOne(
+                {
+                  _id: new ObjectId(
+                    target
+                  ),
+                },
                 {
                   $set: {
                     ...payload,
-                    language: language._id,
-                    lastUpdated: new Date(),
-                    updatedBy: verification.user.username,
+
+                    language:
+                      language._id,
+
+                    lastUpdated:
+                      new Date(),
+
+                    updatedBy:
+                      verification.user
+                        .username,
                   },
                 }
               )
-            : { message: "Nothing to Update" }
-        res
-          .status(200)
-          .json({ message: "Update Completed!", verification, update })
-      } else res.status(401).json(verification)
-      break
-    case "DELETE":
-      if (verification.verified && verifyPermissions(ROLES.ADMIN,null,db,headers.authorization)) {
-        let remove = target
-          ? await db.collection("capPlans").deleteOne({ _id: new ObjectId(target) })
-          : { message: "Nothing to Remove" }
-        res
-          .status(200)
-          .json({ message: "Remove Completed!", verification, remove })
-      } else res.status(401).json(verification)
-      break
+          : {
+              message:
+                "Nothing to Update",
+            };
 
-    default:
-      res
-        .status(405)
-        .json({ message: "Method not Allowed, use POST, PUT or DELETE only" })
+      return res.status(200).json({
+        message: "Update Completed!",
+        verification,
+        update,
+      });
+    }
+
+    return res
+      .status(
+        verification.verified
+          ? 403
+          : 401
+      )
+      .json(verification);
+  }
+
+  case "DELETE": {
+    if (
+      verification.verified &&
+      (await verifyPermissions(
+        ROLES.ADMIN,
+        null,
+        db,
+        headers.authorization
+      ))
+    ) {
+      const remove = target
+        ? await db
+            .collection("capPlans")
+            .deleteOne({
+              _id: new ObjectId(
+                target
+              ),
+            })
+        : {
+            message:
+              "Nothing to Remove",
+          };
+
+      return res.status(200).json({
+        message: "Remove Completed!",
+        verification,
+        remove,
+      });
+    }
+
+    return res
+      .status(
+        verification.verified
+          ? 403
+          : 401
+      )
+      .json(verification);
+  }
+
+  default:
+    res.setHeader("Allow", [
+      "POST",
+      "PUT",
+      "DELETE",
+    ]);
+
+    return res.status(405).json({
+      message:
+        "Method not Allowed, use POST, PUT or DELETE only",
+    });
   }
 }

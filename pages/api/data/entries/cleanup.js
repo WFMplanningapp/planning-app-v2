@@ -14,7 +14,15 @@ export default async function handler(req, res) {
 
   if (method === "DELETE") {
 
-    if (verification.verified && verifyPermissions(ROLES.ADMIN,null,db,headers.authorization)) {
+    if (
+      verification.verified &&
+      (await verifyPermissions(
+        ROLES.ADMIN,
+        null,
+        db,
+        headers.authorization
+      ))
+    ) {
 
       if (query.capPlan) {
         let response = await db

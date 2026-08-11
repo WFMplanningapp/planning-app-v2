@@ -7,7 +7,7 @@ import DatePicker from 'react-datepicker';
 import { registerLocale, setDefaultLocale } from 'react-datepicker';
 import { enGB } from 'date-fns/locale';
 import moment from 'moment';
-import { FaLock } from 'react-icons/fa';
+import { FaLock, FaPlus, FaTrash, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import FoundeverLogo from '../foundeverlogo';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -25,7 +25,7 @@ const selectionFields = [
 const formFields = [
   {
     name: 'hourlycost',
-    level4Only: true, // Indicates this field is only visible to Level 4 users
+    level4Only: true,
     default: 0,
     required: false,
     type: 'number',
@@ -33,7 +33,7 @@ const formFields = [
   },
   {
     name: 'hourlyrate',
-    level4Only: true, // Indicates this field is only visible to Level 4 users
+    level4Only: true,
     default: 0,
     required: false,
     type: 'number',
@@ -107,6 +107,29 @@ const formFields = [
     type: 'text',
     label: 'country',
   },
+  // ── ENGINE INTEGRATION ──
+  {
+    name: 'engineEnabled',
+    default: false,
+    required: false,
+    type: 'check',
+    label: 'Enable Capacity Engine',
+  },
+  {
+    name: 'engineInterval',
+    default: 30,
+    required: false,
+    type: 'number',
+    label: 'Engine Interval',
+  },
+  {
+    name: 'engineChannels',
+    default: {},
+    required: false,
+    type: 'object',
+    label: 'Engine Channels',
+  },
+  // ── END ENGINE INTEGRATION ──
 ];
 
 const weekdays = [
@@ -119,6 +142,82 @@ const weekdays = [
   'Sunday',
 ];
 
+// ── ENGINE INTEGRATION: Constants ──
+const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAY_MAP = {
+  Monday: 'Mon',
+  Tuesday: 'Tue',
+  Wednesday: 'Wed',
+  Thursday: 'Thu',
+  Friday: 'Fri',
+  Saturday: 'Sat',
+  Sunday: 'Sun',
+};
+
+const MODEL_OPTIONS = [
+  { value: 'erlangC', label: 'Erlang C (Real-time: Phone, Chat)' },
+  { value: 'workload', label: 'Workload (Back-office: Email, Tickets)' },
+];
+
+const ICON_OPTIONS = ['📞', '📧', '💬', '🎧'];
+
+const DEFAULT_KPI = {
+  slPct: 80,
+  ast: 30,
+  maxOcc: 85,
+  maxAbandon: 5,
+  apt: 120,
+
+  // Percentage of forecast volume expected
+  // to be processed by a Workload channel.
+  answerRate: 100,
+};
+
+const padTime = (t) => {
+  if (!t) return '';
+  const parts = t.split(':');
+  if (parts.length !== 2) return t;
+  return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+};
+
+const buildDefaultHOOP = (operationDays) => {
+  const hoop = {};
+  DAYS_SHORT.forEach((dayShort) => {
+    hoop[dayShort] = { open: false, start: '08:00', end: '18:00', fullDay: false };
+  });
+
+  if (operationDays && Array.isArray(operationDays)) {
+    operationDays.forEach((opDay) => {
+      const short = DAY_MAP[opDay.weekDay];
+      if (short && opDay.status === 'Open') {
+        hoop[short] = {
+          open: true,
+          start: opDay.fullDay ? '00:00' : padTime(opDay.start) || '08:00',
+          end: opDay.fullDay ? '24:00' : padTime(opDay.end) || '18:00',
+          fullDay: opDay.fullDay || false,
+        };
+      }
+    });
+  }
+
+  return hoop;
+};
+
+const DEFAULT_CHANNEL = (operationDays) => ({
+  name: '',
+  icon: '📞',
+  model: 'erlangC',
+  baseAHT: 300,
+  concurrency: 1,
+  subServices: 1,
+  networkPct: 100,
+  minRequired: 1,
+  maxShiftHours: 8,
+  kpi: { ...DEFAULT_KPI },
+  hoop: buildDefaultHOOP(operationDays),
+});
+// ── END ENGINE INTEGRATION ──
+
 const editGetDate = (form) => {
   const firstDate = form.get('firstWeek').toUpperCase().split('W');
   return firstDate[1] < 10 && firstDate[1].length == 1
@@ -128,16 +227,649 @@ const editGetDate = (form) => {
 
 const generateOperationDays = () => {
   return [
-    { weekDay: 'Monday', status: 'Closed', start: '', end: '' },
-    { weekDay: 'Tuesday', status: 'Closed', start: '', end: '' },
-    { weekDay: 'Wednesday', status: 'Closed', start: '', end: '' },
-    { weekDay: 'Thursday', status: 'Closed', start: '', end: '' },
-    { weekDay: 'Friday', status: 'Closed', start: '', end: '' },
-    { weekDay: 'Saturday', status: 'Closed', start: '', end: '' },
-    { weekDay: 'Sunday', status: 'Closed', start: '', end: '' },
+    { weekDay: 'Monday', status: 'Closed', start: '', end: '', fullDay: false },
+    { weekDay: 'Tuesday', status: 'Closed', start: '', end: '', fullDay: false },
+    { weekDay: 'Wednesday', status: 'Closed', start: '', end: '', fullDay: false },
+    { weekDay: 'Thursday', status: 'Closed', start: '', end: '', fullDay: false },
+    { weekDay: 'Friday', status: 'Closed', start: '', end: '', fullDay: false },
+    { weekDay: 'Saturday', status: 'Closed', start: '', end: '', fullDay: false },
+    { weekDay: 'Sunday', status: 'Closed', start: '', end: '', fullDay: false },
   ];
 };
 
+// ============================================
+// CHANNEL CONFIGURATOR (INLINE)
+// Embedded version for the Management form
+// ============================================
+const ChannelConfiguratorInline = ({ form }) => {
+  const [expandedChannel, setExpandedChannel] = useState(null);
+
+  const channels = form.get('engineChannels') || {};
+  const operationDays = form.get('operationDays');
+
+  const generateKey = (name) =>
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_|_$/g, '') || `channel_${Date.now()}`;
+
+  const addChannel = () => {
+    const key = `channel_${Date.now()}`;
+    const newChannels = {
+      ...channels,
+      [key]: { ...DEFAULT_CHANNEL(operationDays) },
+    };
+    form.set('engineChannels', newChannels);
+    setExpandedChannel(key);
+  };
+
+  const removeChannel = (key) => {
+    const next = { ...channels };
+    delete next[key];
+    form.set('engineChannels', next);
+    if (expandedChannel === key) setExpandedChannel(null);
+  };
+
+  const updateChannel = (key, field, value) => {
+    const updated = {
+      ...channels,
+      [key]: { ...channels[key], [field]: value },
+    };
+    form.set('engineChannels', updated);
+  };
+
+  const updateKPI = (key, field, value) => {
+    const updated = {
+      ...channels,
+      [key]: {
+        ...channels[key],
+        kpi: { ...channels[key].kpi, [field]: parseFloat(value) || 0 },
+      },
+    };
+    form.set('engineChannels', updated);
+  };
+
+  const updateHOOP = (channelKey, day, field, value) => {
+    const updated = {
+      ...channels,
+      [channelKey]: {
+        ...channels[channelKey],
+        hoop: {
+          ...channels[channelKey].hoop,
+          [day]: { ...channels[channelKey].hoop[day], [field]: value },
+        },
+      },
+    };
+    form.set('engineChannels', updated);
+  };
+
+  const syncHOOPFromOperationDays = (channelKey) => {
+    const hoop = buildDefaultHOOP(operationDays);
+    updateChannel(channelKey, 'hoop', hoop);
+  };
+
+  return (
+    <div>
+      {/* Channel List */}
+      {Object.entries(channels).map(([key, channel]) => (
+        <div
+          key={key}
+          className="box mb-3"
+          style={{ padding: '0.75rem', background: '#fafaff' }}
+        >
+          {/* Channel Header */}
+          <div
+            className="is-flex is-align-items-center is-clickable"
+            onClick={() =>
+              setExpandedChannel(expandedChannel === key ? null : key)
+            }
+            style={{ cursor: 'pointer' }}
+          >
+            <span className="mr-2" style={{ fontSize: '1.1rem' }}>
+              {channel.icon}
+            </span>
+            <strong className="mr-2 is-size-7">
+              {channel.name || '(Unnamed Channel)'}
+            </strong>
+            <span className="tag is-light is-small mr-2">{channel.model}</span>
+            <span className="tag is-info is-light is-small mr-2">
+              AHT: {channel.baseAHT}s
+            </span>
+            <span className="ml-auto mr-2">
+              {expandedChannel === key ? (
+                <FaChevronUp size={10} />
+              ) : (
+                <FaChevronDown size={10} />
+              )}
+            </span>
+            <button
+              className="button is-small is-danger is-light"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeChannel(key);
+              }}
+            >
+              <FaTrash size={10} />
+            </button>
+          </div>
+
+          {/* Expanded Config */}
+          {expandedChannel === key && (
+            <div className="mt-3">
+              {/* Basic Settings */}
+              <div className="columns is-multiline">
+                <div className="column is-3">
+                  <label className="label is-small">Channel Name</label>
+                  <input
+                    className="input is-small"
+                    type="text"
+                    value={channel.name}
+                    onChange={(e) => updateChannel(key, 'name', e.target.value)}
+                    placeholder="e.g., Phone Main"
+                  />
+                </div>
+                <div className="column is-2">
+                  <label className="label is-small">Icon</label>
+                  <div className="select is-small is-fullwidth">
+                    <select
+                      value={channel.icon}
+                      onChange={(e) =>
+                        updateChannel(key, 'icon', e.target.value)
+                      }
+                    >
+                      {ICON_OPTIONS.map((ic) => (
+                        <option key={ic} value={ic}>
+                          {ic}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="column is-3">
+                  <label className="label is-small">Model</label>
+                  <div className="select is-small is-fullwidth">
+                    <select
+                      value={channel.model}
+                      onChange={(e) =>
+                        updateChannel(key, 'model', e.target.value)
+                      }
+                    >
+                      {MODEL_OPTIONS.map((m) => (
+                        <option key={m.value} value={m.value}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="column is-2">
+                  <label className="label is-small">Base AHT (sec)</label>
+                  <input
+                    className="input is-small"
+                    type="number"
+                    value={channel.baseAHT}
+                    onChange={(e) =>
+                      updateChannel(key, 'baseAHT', e.target.value)
+                    }
+                  />
+                </div>
+                {channel.model === 'erlangC' && (
+                  <div className="column is-2">
+                    <label className="label is-small">
+                      Concurrency
+                    </label>
+
+                    <input
+                      className="input is-small"
+                      type="number"
+                      min="1"
+                      max="5"
+                      value={channel.concurrency ?? 1}
+                      onChange={(e) =>
+                        updateChannel(
+                          key,
+                          'concurrency',
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="columns is-multiline">
+                {channel.model === 'erlangC' && (
+                  <>
+                    <div className="column is-2">
+                      <label className="label is-small">
+                        Network %
+                      </label>
+
+                      <input
+                        className="input is-small"
+                        type="number"
+                        min="1"
+                        max="100"
+                        step="0.1"
+                        value={channel.networkPct ?? 100}
+                        onChange={(e) =>
+                          updateChannel(
+                            key,
+                            'networkPct',
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div className="column is-2">
+                      <label className="label is-small">
+                        Min Required
+                      </label>
+
+                      <input
+                        className="input is-small"
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={channel.minRequired ?? 1}
+                        onChange={(e) =>
+                          updateChannel(
+                            key,
+                            'minRequired',
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div className="column is-2">
+                      <label className="label is-small">
+                        Sub-Services
+                      </label>
+
+                      <input
+                        className="input is-small"
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={channel.subServices ?? 1}
+                        onChange={(e) =>
+                          updateChannel(
+                            key,
+                            'subServices',
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="column is-2">
+                  <label
+                    className="label is-small"
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    Shift Hours / Day
+                  </label>
+
+                  <input
+                    className="input is-small"
+                    type="number"
+                    min="0.1"
+                    max="24"
+                    step="0.1"
+                    value={channel.maxShiftHours ?? 8}
+                    onChange={(e) =>
+                      updateChannel(
+                        key,
+                        'maxShiftHours',
+                        e.target.value
+                      )
+                    }
+                  />
+
+                  <p
+                    className="help"
+                    style={{ fontSize: '0.6rem' }}
+                  >
+                    For daily FTE calc
+                  </p>
+                </div>
+              </div>
+
+              {/* KPI — Erlang C */}
+              {channel.model === 'erlangC' && (
+                <div>
+                  <label className="label is-small has-text-info">
+                    KPI Targets
+                  </label>
+                  <div className="columns is-multiline">
+                    <div className="column is-2">
+                      <label className="label is-small">SL Target %</label>
+                      <input
+                        className="input is-small"
+                        type="number"
+                        value={channel.kpi.slPct}
+                        onChange={(e) => updateKPI(key, 'slPct', e.target.value)}
+                      />
+                    </div>
+                    <div className="column is-2">
+                      <label className="label is-small">AST (sec)</label>
+                      <input
+                        className="input is-small"
+                        type="number"
+                        value={channel.kpi.ast}
+                        onChange={(e) => updateKPI(key, 'ast', e.target.value)}
+                      />
+                    </div>
+                    <div className="column is-2">
+                      <label className="label is-small">Max Occ %</label>
+                      <input
+                        className="input is-small"
+                        type="number"
+                        value={channel.kpi.maxOcc}
+                        onChange={(e) =>
+                          updateKPI(key, 'maxOcc', e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="column is-2">
+                      <label className="label is-small">Max Abandon %</label>
+                      <input
+                        className="input is-small"
+                        type="number"
+                        value={channel.kpi.maxAbandon}
+                        onChange={(e) =>
+                          updateKPI(key, 'maxAbandon', e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="column is-2">
+                      <label className="label is-small">
+                        Avg Patience (sec)
+                      </label>
+                      <input
+                        className="input is-small"
+                        type="number"
+                        value={channel.kpi.apt}
+                        onChange={(e) => updateKPI(key, 'apt', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* KPI — Workload */}
+                {channel.model === 'workload' && (
+                  <div>
+                    <label className="label is-small has-text-info">
+                      KPI Targets
+                    </label>
+
+                    <div className="columns is-multiline">
+                      <div className="column is-2">
+                        <label className="label is-small">
+                          Max Occupancy %
+                        </label>
+
+                        <input
+                          className="input is-small"
+                          type="number"
+                          min="0.1"
+                          max="100"
+                          step="0.1"
+                          value={channel.kpi?.maxOcc ?? 85}
+                          onChange={(e) =>
+                            updateKPI(
+                              key,
+                              'maxOcc',
+                              e.target.value
+                            )
+                          }
+                        />
+
+                        <p
+                          className="help"
+                          style={{ fontSize: '0.6rem' }}
+                        >
+                          Maximum productive utilization
+                        </p>
+                      </div>
+
+                      <div className="column is-2">
+                        <label className="label is-small">
+                          Answer Rate %
+                        </label>
+
+                        <input
+                          className="input is-small"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          value={
+                            channel.kpi?.answerRate ?? 100
+                          }
+                          onChange={(e) =>
+                            updateKPI(
+                              key,
+                              'answerRate',
+                              e.target.value
+                            )
+                          }
+                        />
+
+                        <p
+                          className="help"
+                          style={{ fontSize: '0.6rem' }}
+                        >
+                          Percentage of forecast volume to process
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              {/* HOOP — Compact Table */}
+              <div className="is-flex is-align-items-center mb-2 mt-2">
+                <label className="label is-small has-text-info mb-0 mr-3">
+                  Channel Hours of Operation
+                </label>
+                <button
+                  className="button is-small is-light is-rounded"
+                  onClick={() => syncHOOPFromOperationDays(key)}
+                  title="Copy from capPlan's Days of Operation above"
+                >
+                  Sync from CapPlan HOOP
+                </button>
+              </div>
+              <table className="table is-narrow is-bordered is-size-7 mb-2" style={{ width: 'auto' }}>
+                <thead>
+                  <tr>
+                    {DAYS_SHORT.map((day) => (
+                      <th key={day} className="has-text-centered" style={{ padding: '4px 8px', minWidth: '80px' }}>
+                        <label className="checkbox">
+                          <input
+                            type="checkbox"
+                            checked={channel.hoop?.[day]?.open || false}
+                            onChange={(e) =>
+                              updateHOOP(key, day, 'open', e.target.checked)
+                            }
+                          />{' '}
+                          {day}
+                        </label>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Full Day toggle */}
+                  <tr>
+                    {DAYS_SHORT.map((day) => (
+                      <td
+                        key={day + '-fd'}
+                        className="has-text-centered"
+                        style={{
+                          padding: '2px 4px',
+                          opacity: channel.hoop?.[day]?.open ? 1 : 0.3,
+                        }}
+                      >
+                        {channel.hoop?.[day]?.open ? (
+                          <label className="checkbox is-size-7">
+                            <input
+                              type="checkbox"
+                              checked={channel.hoop[day]?.fullDay || false}
+                              onChange={(e) =>
+                                updateHOOP(key, day, 'fullDay', e.target.checked)
+                              }
+                            />{' '}
+                            24h
+                          </label>
+                        ) : (
+                          <span className="has-text-grey-light">—</span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                  {/* Times */}
+                  <tr>
+                    {DAYS_SHORT.map((day) => (
+                      <td
+                        key={day + '-t'}
+                        className="has-text-centered"
+                        style={{
+                          padding: '4px 6px',
+                          opacity: channel.hoop?.[day]?.open ? 1 : 0.3,
+                        }}
+                      >
+                        {channel.hoop?.[day]?.open ? (
+                          channel.hoop[day]?.fullDay ? (
+                            <span className="has-text-success is-size-7" style={{ fontWeight: 600 }}>
+                              00:00–23:59
+                            </span>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <input
+                                className="input is-small"
+                                type="time"
+                                value={channel.hoop[day]?.start || '08:00'}
+                                onChange={(e) =>
+                                  updateHOOP(key, day, 'start', e.target.value)
+                                }
+                                style={{ fontSize: '0.7rem', padding: '2px 4px', height: '24px' }}
+                              />
+                              <input
+                                className="input is-small"
+                                type="time"
+                                value={channel.hoop[day]?.end || '18:00'}
+                                onChange={(e) =>
+                                  updateHOOP(key, day, 'end', e.target.value)
+                                }
+                                style={{ fontSize: '0.7rem', padding: '2px 4px', height: '24px' }}
+                              />
+                            </div>
+                          )
+                        ) : (
+                          <span className="has-text-grey-light">—</span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Add Channel Button */}
+      <button
+        className="button is-small is-info is-light is-rounded"
+        onClick={addChannel}
+      >
+        <span className="icon is-small">
+          <FaPlus size={10} />
+        </span>
+        <span>Add Channel</span>
+      </button>
+
+      <span className="ml-3 is-size-7 has-text-grey">
+        {Object.keys(channels).length} channel(s) configured
+      </span>
+    </div>
+  );
+};
+
+// ============================================
+// ENGINE SECTION COMPONENT
+// Renders the Enable toggle + interval + channels
+// ============================================
+const EngineSection = ({ form }) => {
+  const engineEnabled = form.get('engineEnabled') || false;
+
+  return (
+    <div className="mt-4">
+      <hr />
+      <div className="columns is-vcentered">
+        <div className="column is-narrow">
+          <label className="label">
+            <input
+              type="checkbox"
+              className="mr-2"
+              checked={engineEnabled}
+              onChange={() => form.set('engineEnabled', !engineEnabled)}
+            />
+            Enable Capacity Engine
+          </label>
+        </div>
+        {engineEnabled && (
+          <div className="column is-2">
+            <label className="label is-small">Interval (minutes)</label>
+            <div className="select is-small is-fullwidth">
+              <select
+                value={form.get('engineInterval') || 30}
+                onChange={(e) =>
+                  form.set('engineInterval', parseInt(e.target.value))
+                }
+              >
+                <option value={15}>15 min</option>
+                <option value={30}>30 min</option>
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {engineEnabled && (
+        <div className="mt-2">
+          <label className="label is-small has-text-info">
+            Channel Configuration
+          </label>
+          <p className="is-size-7 has-text-grey mb-3">
+            Configure the channels for this capacity plan. Each channel can use
+            Erlang C (real-time) or Workload (back-office) model. Hours of
+            operation can be synced from the capPlan's Days of Operation or set
+            independently per channel.
+          </p>
+          <ChannelConfiguratorInline form={form} />
+        </div>
+      )}
+
+      {!engineEnabled && (
+        <p className="is-size-7 has-text-grey">
+          Enable the capacity engine to configure channels and use automated
+          FTE calculations on the Capacity Planner page.
+        </p>
+      )}
+    </div>
+  );
+};
+
+// ============================================
+// MAIN COMPONENT
+// ============================================
 const CapPlanManagement = ({ data }) => {
   const [tab, setTab] = useState(1);
   const [currentValue, setCurrentValue] = useState('');
@@ -185,14 +917,138 @@ const CapPlanManagement = ({ data }) => {
         pricingModel: capPlan.pricingModel || '',
         hourlycost: capPlan.hourlycost,
         hourlyrate: capPlan.hourlyrate,
+        // ── ENGINE INTEGRATION ──
+        engineEnabled: capPlan.engineEnabled || false,
+        engineInterval: capPlan.engineInterval || 30,
+        engineChannels: capPlan.engineChannels || {},
+        // ── END ENGINE INTEGRATION ──
       });
     }
   }, [selection.get('capPlan')]);
 
   //HANDLERS
   const handleSubmit = async (action) => {
+    // ── ENGINE INTEGRATION: Clean channel keys before saving ──
+    let engineChannels = form.get('engineChannels') || {};
+    const cleanChannels = {};
+    Object.entries(engineChannels).forEach(([key, ch]) => {
+      const newKey = ch.name
+        ? ch.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_|_$/g, '')
+        : key;
+
+      const normalizedModel = String(ch.model || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_-]+/g, "");
+
+      const defaultMaxOcc =
+        normalizedModel === "erlangc"
+          ? 100
+          : 85;
+
+      const rawMaxOccValue =
+        ch.kpi?.maxOcc;
+
+      const parsedMaxOcc =
+        rawMaxOccValue === "" ||
+        rawMaxOccValue === null ||
+        rawMaxOccValue === undefined
+          ? defaultMaxOcc
+          : Number(rawMaxOccValue);
+
+      if (
+        !Number.isFinite(parsedMaxOcc) ||
+        parsedMaxOcc <= 0 ||
+        parsedMaxOcc > 100
+      ) {
+        window.alert(
+          `Max Occupancy for "${
+            ch.name || "Unknown channel"
+          }" must be greater than 0 and no more than 100.`
+        );
+
+        throw new Error(
+          `Invalid maxOcc for channel "${
+            ch.name || "Unknown"
+          }": ${String(rawMaxOccValue)}`
+        );
+      }
+
+      const maxOcc = parsedMaxOcc;
+
+      const rawAnswerRateValue =
+        ch.kpi?.answerRate;
+
+      const parsedAnswerRate =
+        rawAnswerRateValue === "" ||
+        rawAnswerRateValue === null ||
+        rawAnswerRateValue === undefined
+          ? 100
+          : Number(rawAnswerRateValue);
+
+      if (
+        !Number.isFinite(parsedAnswerRate) ||
+        parsedAnswerRate < 0 ||
+        parsedAnswerRate > 100
+      ) {
+        window.alert(
+          `Answer Rate for "${
+            ch.name || "Unknown channel"
+          }" must be between 0 and 100.`
+        );
+
+        throw new Error(
+          `Invalid answerRate for channel "${
+            ch.name || "Unknown"
+          }": ${String(rawAnswerRateValue)}`
+        );
+      }
+
+      const answerRate =
+        parsedAnswerRate;
+
+      cleanChannels[newKey] = {
+        ...ch,
+
+        baseAHT:
+          parseFloat(ch.baseAHT) || 300,
+
+        concurrency:
+          parseInt(ch.concurrency, 10) || 1,
+
+        subServices:
+          parseInt(ch.subServices, 10) || 1,
+
+        networkPct:
+          parseFloat(ch.networkPct) || 100,
+
+        minRequired:
+          Math.max(
+            0,
+            Number(ch.minRequired) || 0
+          ),
+
+        maxShiftHours:
+          parseFloat(ch.maxShiftHours) || 8,
+
+        kpi: {
+          ...DEFAULT_KPI,
+          ...(ch.kpi || {}),
+          maxOcc,
+          answerRate,
+        },
+      };
+    });
+    // ── END ENGINE INTEGRATION ──
+
     let payload = {
       ...form.getForm(),
+      // ── ENGINE INTEGRATION: Override with cleaned channels ──
+      engineChannels: form.get('engineEnabled') ? cleanChannels : {},
+      // ── END ENGINE INTEGRATION ──
     };
 
     switch (action) {
@@ -308,6 +1164,7 @@ const CapPlanManagement = ({ data }) => {
     selection.resetOne('capPlan');
     data.refresh();
   };
+
   function checkValue(e) {
     setCurrentValue(handleDecimalsOnValue(e.target.value));
     form.set('fteHoursWeekly', handleDecimalsOnValue(e.target.value));
@@ -330,18 +1187,28 @@ const CapPlanManagement = ({ data }) => {
 
   const handleOperationDaysChange = (value, key, form, dayIndex) => {
     try {
-      let operationDays = [...form.get('operationDays')]; // Criar uma cópia para evitar mutação direta
-      let changedDay = { ...operationDays[dayIndex] }; // Criar uma cópia do dia específico
+      let operationDays = [...form.get('operationDays')];
+      let changedDay = { ...operationDays[dayIndex] };
 
       switch (key) {
         case 'status':
           changedDay.status = changedDay.status === 'Open' ? 'Closed' : 'Open';
+          if (changedDay.status === 'Closed') {
+            changedDay.fullDay = false;
+          }
           break;
         case 'start':
           changedDay.start = value;
           break;
         case 'end':
           changedDay.end = value;
+          break;
+        case 'fullDay':
+          changedDay.fullDay = !changedDay.fullDay;
+          if (changedDay.fullDay) {
+            changedDay.start = '00:00';
+            changedDay.end = '23:59';
+          }
           break;
         default:
           break;
@@ -382,21 +1249,23 @@ const CapPlanManagement = ({ data }) => {
               Edit
             </a>
           </li>
-
-          <li className={tab === 3 ? 'is-active' : ''} key={3}>
-            <a
-              onClick={() => {
-                setTab(3);
-                form.resetAll();
-                form.set('operationDays', generateOperationDays());
-                selection.resetAll();
-              }}
-            >
-              Remove
-            </a>
-          </li>
+          {auth.allowedAdmin && (
+            <li className={tab === 3 ? 'is-active' : ''} key={3}>
+              <a
+                onClick={() => {
+                  setTab(3);
+                  form.resetAll();
+                  form.set('operationDays', generateOperationDays());
+                  selection.resetAll();
+                }}
+              >
+                Remove
+              </a>
+            </li>
+          )}
         </ul>
       </div>
+
       {/*TABS*/}
       {tab === 1 ? (
         /** ADD */
@@ -536,13 +1405,14 @@ const CapPlanManagement = ({ data }) => {
                     <FormDropdown
                       fieldName="pricing Model"
                       form={form}
-                      data={data && data.pms && data.pms.map((pms) => pms.name)}
+                      data={
+                        data && data.pms && data.pms.map((pms) => pms.name)
+                      }
                       disabled={false}
                       style={'maxWidth: "74px"'}
                     />
                   </div>
                 </div>
-                {/* Conditionally Render Hourly Cost and Hourly Rate Fields */}
                 {isLevel4 && (
                   <>
                     <div className="column is-3">
@@ -559,7 +1429,6 @@ const CapPlanManagement = ({ data }) => {
                         />
                       </div>
                     </div>
-
                     <div className="column is-3">
                       <label className="label">Hourly Rate</label>
                       <div className="control is-small">
@@ -577,122 +1446,158 @@ const CapPlanManagement = ({ data }) => {
                   </>
                 )}
               </div>
-              <div className="columns">
-                <div className="column is-2">
-                  <label className="label">Days of Operation</label>
-                </div>
-                <div className="column is-1">
-                  <label className="label">Status</label>
-                </div>
-
-                <div className="column is-2">
-                  <label className="label">Hours of Operation</label>
-                </div>
-                <div className="column is-12 ">
-                  <div className="control">
-                    <label className="label">
-                      <input
-                        type="checkbox"
-                        className="mx-2"
-                        checked={form.get('active') || true}
-                        onChange={() => {
-                          form.set('active', !form.get('active'));
-                        }}
-                        disabled
-                      ></input>
-                      Active
-                    </label>
-                  </div>
-                </div>
+              {/* Days & Hours of Operation — Compact Table */}
+              <div className="is-flex is-align-items-center mb-2">
+                <label className="label mb-0 mr-4">Days & Hours of Operation</label>
+                <label className="checkbox is-size-7">
+                  <input
+                    type="checkbox"
+                    className="mr-1"
+                    checked={form.get('active') || false}
+                    onChange={() => {
+                      form.set('active', !form.get('active'));
+                    }}
+                  />
+                  Active
+                </label>
               </div>
-              {weekdays.map((w, i) => (
-                <div key={w + '-add'}>
-                  <div className="columns">
-                    <div className="column is-2">
-                      <div className="control">
-                        <input
-                          className="input is-small"
-                          value={w}
-                          type="text"
-                          placeholder={w}
-                          required
-                          disabled
-                        />
-                      </div>
-                    </div>
-                    <div
-                      className="column is-1"
-                      style={{ paddingBottom: '0px' }}
-                    >
-                      <div className="control">
-                        <input
-                          type="checkbox"
-                          className="mx-2"
-                          checked={
-                            form.get('operationDays')
-                              ? form.get('operationDays')[i].status == 'Open'
-                              : false
-                          }
-                          onChange={() => {
-                            handleOperationDaysChange(true, 'status', form, i);
-                          }}
-                        ></input>
-                      </div>
-                    </div>
+              <table className="table is-narrow is-bordered is-size-7 mb-3" style={{ width: 'auto' }}>
+                <thead>
+                  <tr>
+                    {weekdays.map((w, i) => (
+                      <th key={w} className="has-text-centered" style={{ padding: '4px 6px', minWidth: '90px' }}>
+                        <label className="checkbox">
+                          <input
+                            type="checkbox"
+                            checked={
+                              form.get('operationDays')
+                                ? form.get('operationDays')[i].status === 'Open'
+                                : false
+                            }
+                            onChange={() => {
+                              handleOperationDaysChange(true, 'status', form, i);
+                            }}
+                          />{' '}
+                          {w.slice(0, 3)}
+                        </label>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Full Day toggle row */}
+                  <tr>
+                    {weekdays.map((w, i) => (
+                      <td
+                        key={w + '-fullday'}
+                        className="has-text-centered"
+                        style={{
+                          padding: '2px 4px',
+                          opacity:
+                            form.get('operationDays') &&
+                            form.get('operationDays')[i].status === 'Open'
+                              ? 1
+                              : 0.3,
+                        }}
+                      >
+                        {form.get('operationDays') &&
+                        form.get('operationDays')[i].status === 'Open' ? (
+                          <label className="checkbox is-size-7">
+                            <input
+                              type="checkbox"
+                              checked={form.get('operationDays')[i].fullDay || false}
+                              onChange={() => {
+                                handleOperationDaysChange(true, 'fullDay', form, i);
+                              }}
+                            />{' '}
+                            24h
+                          </label>
+                        ) : (
+                          <span className="has-text-grey-light">—</span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                  {/* Start/End time row */}
+                  <tr>
+                    {weekdays.map((w, i) => (
+                      <td
+                        key={w + '-times'}
+                        className="has-text-centered"
+                        style={{
+                          padding: '4px 4px',
+                          opacity:
+                            form.get('operationDays') &&
+                            form.get('operationDays')[i].status === 'Open'
+                              ? 1
+                              : 0.3,
+                        }}
+                      >
+                        {form.get('operationDays') &&
+                        form.get('operationDays')[i].status === 'Open' ? (
+                          form.get('operationDays')[i].fullDay ? (
+                            <span className="has-text-success is-size-7" style={{ fontWeight: 600 }}>
+                              00:00–23:59
+                            </span>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <FormDropdown
+                                className={'workHours'}
+                                fieldName="operationDays"
+                                subFieldName="start"
+                                form={form}
+                                data={
+                                  data &&
+                                  data.hours
+                                    .sort((a, b) => a.order - b.order)
+                                    .map((h) => h.name)
+                                }
+                                callback={(f, j, v) => {
+                                  handleOperationDaysChange(j, 'start', f, i);
+                                }}
+                                disabled={false}
+                                getNestedItem={(opDays) => {
+                                  return opDays[i]['start'];
+                                }}
+                              />
+                              <FormDropdown
+                                fieldName="operationDays"
+                                subFieldName="end"
+                                form={form}
+                                data={
+                                  data &&
+                                  data.hours
+                                    .sort((a, b) => a.order - b.order)
+                                    .map((h) => h.name)
+                                }
+                                callback={(f, j, v) => {
+                                  handleOperationDaysChange(j, 'end', f, i);
+                                }}
+                                disabled={false}
+                                getNestedItem={(opDays) => {
+                                  return opDays[i]['end'];
+                                }}
+                              />
+                            </div>
+                          )
+                        ) : (
+                          <span className="has-text-grey-light">—</span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
 
-                    {form.get('operationDays') &&
-                    form.get('operationDays')[i].status == 'Open' ? (
-                      <div className="column is-3">
-                        <div className="control">
-                          <FormDropdown
-                            className={'workHours'}
-                            fieldName="operationDays"
-                            subFieldName="start"
-                            form={form}
-                            data={
-                              data &&
-                              data.hours
-                                .sort((a, b) => a.order - b.order)
-                                .map((h) => h.name)
-                            }
-                            callback={(f, j, v) => {
-                              handleOperationDaysChange(j, 'start', f, i);
-                            }}
-                            disabled={false}
-                            getNestedItem={(opDays) => {
-                              return opDays[i]['start'];
-                            }}
-                          />
-                          <FormDropdown
-                            fieldName="operationDays"
-                            subFieldName="end"
-                            form={form}
-                            data={
-                              data &&
-                              data.hours
-                                .sort((a, b) => a.order - b.order)
-                                .map((h) => h.name)
-                            }
-                            callback={(f, j, v) => {
-                              // console.log(j, v)
-                              handleOperationDaysChange(j, 'end', f, i);
-                            }}
-                            disabled={false}
-                            getNestedItem={(opDays) => {
-                              return opDays[i]['end'];
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
+              {/* ── ENGINE INTEGRATION ── */}
+              <EngineSection form={form} />
+              {/* ── END ENGINE INTEGRATION ── */}
             </div>
 
             <div id="add-button">
-              <div className="columns">
+              <div className="columns mt-3">
                 <div className="column is-3">
+                  
                   <button
                     className="button is-small is-success is-rounded"
                     onClick={() => handleSubmit('ADD')}
@@ -785,7 +1690,6 @@ const CapPlanManagement = ({ data }) => {
                     />
                   </div>
                 </div>
-
                 <div className="column is-2">
                   <label className="label">First Week</label>
                   <div className="control">
@@ -794,7 +1698,6 @@ const CapPlanManagement = ({ data }) => {
                       locale="en-GB"
                       dateFormat={"YYYY'w'ww"}
                       onChange={(date) => {
-                        console.log(`on change ${date}`);
                         let year = moment(date).format('YYYY');
                         let week = moment(date).isoWeek();
                         let weekCode = year + 'w' + week;
@@ -805,7 +1708,6 @@ const CapPlanManagement = ({ data }) => {
                     />
                   </div>
                 </div>
-
                 <div className="column is-2">
                   <label className="label">Starting HC</label>
                   <div className="control">
@@ -827,8 +1729,7 @@ const CapPlanManagement = ({ data }) => {
                     form={selection}
                     data={
                       data && data.languages
-                        ? data &&
-                          data.languages.sort((a, b) =>
+                        ? data.languages.sort((a, b) =>
                             a.name > b.name ? 1 : a.name < b.name ? -1 : 0
                           )
                         : ''
@@ -836,7 +1737,6 @@ const CapPlanManagement = ({ data }) => {
                     disabled={!selection.get('language')}
                   />
                 </div>
-
                 <div className="column is-2">
                   <label className="label">Country</label>
                   <div className="control is-small">
@@ -878,7 +1778,6 @@ const CapPlanManagement = ({ data }) => {
                     />
                   </div>
                 </div>
-                {/* Conditionally Render Hourly Cost and Hourly Rate Fields */}
                 {isLevel4 && (
                   <>
                     <div className="column is-3">
@@ -895,7 +1794,6 @@ const CapPlanManagement = ({ data }) => {
                         />
                       </div>
                     </div>
-
                     <div className="column is-3">
                       <label className="label">Hourly Rate</label>
                       <div className="control is-small">
@@ -913,116 +1811,154 @@ const CapPlanManagement = ({ data }) => {
                   </>
                 )}
               </div>
-              <div className="columns">
-                <div className="column is-2">
-                  <label className="label">Days of Operation</label>
-                </div>
-                <div className="column is-1">
-                  <label className="label">Status</label>
-                </div>
-
-                <div className="column is-2">
-                  <label className="label">Hours of Operation</label>
-                </div>
-                <div className="column is-12 ">
-                  <div className="control">
-                    <label className="label">
-                      <input
-                        type="checkbox"
-                        className="mx-2"
-                        checked={form.get('active') || false}
-                        onChange={() => {
-                          form.set('active', !form.get('active'));
-                        }}
-                      ></input>
-                      Active
-                    </label>
-                  </div>
-                </div>
+             {/* Days & Hours of Operation — Compact Table */}
+              <div className="is-flex is-align-items-center mb-2">
+                <label className="label mb-0 mr-4">Days & Hours of Operation</label>
+                <label className="checkbox is-size-7">
+                  <input
+                    type="checkbox"
+                    className="mr-1"
+                    checked={form.get('active') || false}
+                    onChange={() => {
+                      form.set('active', !form.get('active'));
+                    }}
+                  />
+                  Active
+                </label>
               </div>
-              {weekdays.map((w, i) => (
-                <div key={w + '-edit'}>
-                  <div className="columns">
-                    <div className="column is-2">
-                      <div className="control">
-                        <input
-                          className="input is-small"
-                          onChange={(e) => form.set('name', e.target.value)}
-                          value={w}
-                          type="text"
-                          placeholder={w}
-                          required
-                          disabled
-                        />
-                      </div>
-                    </div>
-                    <div
-                      className="column is-1"
-                      style={{ paddingBottom: '0px' }}
-                    >
-                      <div className="control">
-                        <input
-                          type="checkbox"
-                          className="mx-2"
-                          checked={
+              <table className="table is-narrow is-bordered is-size-7 mb-3" style={{ width: 'auto' }}>
+                <thead>
+                  <tr>
+                    {weekdays.map((w, i) => (
+                      <th key={w} className="has-text-centered" style={{ padding: '4px 6px', minWidth: '90px' }}>
+                        <label className="checkbox">
+                          <input
+                            type="checkbox"
+                            checked={
+                              form.get('operationDays')
+                                ? form.get('operationDays')[i].status === 'Open'
+                                : false
+                            }
+                            onChange={() => {
+                              handleOperationDaysChange(true, 'status', form, i);
+                            }}
+                          />{' '}
+                          {w.slice(0, 3)}
+                        </label>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Full Day toggle row */}
+                  <tr>
+                    {weekdays.map((w, i) => (
+                      <td
+                        key={w + '-fullday'}
+                        className="has-text-centered"
+                        style={{
+                          padding: '2px 4px',
+                          opacity:
                             form.get('operationDays') &&
-                            form.get('operationDays')[i].status == 'Open'
-                          }
-                          onChange={() => {
-                            handleOperationDaysChange(true, 'status', form, i);
-                          }}
-                        ></input>
-                      </div>
-                    </div>
+                            form.get('operationDays')[i].status === 'Open'
+                              ? 1
+                              : 0.3,
+                        }}
+                      >
+                        {form.get('operationDays') &&
+                        form.get('operationDays')[i].status === 'Open' ? (
+                          <label className="checkbox is-size-7">
+                            <input
+                              type="checkbox"
+                              checked={form.get('operationDays')[i].fullDay || false}
+                              onChange={() => {
+                                handleOperationDaysChange(true, 'fullDay', form, i);
+                              }}
+                            />{' '}
+                            24h
+                          </label>
+                        ) : (
+                          <span className="has-text-grey-light">—</span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                  {/* Start/End time row */}
+                  <tr>
+                    {weekdays.map((w, i) => (
+                      <td
+                        key={w + '-times'}
+                        className="has-text-centered"
+                        style={{
+                          padding: '4px 4px',
+                          opacity:
+                            form.get('operationDays') &&
+                            form.get('operationDays')[i].status === 'Open'
+                              ? 1
+                              : 0.3,
+                        }}
+                      >
+                        {form.get('operationDays') &&
+                        form.get('operationDays')[i].status === 'Open' ? (
+                          form.get('operationDays')[i].fullDay ? (
+                            <span className="has-text-success is-size-7" style={{ fontWeight: 600 }}>
+                              00:00–23:59
+                            </span>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <FormDropdown
+                                className={'workHours'}
+                                fieldName="operationDays"
+                                subFieldName="start"
+                                form={form}
+                                data={
+                                  data &&
+                                  data.hours
+                                    .sort((a, b) => a.order - b.order)
+                                    .map((h) => h.name)
+                                }
+                                callback={(f, j, v) => {
+                                  handleOperationDaysChange(j, 'start', f, i);
+                                }}
+                                disabled={false}
+                                getNestedItem={(opDays) => {
+                                  return opDays[i]['start'];
+                                }}
+                              />
+                              <FormDropdown
+                                fieldName="operationDays"
+                                subFieldName="end"
+                                form={form}
+                                data={
+                                  data &&
+                                  data.hours
+                                    .sort((a, b) => a.order - b.order)
+                                    .map((h) => h.name)
+                                }
+                                callback={(f, j, v) => {
+                                  handleOperationDaysChange(j, 'end', f, i);
+                                }}
+                                disabled={false}
+                                getNestedItem={(opDays) => {
+                                  return opDays[i]['end'];
+                                }}
+                              />
+                            </div>
+                          )
+                        ) : (
+                          <span className="has-text-grey-light">—</span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
 
-                    {form.get('operationDays') &&
-                    form.get('operationDays')[i].status == 'Open' ? (
-                      <div className="column is-3">
-                        <div className="control">
-                          <FormDropdown
-                            fieldName="operationDays"
-                            subFieldName={'start'}
-                            form={form}
-                            data={
-                              data &&
-                              data.hours
-                                .sort((a, b) => a.order - b.order)
-                                .map((h) => h.name)
-                            }
-                            callback={(f, j, v) => {
-                              handleOperationDaysChange(j, 'start', f, i);
-                            }}
-                            disabled={false}
-                            getNestedItem={(opDays) => {
-                              return opDays[i]['start'];
-                            }}
-                          />
-                          <FormDropdown
-                            fieldName="operationDays"
-                            form={form}
-                            subFieldName={'end'}
-                            data={
-                              data &&
-                              data.hours
-                                .sort((a, b) => a.order - b.order)
-                                .map((h) => h.name)
-                            }
-                            callback={(f, j, v) => {
-                              handleOperationDaysChange(j, 'end', f, i);
-                            }}
-                            disabled={false}
-                            getNestedItem={(opDays) => {
-                              return opDays[i]['end'];
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
+              {/* ── ENGINE INTEGRATION ── */}
+              <EngineSection form={form} />
+              {/* ── END ENGINE INTEGRATION ── */}
             </div>
-            <div className="columns">
+            <div className="columns mt-3">
               <div className="column is-3">
                 <div id="edit-button">
                   <button
@@ -1048,8 +1984,7 @@ const CapPlanManagement = ({ data }) => {
             </div>
           </div>
         )
-      ) : //remove tab
-      tab === 3 && auth.allowedManager ? (
+      ) : tab === 3 && auth.allowedAdmin ? (
         data && data.projects ? (
           <div id="remove-tab">
             <div className="columns">
@@ -1130,7 +2065,7 @@ const CapPlanManagement = ({ data }) => {
         )
       ) : (
         <div className="message is-danger is-size-5 px-5 py-5">
-          <span className="">
+          <span>
             <FaLock />
           </span>{' '}
           UNAUTHORIZED ACCESS

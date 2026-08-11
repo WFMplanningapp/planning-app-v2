@@ -44,6 +44,60 @@ const entrySelectionFields = [
   },
 ];
 
+const engineOutputFields = [
+  // Hours
+  {
+    internal: 'engineHoursGross',
+    external: 'Gross Hours',
+    order: 900,
+    type: 'hours',
+    format: 'number',
+    readOnly: true,
+  },
+  {
+    internal: 'engineHoursInCenter',
+    external: 'In-Center Hours',
+    order: 901,
+    type: 'hours',
+    format: 'number',
+    readOnly: true,
+  },
+  {
+    internal: 'engineHoursProductive',
+    external: 'Productive Hours',
+    order: 902,
+    type: 'hours',
+    format: 'number',
+    readOnly: true,
+  },
+
+  // Planned shrinkage
+  {
+    internal: 'enginePlannedShrinkageInternal',
+    external: 'Planned Internal Shrinkage',
+    order: 910,
+    type: 'planned shrinkage',
+    format: 'percent',
+    readOnly: true,
+  },
+  {
+    internal: 'enginePlannedShrinkageExternal',
+    external: 'Planned External Shrinkage',
+    order: 911,
+    type: 'planned shrinkage',
+    format: 'percent',
+    readOnly: true,
+  },
+  {
+    internal: 'enginePlannedShrinkageCombined',
+    external: 'Planned Combined Shrinkage',
+    order: 912,
+    type: 'planned shrinkage',
+    format: 'percent',
+    readOnly: true,
+  },
+];
+
 export default function Capacity() {
   const [weekRange, setWeekRange] = useState([]);
   const [active, setActive] = useState(false);
@@ -86,6 +140,32 @@ export default function Capacity() {
   const entrySelection = useForm({
     fields: entrySelectionFields,
   });
+
+  const baseCapacityFields = Array.from(
+      new Map(
+        [
+          ...(data.fields || []),
+          ...engineOutputFields,
+        ].map((field) => [field.internal, field])
+      ).values()
+    ).sort(
+      (a, b) =>
+        Number(a.order || 0) -
+        Number(b.order || 0)
+    );
+
+    const viewerFields = Array.from(
+      new Map(
+        [
+          ...channelFields.flat(),
+          ...baseCapacityFields,
+        ].map((field) => [field.internal, field])
+      ).values()
+    ).sort(
+      (a, b) =>
+        Number(a.order || 0) -
+        Number(b.order || 0)
+    ); 
 
   const handleGenerate = () => {
     let capPlan = selection.get('capPlan');
@@ -440,9 +520,7 @@ export default function Capacity() {
                   <CapacityViewer
                     capacity={capacity.get(weekRange)}
                     currentWeek={weeks.getWeekRelative('-1')}
-                    fields={[...channelFields.flat(), ...data.fields].sort(
-                      (a, b) => parseInt(a.order) - parseInt(b.order)
-                    )}
+                    fields={viewerFields}
                     withStaff={withStaff}
                   />
 
@@ -496,7 +574,7 @@ export default function Capacity() {
                   <br />
                   <CapacityDataGrid
                     data={capacity.get(weekRange)}
-                    fields={data.fields}
+                    fields={baseCapacityFields}
                   />
                   <br />
                 </div>
