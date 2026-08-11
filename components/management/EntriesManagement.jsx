@@ -6,14 +6,47 @@ import CSVUploader from '../files/CSVUploader';
 import { validateFieldValue } from '../../lib/fieldValidation';
 
 // Utility function to fetch existing entries for a list of (capPlan, week)
-async function fetchExistingEntries(keys) {
-  const response = await fetch('/api/data/entries/bulkFetch', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ keys }),
-  });
-  if (!response.ok) throw new Error('Failed to fetch existing entries');
-  return await response.json();
+async function fetchExistingEntries(
+  keys,
+  authorization
+) {
+  const response = await fetch(
+    '/api/data/entries/bulkFetch',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: authorization,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ keys }),
+    }
+  );
+
+  const result = await response
+    .json()
+    .catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(
+      result?.message ||
+        `Failed to fetch existing entries (${response.status}).`
+    );
+  }
+
+  // Supports the current raw-array response and
+  // a possible future { data: [] } response.
+  if (Array.isArray(result)) {
+    return result;
+  }
+
+  if (Array.isArray(result?.data)) {
+    return result.data;
+  }
+
+  throw new Error(
+    'The existing-entry response has an unexpected format.'
+  );
 }
 
 function recalculateRequirements(row) {
@@ -309,13 +342,50 @@ const EntriesManagement = ({ data }) => {
                     setValidationErrors([]);
                   }}
                   loadedHandler={async (csv) => {
-                    const missing = v =>
-                      v === undefined || v === null || (typeof v === "string" && v.trim() === "");
+                    const missing = (value) =>
+                      value === undefined ||
+                      value === null ||
+                      String(value).trim() === '';
+
+                    // Normalize values and remove completely empty
+                    // records created by trailing CSV line breaks.
+                    const cleanedCsv = (Array.isArray(csv) ? csv : [])
+                      .map((row) =>
+                        Object.fromEntries(
+                          Object.entries(row || {}).map(
+                            ([key, value]) => [
+                              String(key)
+                                .replace(/^\uFEFF/, '')
+                                .trim(),
+                              typeof value === 'string'
+                                ? value.trim()
+                                : value,
+                            ]
+                          )
+                        )
+                      )
+                      .filter((row) =>
+                        Object.values(row).some(
+                          (value) => !missing(value)
+                        )
+                      );
+
+                    if (cleanedCsv.length === 0) {
+                      alert(
+                        'The CSV does not contain any data rows.'
+                      );
+                      setUpload([]);
+                      return;
+                    }
 
                     // ============================
-                    // STEP 1: VALIDATE RAW CSV FIRST
+                    // STEP 1: VALIDATE CLEAN CSV
                     // ============================
-                    const { validRows: _, invalidRows, errorSummary } = validateBulkUpload(csv);
+                    const {
+                      validRows: _,
+                      invalidRows,
+                      errorSummary,
+                    } = validateBulkUpload(cleanedCsv);
 
                     if (invalidRows.length > 0) {
                       const maxDisplay = 20;
@@ -342,28 +412,115 @@ const EntriesManagement = ({ data }) => {
                     // ============================
                     // STEP 2: FETCH DB ENTRIES
                     // ============================
-                    const keys = csv.map(row => ({ capPlan: row.capPlan, week: row.week }));
+                    if (!Array.isArray(csv) || csv.length === 0) {
+                      alert(
+                        'The CSV does not contain any data rows.'
+                      );
 
-                    let dbEntries = [];
-                    try {
-                      dbEntries = await fetchExistingEntries(keys);
-                    } catch (e) {
-                      alert("Error fetching existing planned values from DB.");
                       setUpload([]);
                       return;
                     }
 
-                    const findDbEntry = (row) =>
-                      dbEntries.find(
-                        dbRow => dbRow.capPlan === row.capPlan && dbRow.week === row.week
-                      ) || {};
+                    const keys = cleanedCsv.map(
+                      (row, index) => ({
+                        rowNumber: index + 2,
+                        capPlan: String(
+                          row?.capPlan ?? ''
+                        ).trim(),
+                        week: String(
+                          row?.week ?? ''
+                        ).trim(),
+                      })
+                    );
+
+                    const invalidKeys = keys.filter(
+                      ({ capPlan, week }) =>
+                        !capPlan || !week
+                    );
+
+                    if (invalidKeys.length > 0) {
+                      const details = invalidKeys
+                        .slice(0, 20)
+                        .map(
+                          ({
+                            rowNumber,
+                            capPlan,
+                            week,
+                          }) =>
+                            `CSV row ${rowNumber}: ` +
+                            `capPlan="${capPlan}", ` +
+                            `week="${week}"`
+                        )
+                        .join('\n');
+
+                      alert(
+                        'Some rows are missing capPlan or week:\n\n' +
+                          details
+                      );
+
+                      setUpload([]);
+                      return;
+                    }
+
+                    const lookupKeys = keys.map(
+                      ({
+                        capPlan,
+                        week,
+                      }) => ({
+                        capPlan,
+                        week,
+                      })
+                    );
+
+                    let dbEntries = [];
+                    try {
+                      dbEntries = await fetchExistingEntries(
+                        lookupKeys,
+                        auth.authorization()
+                      );
+                    } catch (error) {
+                      console.error(
+                        'Unable to fetch existing entries:',
+                        error
+                      );
+
+                      alert(
+                        error.message ||
+                          'Error fetching existing planned values from DB.'
+                      );
+
+                      setUpload([]);
+                      return;
+                    }
+
+                    const findDbEntry = (row) => {
+                      const capPlan = String(
+                        row?.capPlan ?? ''
+                      ).trim();
+
+                      const week = String(
+                        row?.week ?? ''
+                      ).trim();
+
+                      return (
+                        dbEntries.find(
+                          (dbRow) =>
+                            String(
+                              dbRow?.capPlan ?? ''
+                            ).trim() === capPlan &&
+                            String(
+                              dbRow?.week ?? ''
+                            ).trim() === week
+                        ) || {}
+                      );
+                    };
 
                     const warnings = [];
 
                     // ============================
                     // STEP 3: ENRICH & RECALCULATE
                     // ============================
-                    const processed = csv.map(row => {
+                    const processed = cleanedCsv.map((row) => {
                       const dbRow = findDbEntry(row);
 
                       const pVac = !missing(row.plannedVac) ? row.plannedVac : dbRow.plannedVac;
