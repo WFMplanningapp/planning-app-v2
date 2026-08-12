@@ -1,23 +1,23 @@
 // ============================================
 // CAPACITY ENGINE — SHRINKAGE CATEGORIES
 //
-// Global administrator-managed catalog.
+// Global Super User-managed catalog.
 //
 // GET:
-//   Manager permission.
+//   Super User permission.
 //   Returns active categories by default.
-//   Administrators may request inactive records.
+//   Inactive records may be requested.
 //
 // POST:
-//   Administrator permission.
+//   Super User permission.
 //   Creates a category.
 //
 // PUT:
-//   Administrator permission.
+//   Super User permission.
 //   Updates category metadata.
 //
 // DELETE:
-//   Administrator permission.
+//   Super User permission.
 //   Soft-deactivates a category.
 //
 // Collection:
@@ -173,24 +173,12 @@ async function authenticate(
   };
 }
 
-async function hasManagerPermission(
+async function hasSuperUserPermission(
   db,
   authorization
 ) {
   return verifyPermissions(
-    ROLES.MANAGER,
-    null,
-    db,
-    authorization
-  );
-}
-
-async function hasAdminPermission(
-  db,
-  authorization
-) {
-  return verifyPermissions(
-    ROLES.ADMIN,
+    ROLES.SU,
     null,
     db,
     authorization
@@ -406,6 +394,23 @@ export default async function handler(
         });
     }
 
+    // Every supported operation in this
+    // endpoint requires Super User permission.
+    const isSuperUser =
+      await hasSuperUserPermission(
+        db,
+        authorization
+      );
+
+    if (!isSuperUser) {
+      return res.status(403).json({
+        message:
+          "Super User permission is required to access shrinkage categories.",
+      });
+    }
+
+    // Initialization occurs only after the
+    // requester has passed the SU check.
     await ensureDefaultCategories(
       db
     );
@@ -418,36 +423,11 @@ export default async function handler(
     // ========================================
 
     if (method === "GET") {
-      const permitted =
-        await hasManagerPermission(
-          db,
-          authorization
-        );
-
-      if (!permitted) {
-        return res.status(403).json({
-          message:
-            "Manager permission is required to view shrinkage categories.",
-        });
-      }
-
-      const isAdministrator =
-        await hasAdminPermission(
-          db,
-          authorization
-        );
-
-      const requestedIncludeInactive =
+      const includeInactive =
         getBooleanQueryValue(
           query.includeInactive,
           false
         );
-
-      // Only administrators may retrieve
-      // inactive categories.
-      const includeInactive =
-        isAdministrator &&
-        requestedIncludeInactive;
 
       const filter = {};
 
@@ -496,24 +476,8 @@ export default async function handler(
         ),
 
         permissions: {
-          canManage:
-            isAdministrator,
+          canManage: true,
         },
-      });
-    }
-
-    // All methods below are
-    // administrator-only.
-    const isAdministrator =
-      await hasAdminPermission(
-        db,
-        authorization
-      );
-
-    if (!isAdministrator) {
-      return res.status(403).json({
-        message:
-          "Administrator permission is required to manage shrinkage categories.",
       });
     }
 
@@ -593,6 +557,7 @@ export default async function handler(
       }
 
       const now = new Date();
+
       const username =
         getUsername(
           verification
