@@ -2,6 +2,309 @@ import { verifySession, verifyPermissions, ROLES } from "../../../../lib/verific
 import { connectToDatabase } from "../../../../lib/mongodb"
 import { ObjectId } from "mongodb"
 
+function normalizeChannelName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+function buildChannelMigrations(
+  currentChannels,
+  nextChannels
+) {
+  const migrations = [];
+
+  Object.entries(
+    nextChannels || {}
+  ).forEach(([channelKey, nextChannel]) => {
+    const currentChannel =
+      currentChannels?.[channelKey];
+
+    /*
+     * Only an existing channel can have
+     * legacy forecast or pattern records.
+     */
+    if (!currentChannel) {
+      return;
+    }
+
+    const oldName = String(
+      currentChannel?.name || ""
+    ).trim();
+
+    const newName = String(
+      nextChannel?.name || ""
+    ).trim();
+
+    if (!oldName || !newName) {
+      return;
+    }
+
+    migrations.push({
+      channelKey,
+      oldName,
+      oldNameNorm:
+        normalizeChannelName(
+          oldName
+        ),
+      newName,
+      newNameNorm:
+        normalizeChannelName(
+          newName
+        ),
+      renamed:
+        normalizeChannelName(
+          oldName
+        ) !==
+        normalizeChannelName(
+          newName
+        ),
+    });
+  });
+
+  return migrations;
+}
+
+function buildChannelDataFilter({
+  capPlanId,
+  channelKey,
+  oldName,
+  oldNameNorm,
+  newName,
+  newNameNorm,
+}) {
+  const names = [
+    ...new Set(
+      [
+        oldName,
+        newName,
+      ].filter(Boolean)
+    ),
+  ];
+
+  const normalizedNames = [
+    ...new Set(
+      [
+        oldNameNorm,
+        newNameNorm,
+      ].filter(Boolean)
+    ),
+  ];
+
+  return {
+    capPlan: capPlanId,
+
+    $or: [
+      /*
+       * Records already migrated to the
+       * stable channel key.
+       */
+      {
+        channelKey,
+      },
+
+      /*
+       * Legacy records have no channelKey
+       * and are identified by normalized name.
+       */
+      {
+        channelKey: {
+          $exists: false,
+        },
+
+        channelNorm: {
+          $in: normalizedNames,
+        },
+      },
+
+      /*
+       * Compatibility for very old records
+       * that may not contain channelNorm.
+       */
+      {
+        channelKey: {
+          $exists: false,
+        },
+
+        channel: {
+          $in: names,
+        },
+      },
+    ],
+  };
+}
+
+async function findChannelDataConflicts({
+  db,
+  capPlanId,
+  migrations,
+}) {
+  const conflicts = [];
+
+  for (const collectionName of [
+    "capForecasts",
+    "capPatterns",
+  ]) {
+    const collection =
+      db.collection(
+        collectionName
+      );
+
+    for (const migration of migrations) {
+      const documents =
+        await collection
+          .find(
+            buildChannelDataFilter({
+              capPlanId,
+              ...migration,
+            })
+          )
+          .project({
+            _id: 1,
+            date: 1,
+            channel: 1,
+            channelKey: 1,
+          })
+          .toArray();
+
+      const documentsByDate =
+        new Map();
+
+      documents.forEach((document) => {
+        const date = String(
+          document.date || ""
+        );
+
+        if (!documentsByDate.has(date)) {
+          documentsByDate.set(
+            date,
+            []
+          );
+        }
+
+        documentsByDate
+          .get(date)
+          .push(document);
+      });
+
+      documentsByDate.forEach(
+        (dateDocuments, date) => {
+          if (
+            dateDocuments.length > 1
+          ) {
+            conflicts.push({
+              collection:
+                collectionName,
+              channelKey:
+                migration.channelKey,
+              oldName:
+                migration.oldName,
+              newName:
+                migration.newName,
+              date,
+              records:
+                dateDocuments.length,
+            });
+          }
+        }
+      );
+    }
+  }
+
+  return conflicts;
+}
+
+async function migrateChannelData({
+  db,
+  capPlanId,
+  migrations,
+  username,
+}) {
+  const summary = {
+    forecastsMatched: 0,
+    forecastsModified: 0,
+    patternsMatched: 0,
+    patternsModified: 0,
+    renamedChannels: [],
+  };
+
+  for (const migration of migrations) {
+    const update = {
+      $set: {
+        channelKey:
+          migration.channelKey,
+
+        /*
+         * These remain display snapshots.
+         * The stable relationship is channelKey.
+         */
+        channel:
+          migration.newName,
+
+        channelNorm:
+          migration.newNameNorm,
+
+        channelIdentityUpdatedAt:
+          new Date(),
+
+        channelIdentityUpdatedBy:
+          username,
+      },
+    };
+
+    const forecastResult =
+      await db
+        .collection(
+          "capForecasts"
+        )
+        .updateMany(
+          buildChannelDataFilter({
+            capPlanId,
+            ...migration,
+          }),
+          update
+        );
+
+    const patternResult =
+      await db
+        .collection(
+          "capPatterns"
+        )
+        .updateMany(
+          buildChannelDataFilter({
+            capPlanId,
+            ...migration,
+          }),
+          update
+        );
+
+    summary.forecastsMatched +=
+      forecastResult.matchedCount;
+
+    summary.forecastsModified +=
+      forecastResult.modifiedCount;
+
+    summary.patternsMatched +=
+      patternResult.matchedCount;
+
+    summary.patternsModified +=
+      patternResult.modifiedCount;
+
+    if (migration.renamed) {
+      summary.renamedChannels.push({
+        channelKey:
+          migration.channelKey,
+        from:
+          migration.oldName,
+        to:
+          migration.newName,
+      });
+    }
+  }
+
+  return summary;
+}
+
 /**
 METHODS: POST(Add), PUT(Edit) DELETE(Remove)
 PARAMS: id
@@ -105,43 +408,128 @@ export default async function handler(req, res) {
       )) &&
       target
     ) {
+      if (
+        !ObjectId.isValid(target)
+      ) {
+        return res.status(400).json({
+          message:
+            "Invalid capacity plan identifier.",
+        });
+      }
+
+      if (
+        !payload ||
+        !language
+      ) {
+        return res.status(400).json({
+          message:
+            "Capacity plan payload and language are required.",
+        });
+      }
+
+      const capPlanObjectId =
+        new ObjectId(target);
+
+      const existingCapPlan =
+        await db
+          .collection("capPlans")
+          .findOne({
+            _id: capPlanObjectId,
+          });
+
+      if (!existingCapPlan) {
+        return res.status(404).json({
+          message:
+            "Capacity plan not found.",
+        });
+      }
+
+      const nextChannels =
+        payload.engineEnabled
+          ? payload.engineChannels || {}
+          : {};
+
+      const migrations =
+        buildChannelMigrations(
+          existingCapPlan.engineChannels ||
+            {},
+          nextChannels
+        );
+
+      /*
+      * Stop before changing anything if old
+      * and new records already exist for the
+      * same stable channel and date.
+      *
+      * This avoids silently choosing one
+      * forecast or pattern over another.
+      */
+      const conflicts =
+        await findChannelDataConflicts({
+          db,
+          capPlanId: target,
+          migrations,
+        });
+
+      if (conflicts.length > 0) {
+        return res.status(409).json({
+          message:
+            "The channel rename was not saved because duplicate forecast or pattern records exist for the same channel and date. Resolve the conflicts before trying again.",
+
+          conflicts:
+            conflicts.slice(0, 50),
+        });
+      }
+
+      /*
+      * Migrate legacy name-based records before
+      * saving the renamed channel configuration.
+      */
+      const channelMigration =
+        await migrateChannelData({
+          db,
+          capPlanId: target,
+          migrations,
+          username:
+            verification.user.username,
+        });
+
       const update =
-        payload &&
-        language &&
-        target
-          ? await db
-              .collection("capPlans")
-              .updateOne(
-                {
-                  _id: new ObjectId(
-                    target
-                  ),
-                },
-                {
-                  $set: {
-                    ...payload,
+        await db
+          .collection("capPlans")
+          .updateOne(
+            {
+              _id:
+                capPlanObjectId,
+            },
+            {
+              $set: {
+                ...payload,
 
-                    language:
-                      language._id,
+                language:
+                  language._id,
 
-                    lastUpdated:
-                      new Date(),
+                lastUpdated:
+                  new Date(),
 
-                    updatedBy:
-                      verification.user
-                        .username,
-                  },
-                }
-              )
-          : {
-              message:
-                "Nothing to Update",
-            };
+                updatedBy:
+                  verification.user
+                    .username,
+              },
+            }
+          );
 
       return res.status(200).json({
-        message: "Update Completed!",
+        message:
+          channelMigration
+            .renamedChannels
+            .length > 0
+            ? `Update completed. ${channelMigration.renamedChannels.length} channel rename(s) were applied to existing forecast and pattern records.`
+            : "Update Completed!",
+
         verification,
         update,
+        channelMigration,
       });
     }
 

@@ -1,7 +1,13 @@
 // ============================================
 // PATTERN MANAGER
+//
 // Upload, visualize, copy, and manage interval
-// patterns per channel
+// patterns using permanent channel keys.
+//
+// Model behavior:
+// - Hours: Hours Distribution % + Shrinkage %
+// - Other models: Volume Distribution % +
+//   AHT Multiplier + Shrinkage %
 // ============================================
 
 import {
@@ -11,7 +17,9 @@ import {
   useCallback,
 } from "react";
 
-import { useAuth } from "../../contexts/authContext";
+import {
+  useAuth,
+} from "../../contexts/authContext";
 
 import {
   FaUpload,
@@ -32,7 +40,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 
@@ -51,113 +58,341 @@ const CHANNEL_COLORS = [
   "#ec4899",
 ];
 
+const DAY_COLORS = [
+  "#4b4bf9", // Monday
+  "#ff8d96", // Tuesday
+  "#8bf0bb", // Wednesday
+  "#bfa1ff", // Thursday
+  "#f97316", // Friday
+  "#06b6d4", // Saturday
+  "#ec4899", // Sunday
+];
+
+const DAY_KEYS = [
+  "Sun",
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+];
+
+// ============================================
+// GENERAL HELPERS
+// ============================================
+
+function normalizeChannelName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+function normalizeModel(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+}
+
+function channelRequiresAHT(config) {
+  return (
+    normalizeModel(
+      config?.model
+    ) !== "hours"
+  );
+}
+
+function formatPatternValue(
+  value,
+  decimals = 2
+) {
+  const numericValue =
+    Number(value);
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === "" ||
+    !Number.isFinite(
+      numericValue
+    )
+  ) {
+    return "Missing";
+  }
+
+  return numericValue.toFixed(
+    decimals
+  );
+}
+
+function getApiErrorMessage(
+  data,
+  fallback
+) {
+  const validationErrors =
+    data?.validation?.errors;
+
+  const details =
+    Array.isArray(
+      validationErrors
+    )
+      ? validationErrors
+          .slice(0, 5)
+          .map(
+            (error) =>
+              error?.message ||
+              String(error)
+          )
+          .join(" | ")
+      : "";
+
+  return [
+    data?.message || fallback,
+    details,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function safeFileName(value) {
+  return String(value || "channel")
+    .trim()
+    .replace(
+      /[^a-zA-Z0-9_-]+/g,
+      "_"
+    );
+}
+
 // ============================================
 // DATE HELPERS
 // ============================================
 
-const normalizeDate = (raw) => {
-  if (!raw) return null;
-
-  const value = String(raw).trim();
-
-  const isoMatch = value.match(
-    /^(\d{4})-(\d{1,2})-(\d{1,2})$/
-  );
-
-  if (isoMatch) {
-    const [, year, month, day] = isoMatch;
-
-    return `${year}-${month.padStart(
-      2,
-      "0"
-    )}-${day.padStart(2, "0")}`;
-  }
-
-  const mdyMatch = value.match(
-    /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
-  );
-
-  if (mdyMatch) {
-    const [, month, day, year] = mdyMatch;
-
-    return `${year}-${month.padStart(
-      2,
-      "0"
-    )}-${day.padStart(2, "0")}`;
-  }
-
-  return null;
-};
-
-const toISODate = (value) => {
-  if (!value) return null;
-
+function isValidISODate(value) {
   if (
-    typeof value === "string" &&
-    /^\d{4}-\d{2}-\d{2}$/.test(value)
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(
+      value
+    )
   ) {
-    return value;
+    return false;
   }
 
-  const date = new Date(value);
+  const [
+    yearText,
+    monthText,
+    dayText,
+  ] = value.split("-");
 
-  if (Number.isNaN(date.getTime())) {
+  const year =
+    Number(yearText);
+
+  const month =
+    Number(monthText);
+
+  const day =
+    Number(dayText);
+
+  const date = new Date(
+    Date.UTC(
+      year,
+      month - 1,
+      day
+    )
+  );
+
+  return (
+    date.getUTCFullYear() ===
+      year &&
+    date.getUTCMonth() ===
+      month - 1 &&
+    date.getUTCDate() ===
+      day
+  );
+}
+
+function normalizeDate(rawValue) {
+  if (!rawValue) {
     return null;
   }
 
-  return date.toISOString().slice(0, 10);
-};
+  const value =
+    String(rawValue).trim();
 
-const addDaysToISODate = (
+  const isoMatch =
+    value.match(
+      /^(\d{4})-(\d{1,2})-(\d{1,2})$/
+    );
+
+  if (isoMatch) {
+    const [
+      ,
+      year,
+      month,
+      day,
+    ] = isoMatch;
+
+    const normalized =
+      `${year}-${month.padStart(
+        2,
+        "0"
+      )}-${day.padStart(
+        2,
+        "0"
+      )}`;
+
+    return isValidISODate(
+      normalized
+    )
+      ? normalized
+      : null;
+  }
+
+  const mdyMatch =
+    value.match(
+      /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
+    );
+
+  if (mdyMatch) {
+    const [
+      ,
+      month,
+      day,
+      year,
+    ] = mdyMatch;
+
+    const normalized =
+      `${year}-${month.padStart(
+        2,
+        "0"
+      )}-${day.padStart(
+        2,
+        "0"
+      )}`;
+
+    return isValidISODate(
+      normalized
+    )
+      ? normalized
+      : null;
+  }
+
+  return null;
+}
+
+function toISODate(value) {
+  if (!value) {
+    return null;
+  }
+
+  if (
+    typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}/.test(
+      value
+    )
+  ) {
+    const normalized =
+      value.slice(0, 10);
+
+    return isValidISODate(
+      normalized
+    )
+      ? normalized
+      : null;
+  }
+
+  const date =
+    new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return null;
+  }
+
+  return date
+    .toISOString()
+    .slice(0, 10);
+}
+
+function addDaysToISODate(
   dateString,
   days
-) => {
-  if (!dateString) return null;
+) {
+  if (!dateString) {
+    return null;
+  }
 
   const date = new Date(
     `${dateString}T00:00:00.000Z`
   );
 
-  if (Number.isNaN(date.getTime())) {
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
     return null;
   }
 
   date.setUTCDate(
-    date.getUTCDate() + days
+    date.getUTCDate() +
+      days
   );
 
-  return date.toISOString().slice(0, 10);
-};
+  return date
+    .toISOString()
+    .slice(0, 10);
+}
 
-const getSevenDates = (weekStart) =>
-  Array.from(
-    { length: 7 },
+function getSevenDates(weekStart) {
+  return Array.from(
+    {
+      length: 7,
+    },
     (_, index) =>
-      addDaysToISODate(weekStart, index)
-  );
+      addDaysToISODate(
+        weekStart,
+        index
+      )
+  ).filter(Boolean);
+}
 
-const formatWeekLabel = (weekStart) => {
-  if (!weekStart) return "";
+function formatWeekLabel(
+  weekStart
+) {
+  if (!weekStart) {
+    return "";
+  }
 
-  const weekEnd = addDaysToISODate(
-    weekStart,
-    6
-  );
+  const weekEnd =
+    addDaysToISODate(
+      weekStart,
+      6
+    );
 
   return `${weekStart} → ${weekEnd}`;
-};
+}
 
-const getWeekdayLabel = (
+function getWeekdayLabel(
   dateString,
   format = "short"
-) => {
-  if (!dateString) return "";
+) {
+  if (!dateString) {
+    return "";
+  }
 
   const date = new Date(
     `${dateString}T00:00:00.000Z`
   );
 
-  if (Number.isNaN(date.getTime())) {
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
     return "";
   }
 
@@ -168,16 +403,117 @@ const getWeekdayLabel = (
       timeZone: "UTC",
     }
   );
-};
+}
+
+function getDayKey(dateString) {
+  if (!dateString) {
+    return null;
+  }
+
+  const date = new Date(
+    `${dateString}T00:00:00.000Z`
+  );
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return null;
+  }
+
+  return DAY_KEYS[
+    date.getUTCDay()
+  ];
+}
+
+// ============================================
+// TIME HELPERS
+// ============================================
+
+function timeToMinutes(
+  time,
+  allow24 = false
+) {
+  if (
+    typeof time !== "string"
+  ) {
+    return null;
+  }
+
+  const match =
+    time.match(
+      /^(\d{2}):(\d{2})$/
+    );
+
+  if (!match) {
+    return null;
+  }
+
+  const hours =
+    Number(match[1]);
+
+  const minutes =
+    Number(match[2]);
+
+  if (
+    allow24 &&
+    hours === 24 &&
+    minutes === 0
+  ) {
+    return 24 * 60;
+  }
+
+  if (
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return null;
+  }
+
+  return (
+    hours * 60 +
+    minutes
+  );
+}
+
+function minutesToTime(
+  totalMinutes
+) {
+  const hours =
+    Math.floor(
+      totalMinutes / 60
+    );
+
+  const minutes =
+    totalMinutes % 60;
+
+  return `${String(
+    hours
+  ).padStart(
+    2,
+    "0"
+  )}:${String(
+    minutes
+  ).padStart(
+    2,
+    "0"
+  )}`;
+}
 
 // ============================================
 // CSV HELPERS
 // ============================================
 
-const looksLikeDate = (value) => {
-  if (!value) return false;
+function looksLikeDate(value) {
+  if (!value) {
+    return false;
+  }
 
-  const text = String(value).trim();
+  const text =
+    String(value).trim();
 
   return (
     /^\d{4}-\d{1,2}-\d{1,2}$/.test(
@@ -187,22 +523,27 @@ const looksLikeDate = (value) => {
       text
     )
   );
-};
+}
 
-const looksLikeTime = (value) => {
-  if (!value) return false;
+function looksLikeTime(value) {
+  if (!value) {
+    return false;
+  }
 
   return /^\d{1,2}:\d{2}$/.test(
     String(value).trim()
   );
-};
+}
 
-const normalizeTime = (value) => {
+function normalizeTime(value) {
   if (!looksLikeTime(value)) {
     return value;
   }
 
-  const [hour, minute] = String(value)
+  const [
+    hour,
+    minute,
+  ] = String(value)
     .trim()
     .split(":");
 
@@ -210,24 +551,6 @@ const normalizeTime = (value) => {
     2,
     "0"
   )}:${minute}`;
-};
-
-function formatPatternValue(
-  value,
-  decimals = 2
-) {
-  const numericValue = Number(value);
-
-  if (
-    value === null ||
-    value === undefined ||
-    value === "" ||
-    !Number.isFinite(numericValue)
-  ) {
-    return "Missing";
-  }
-
-  return numericValue.toFixed(decimals);
 }
 
 // ============================================
@@ -244,24 +567,40 @@ export default function PatternManager({
   const auth = useAuth();
   const fileRef = useRef(null);
 
+  const authorization =
+    auth.authorization();
+
   // ==========================================
   // STATE
   // ==========================================
 
+  /*
+   * selectedChannel always contains the
+   * permanent channel key.
+   */
   const [
     selectedChannel,
     setSelectedChannel,
   ] = useState("");
 
-  const [preview, setPreview] =
-    useState(null);
+  const [
+    preview,
+    setPreview,
+  ] = useState(null);
 
-  const [uploading, setUploading] =
-    useState(false);
+  const [
+    uploading,
+    setUploading,
+  ] = useState(false);
 
-  const [message, setMessage] =
-    useState(null);
+  const [
+    message,
+    setMessage,
+  ] = useState(null);
 
+  /*
+   * loadedPatterns is grouped by channelKey.
+   */
   const [
     loadedPatterns,
     setLoadedPatterns,
@@ -272,23 +611,38 @@ export default function PatternManager({
     setLoadingPatterns,
   ] = useState(false);
 
-  const [viewMode, setViewMode] =
-    useState("chart");
-
-  const [metric, setMetric] =
-    useState("arrival");
+  const [
+    viewMode,
+    setViewMode,
+  ] = useState("chart");
 
   const [
-    selectedDate,
-    setSelectedDate,
+    metric,
+    setMetric,
+  ] = useState("arrival");
+
+  /*
+  * The visualization compares weekdays for
+  * one channel and one selected week.
+  */
+  const [
+    visualizationChannel,
+    setVisualizationChannel,
   ] = useState("");
 
+  const [
+    selectedVisualizationWeek,
+    setSelectedVisualizationWeek,
+  ] = useState("");
+
+  /*
+   * Visibility is also keyed by channelKey.
+   */
   const [
     visibleChannels,
     setVisibleChannels,
   ] = useState({});
 
-  // Copy/reuse state
   const [
     copySourceWeek,
     setCopySourceWeek,
@@ -308,22 +662,66 @@ export default function PatternManager({
   // CHANNEL CONFIGURATION
   // ==========================================
 
-  const channelEntries = channelsConfig
-    ? Object.entries(
-        channelsConfig
-      ).map(([key, config]) => ({
+  const channelEntries =
+    Object.entries(
+      channelsConfig || {}
+    ).map(
+      ([
         key,
-        name: config.name,
-      }))
-    : [];
+        config,
+      ]) => {
+        const name =
+          String(
+            config?.name || key
+          ).trim();
 
-  const channelNames =
-    channelEntries.map(
-      (channel) => channel.name
+        const model =
+          normalizeModel(
+            config?.model
+          );
+
+        return {
+          key,
+          name,
+          model,
+          requiresAHT:
+            channelRequiresAHT(
+              config
+            ),
+          config,
+        };
+      }
     );
 
+  const channelByKey =
+    Object.fromEntries(
+      channelEntries.map(
+        (channel) => [
+          channel.key,
+          channel,
+        ]
+      )
+    );
+
+  const selectedChannelEntry =
+    channelByKey[
+      selectedChannel
+    ] || null;
+
+  const selectedChannelName =
+    selectedChannelEntry?.name ||
+    selectedChannel;
+
+  const selectedRequiresAHT =
+    selectedChannelEntry
+      ? selectedChannelEntry
+          .requiresAHT
+      : true;
+
   const selectedChannelPattern =
-    loadedPatterns[selectedChannel];
+    loadedPatterns[
+      selectedChannel
+    ];
 
   // ==========================================
   // AVAILABLE WEEKS
@@ -333,27 +731,56 @@ export default function PatternManager({
     ...new Set(
       (weekDocs || [])
         .map((week) =>
-          toISODate(week.firstDate)
+          toISODate(
+            week?.firstDate
+          )
         )
         .filter(Boolean)
     ),
   ].sort();
 
+  const getWeekDates =
+    useCallback(() => {
+      const dates = [];
+
+      availableWeekStarts.forEach(
+        (weekStart) => {
+          dates.push(
+            ...getSevenDates(
+              weekStart
+            )
+          );
+        }
+      );
+
+      return [
+        ...new Set(dates),
+      ].sort();
+    }, [
+      availableWeekStarts.join(
+        "|"
+      ),
+    ]);
+
   const sourceWeekOptions =
     availableWeekStarts.filter(
       (weekStart) => {
-        if (!selectedChannelPattern) {
+        if (
+          !selectedChannelPattern
+        ) {
           return false;
         }
 
-        const weekDates =
-          getSevenDates(weekStart);
-
-        return weekDates.every((date) =>
-          Array.isArray(
-            selectedChannelPattern
-              .intervals?.[date]
-          )
+        return getSevenDates(
+          weekStart
+        ).every(
+          (date) =>
+            Array.isArray(
+              selectedChannelPattern
+                .intervals?.[
+                date
+              ]
+            )
         );
       }
     );
@@ -361,142 +788,108 @@ export default function PatternManager({
   const targetWeekOptions =
     availableWeekStarts.filter(
       (weekStart) =>
-        weekStart !== copySourceWeek
+        weekStart !==
+        copySourceWeek
     );
 
   // ==========================================
-  // BUILD DATES FROM WEEK DOCUMENTS
+  // TEMPLATE TIME SLOTS
   // ==========================================
 
-  const getWeekDates = useCallback(() => {
-    const dates = [];
+  const getTimeSlots =
+    useCallback(
+      (
+        channelKey,
+        dateString
+      ) => {
+        const interval =
+          Number(
+            intervalMinutes
+          ) || 30;
 
-    availableWeekStarts.forEach(
-      (weekStart) => {
-        dates.push(
-          ...getSevenDates(weekStart)
-        );
-      }
-    );
+        const channel =
+          channelsConfig?.[
+            channelKey
+          ];
 
-    return [...new Set(dates)].sort();
-  }, [weekDocs]);
+        if (
+          !channel ||
+          !dateString
+        ) {
+          return [];
+        }
 
-  // ==========================================
-  // BUILD TEMPLATE TIME SLOTS
-  // ==========================================
-
-  const getTimeSlots = useCallback(
-    (forChannel) => {
-      const interval =
-        Number(intervalMinutes) || 30;
-
-      let startMinutes = 8 * 60;
-      let endMinutes = 18 * 60;
-
-      if (
-        forChannel &&
-        channelsConfig
-      ) {
-        const channelEntry =
-          Object.values(
-            channelsConfig
-          ).find(
-            (channel) =>
-              String(
-                channel?.name || ""
-              )
-                .trim()
-                .toLowerCase() ===
-              String(forChannel)
-                .trim()
-                .toLowerCase()
+        const dayKey =
+          getDayKey(
+            dateString
           );
 
-        if (channelEntry?.hoop) {
-          let earliest = 24 * 60;
-          let latest = 0;
+        const hoop =
+          channel?.hoop?.[
+            dayKey
+          ];
 
-          Object.values(
-            channelEntry.hoop
-          ).forEach((day) => {
-            if (!day?.open) return;
-
-            if (day.fullDay) {
-              earliest = 0;
-              latest = 24 * 60;
-              return;
-            }
-
-            const [startHour, startMinute] =
-              (
-                day.start || "08:00"
-              )
-                .split(":")
-                .map(Number);
-
-            const [endHour, endMinute] =
-              (
-                day.end || "18:00"
-              )
-                .split(":")
-                .map(Number);
-
-            const currentStart =
-              startHour * 60 +
-              startMinute;
-
-            const currentEnd =
-              endHour * 60 +
-              endMinute;
-
-            if (currentStart < earliest) {
-              earliest = currentStart;
-            }
-
-            if (currentEnd > latest) {
-              latest = currentEnd;
-            }
-          });
-
-          if (earliest < latest) {
-            startMinutes = earliest;
-            endMinutes = latest;
-          }
+        if (!hoop?.open) {
+          return [];
         }
-      }
 
-      const slots = [];
+        const startTime =
+          hoop.fullDay
+            ? "00:00"
+            : hoop.start ||
+              "08:00";
 
-      for (
-        let minute = startMinutes;
-        minute < endMinutes;
-        minute += interval
-      ) {
-        const hour = Math.floor(
-          minute / 60
-        );
+        const endTime =
+          hoop.fullDay
+            ? "24:00"
+            : hoop.end ||
+              "18:00";
 
-        const minutePart =
-          minute % 60;
+        const startMinutes =
+          timeToMinutes(
+            startTime,
+            false
+          );
 
-        slots.push(
-          `${String(hour).padStart(
-            2,
-            "0"
-          )}:${String(
-            minutePart
-          ).padStart(2, "0")}`
-        );
-      }
+        const endMinutes =
+          timeToMinutes(
+            endTime,
+            true
+          );
 
-      return slots;
-    },
-    [
-      channelsConfig,
-      intervalMinutes,
-    ]
-  );
+        if (
+          startMinutes ===
+            null ||
+          endMinutes === null ||
+          endMinutes <=
+            startMinutes
+        ) {
+          return [];
+        }
+
+        const slots = [];
+
+        for (
+          let minute =
+            startMinutes;
+          minute <
+          endMinutes;
+          minute += interval
+        ) {
+          slots.push(
+            minutesToTime(
+              minute
+            )
+          );
+        }
+
+        return slots;
+      },
+      [
+        channelsConfig,
+        intervalMinutes,
+      ]
+    );
 
   // ==========================================
   // LOAD EXISTING PATTERNS
@@ -506,51 +899,118 @@ export default function PatternManager({
     useCallback(async () => {
       if (
         !capPlanId ||
-        !channelsConfig
+        channelEntries.length ===
+          0
       ) {
+        setLoadedPatterns({});
+        setVisibleChannels({});
+        setVisualizationChannel("");
+        setSelectedVisualizationWeek("");
         return;
       }
 
       setLoadingPatterns(true);
 
       try {
-        const response = await fetch(
-          `/api/capacity-engine/patterns?capPlan=${encodeURIComponent(
-            capPlanId
-          )}`,
-          {
-            headers: {
-              Authorization:
-                auth.authorization(),
-            },
-          }
-        );
+        const response =
+          await fetch(
+            `/api/capacity-engine/patterns?capPlan=${encodeURIComponent(
+              capPlanId
+            )}`,
+            {
+              headers: {
+                Authorization:
+                  authorization,
+              },
+            }
+          );
 
         const data =
           await response.json();
 
-        if (
-          !response.ok ||
-          !Array.isArray(data.data) ||
-          data.data.length === 0
-        ) {
-          setLoadedPatterns({});
-          setVisibleChannels({});
-          setSelectedDate("");
-          return;
+        if (!response.ok) {
+          throw new Error(
+            getApiErrorMessage(
+              data,
+              `Unable to load patterns (${response.status}).`
+            )
+          );
         }
+
+        const documents =
+          Array.isArray(data.data)
+            ? data.data
+            : [];
 
         const results = {};
 
-        data.data.forEach(
+        documents.forEach(
           (document) => {
-            const channel =
-              document.channel;
+            /*
+             * Prefer the permanent key.
+             * Resolve legacy records by their
+             * current display name only when
+             * channelKey is absent.
+             */
+            let channelKey =
+              document.channelKey;
 
-            if (!channel) return;
+            if (
+              !channelKey &&
+              document.channel
+            ) {
+              const matches =
+                channelEntries.filter(
+                  (channel) =>
+                    normalizeChannelName(
+                      channel.name
+                    ) ===
+                    normalizeChannelName(
+                      document.channel
+                    )
+                );
 
-            if (!results[channel]) {
-              results[channel] = {
+              if (
+                matches.length === 1
+              ) {
+                channelKey =
+                  matches[0].key;
+              }
+            }
+
+            if (!channelKey) {
+              return;
+            }
+
+            const configured =
+              channelByKey[
+                channelKey
+              ];
+
+            const channelName =
+              configured?.name ||
+              document.channel ||
+              channelKey;
+
+            const requiresAHT =
+              configured
+                ? configured.requiresAHT
+                : true;
+
+            if (
+              !results[
+                channelKey
+              ]
+            ) {
+              results[
+                channelKey
+              ] = {
+                channelKey,
+                channelName,
+                model:
+                  configured?.model ||
+                  "",
+                requiresAHT,
                 dates: [],
                 intervals: {},
               };
@@ -558,53 +1018,65 @@ export default function PatternManager({
 
             if (
               !results[
-                channel
+                channelKey
               ].dates.includes(
                 document.date
               )
             ) {
               results[
-                channel
+                channelKey
               ].dates.push(
                 document.date
               );
             }
 
             results[
-              channel
+              channelKey
             ].intervals[
               document.date
             ] =
-              document.intervals || [];
+              Array.isArray(
+                document.intervals
+              )
+                ? document.intervals
+                : [];
           }
         );
 
-        Object.keys(results).forEach(
-          (channel) => {
-            results[
-              channel
-            ].dates.sort();
+        Object.values(
+          results
+        ).forEach(
+          (pattern) => {
+            pattern.dates.sort();
 
-            const firstDate =
-              results[channel].dates[0];
-
-            results[
-              channel
-            ].totalIntervals =
-              results[channel]
-                .intervals[
-                firstDate
-              ]?.length || 0;
+            pattern.totalIntervals =
+              Math.max(
+                0,
+                ...pattern.dates.map(
+                  (date) =>
+                    pattern
+                      .intervals[
+                      date
+                    ]?.length ||
+                    0
+                )
+              );
           }
         );
 
-        setLoadedPatterns(results);
+        setLoadedPatterns(
+          results
+        );
 
         const visibility = {};
 
-        Object.keys(results).forEach(
-          (channel) => {
-            visibility[channel] = true;
+        Object.keys(
+          results
+        ).forEach(
+          (channelKey) => {
+            visibility[
+              channelKey
+            ] = true;
           }
         );
 
@@ -612,59 +1084,57 @@ export default function PatternManager({
           visibility
         );
 
-        const loadedDates = [
-          ...new Set(
-            Object.values(
-              results
-            ).flatMap(
-              (result) =>
-                result.dates
-            )
-          ),
-        ].sort();
+        const loadedChannelKeys =
+          Object.keys(results);
 
-        if (
-          loadedDates.length > 0
-        ) {
-          setSelectedDate(
-            (currentDate) =>
-              loadedDates.includes(
-                currentDate
-              )
-                ? currentDate
-                : loadedDates[0]
-          );
-        }
+        setVisualizationChannel(
+          (currentChannel) =>
+            loadedChannelKeys.includes(
+              currentChannel
+            )
+              ? currentChannel
+              : loadedChannelKeys[0] ||
+                ""
+        );
       } catch (error) {
         console.error(
           "Failed to load patterns:",
           error
         );
 
+        setLoadedPatterns({});
+        setVisibleChannels({});
+        setVisualizationChannel("");
+        setSelectedVisualizationWeek("");
+
         setMessage({
           type: "danger",
           text:
+            error?.message ||
             "Existing patterns could not be loaded.",
         });
       } finally {
-        setLoadingPatterns(false);
+        setLoadingPatterns(
+          false
+        );
       }
     }, [
       capPlanId,
       channelsConfig,
-      auth,
+      authorization,
     ]);
 
   useEffect(() => {
     if (
       capPlanId &&
-      channelNames.length > 0
+      channelEntries.length >
+        0
     ) {
       loadExistingPatterns();
     }
   }, [
     capPlanId,
-    channelNames.length,
+    channelEntries.length,
     loadExistingPatterns,
   ]);
 
@@ -678,18 +1148,31 @@ export default function PatternManager({
       (currentWeeks) =>
         currentWeeks.filter(
           (week) =>
-            week !== copySourceWeek
+            week !==
+            copySourceWeek
         )
     );
   }, [copySourceWeek]);
 
   // ==========================================
-  // PARSE CSV
+  // CSV PARSING
   // ==========================================
 
-  const parsePatternCSV = (text) => {
+  const parsePatternCSV = (
+    text,
+    requiresAHT
+  ) => {
+    if (
+      typeof text !== "string" ||
+      !text.trim()
+    ) {
+      return null;
+    }
+
     const delimiter =
-      text.includes("\t") ? "\t" : ",";
+      text.includes("\t")
+        ? "\t"
+        : ",";
 
     const lines = text
       .trim()
@@ -702,7 +1185,7 @@ export default function PatternManager({
           line.trim().length > 0
       );
 
-    if (lines.length < 4) {
+    if (lines.length < 2) {
       return null;
     }
 
@@ -712,94 +1195,130 @@ export default function PatternManager({
       shrinkage: [],
     };
 
-    let currentSection = null;
+    const foundSections = {
+      arrival: false,
+      aht: false,
+      shrinkage: false,
+    };
+
+    let currentSection =
+      null;
+
     let currentDates = [];
     let allDates = [];
 
     lines.forEach((line) => {
-      const columns = line
-        .split(delimiter)
-        .map((column) =>
-          column.trim()
-        );
+      const columns =
+        line
+          .split(delimiter)
+          .map((column) =>
+            column.trim()
+          );
 
       if (
-        columns.some((column) =>
-          column.startsWith("#")
+        columns.some(
+          (column) =>
+            column.startsWith(
+              "#"
+            )
         )
       ) {
         return;
       }
 
-      const nonEmpty = columns
-        .map((value, index) => ({
-          value,
-          index,
-        }))
-        .filter(
-          (item) =>
-            item.value.length > 0
-        );
+      const nonEmpty =
+        columns
+          .map(
+            (
+              value,
+              index
+            ) => ({
+              value,
+              index,
+            })
+          )
+          .filter(
+            (item) =>
+              item.value.length >
+              0
+          );
 
-      if (nonEmpty.length === 0) {
+      if (
+        nonEmpty.length === 0
+      ) {
         return;
       }
 
-      const lowerJoined = nonEmpty
-        .map((item) =>
-          item.value.toLowerCase()
-        )
-        .join(" ");
+      const lowerJoined =
+        nonEmpty
+          .map((item) =>
+            item.value.toLowerCase()
+          )
+          .join(" ");
 
-      let detectedSection = null;
+      let detectedSection =
+        null;
 
       if (
-        lowerJoined.includes(
-          "volume"
-        ) ||
-        lowerJoined.includes(
-          "arrival"
-        )
-      ) {
-        detectedSection = "arrival";
-      } else if (
-        nonEmpty.some(
-          (item) =>
-            item.value.toLowerCase() ===
-            "aht"
-        )
-      ) {
-        detectedSection = "aht";
-      } else if (
         lowerJoined.includes(
           "shrinkage"
         )
       ) {
         detectedSection =
           "shrinkage";
+      } else if (
+        nonEmpty.some(
+          (item) =>
+            item.value
+              .toLowerCase()
+              .includes("aht")
+        )
+      ) {
+        detectedSection =
+          "aht";
+      } else if (
+        lowerJoined.includes(
+          "volume"
+        ) ||
+        lowerJoined.includes(
+          "arrival"
+        ) ||
+        lowerJoined.includes(
+          "hours"
+        ) ||
+        lowerJoined.includes(
+          "demand"
+        )
+      ) {
+        detectedSection =
+          "arrival";
       }
 
       if (detectedSection) {
         currentSection =
           detectedSection;
 
-        currentDates = columns
-          .filter((column) =>
-            looksLikeDate(column)
-          )
-          .map(normalizeDate)
-          .filter(Boolean);
+        foundSections[
+          detectedSection
+        ] = true;
 
-        if (
-          currentDates.length > 0
-        ) {
-          allDates = [
-            ...new Set([
-              ...allDates,
-              ...currentDates,
-            ]),
-          ];
-        }
+        currentDates =
+          columns
+            .filter(
+              (column) =>
+                looksLikeDate(
+                  column
+                )
+            )
+            .map(normalizeDate)
+            .filter(Boolean);
+
+        allDates = [
+          ...new Set([
+            ...allDates,
+            ...currentDates,
+          ]),
+        ];
 
         return;
       }
@@ -809,47 +1328,53 @@ export default function PatternManager({
       }
 
       const timeEntry =
-        nonEmpty.find((item) =>
-          looksLikeTime(item.value)
+        nonEmpty.find(
+          (item) =>
+            looksLikeTime(
+              item.value
+            )
         );
 
       if (!timeEntry) {
         return;
       }
 
-      const time = normalizeTime(
-        timeEntry.value
-      );
-
-      const timeColumnIndex =
-        timeEntry.index;
+      const time =
+        normalizeTime(
+          timeEntry.value
+        );
 
       currentDates.forEach(
-        (date, dateIndex) => {
-          const valueColumnIndex =
-            timeColumnIndex +
+        (
+          date,
+          dateIndex
+        ) => {
+          const valueIndex =
+            timeEntry.index +
             1 +
             dateIndex;
 
           const rawValue =
             columns[
-              valueColumnIndex
+              valueIndex
             ];
 
           let value = null;
 
           if (
-            rawValue !== undefined &&
+            rawValue !==
+              undefined &&
             rawValue !== ""
           ) {
-            const numericValue =
+            const numeric =
               Number(rawValue);
 
-            value = Number.isFinite(
-              numericValue
-            )
-              ? numericValue
-              : null;
+            value =
+              Number.isFinite(
+                numeric
+              )
+                ? numeric
+                : null;
           }
 
           sections[
@@ -867,16 +1392,23 @@ export default function PatternManager({
 
     if (
       allDates.length === 0 ||
-      sections.arrival.length === 0
+      !foundSections.arrival ||
+      !foundSections.shrinkage ||
+      (
+        requiresAHT &&
+        !foundSections.aht
+      )
     ) {
       return null;
     }
 
     const merged = {};
 
-    allDates.forEach((date) => {
-      merged[date] = [];
-    });
+    allDates.forEach(
+      (date) => {
+        merged[date] = [];
+      }
+    );
 
     const allTimes = [
       ...new Set(
@@ -886,51 +1418,103 @@ export default function PatternManager({
       ),
     ].sort();
 
-    allDates.forEach((date) => {
-      allTimes.forEach((time) => {
-        const arrivalRow =
-          sections.arrival.find(
-            (row) =>
-              row.date === date &&
-              row.time === time
-          );
+    allDates.forEach(
+      (date) => {
+        allTimes.forEach(
+          (time) => {
+            const findValue = (
+              section
+            ) =>
+              sections[
+                section
+              ].find(
+                (row) =>
+                  row.date ===
+                    date &&
+                  row.time ===
+                    time
+              )?.value ??
+              null;
 
-        const ahtRow =
-          sections.aht.find(
-            (row) =>
-              row.date === date &&
-              row.time === time
-          );
+            const arrivalPct =
+              findValue(
+                "arrival"
+              );
 
-        const shrinkageRow =
-          sections.shrinkage.find(
-            (row) =>
-              row.date === date &&
-              row.time === time
-          );
+            const ahtMultiplier =
+              requiresAHT
+                ? findValue(
+                    "aht"
+                  )
+                : null;
 
-        merged[date].push({
-          time,
-          arrivalPct:
-            arrivalRow?.value ??
-            null,
-          ahtMultiplier:
-            ahtRow?.value ?? null,
-          shrinkagePct:
-            shrinkageRow?.value ??
-            null,
-        });
-      });
-    });
+            const shrinkagePct =
+              findValue(
+                "shrinkage"
+              );
+
+            const outsideHOOP =
+              requiresAHT
+                ? arrivalPct ===
+                    null &&
+                  ahtMultiplier ===
+                    null &&
+                  shrinkagePct ===
+                    null
+                : arrivalPct ===
+                    null &&
+                  shrinkagePct ===
+                    null;
+
+            if (outsideHOOP) {
+              return;
+            }
+
+            merged[
+              date
+            ].push({
+              time,
+              arrivalPct,
+
+              ...(requiresAHT
+                ? {
+                    ahtMultiplier,
+                  }
+                : {}),
+
+              shrinkagePct,
+            });
+          }
+        );
+      }
+    );
 
     return {
       dates: allDates,
       intervals: merged,
+      requiresAHT,
+
       totalIntervals:
-        allTimes.length,
+        Math.max(
+          0,
+          ...allDates.map(
+            (date) =>
+              merged[date]
+                .length
+          )
+        ),
+
       totalRows:
-        allTimes.length *
-        allDates.length,
+        allDates.reduce(
+          (
+            total,
+            date
+          ) =>
+            total +
+            merged[date]
+              .length,
+          0
+        ),
     };
   };
 
@@ -938,74 +1522,68 @@ export default function PatternManager({
   // HANDLE FILE
   // ==========================================
 
-  const handleFile = (event) => {
+  const handleFile = (
+    event
+  ) => {
     const file =
-      event.target.files?.[0];
+      event.target
+        .files?.[0];
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
-    const reader = new FileReader();
+    const reader =
+      new FileReader();
 
     reader.onload = (
       readerEvent
     ) => {
       const parsed =
         parsePatternCSV(
-          readerEvent.target.result
+          readerEvent
+            .target?.result,
+          selectedRequiresAHT
         );
 
-      if (
-        !parsed ||
-        parsed.dates.length === 0
-      ) {
+      if (!parsed) {
+        setPreview(null);
+
         setMessage({
           type: "danger",
+
           text:
-            "Invalid pattern CSV. Expected Volume/Arrival, AHT, and Shrinkage sections.",
+            selectedRequiresAHT
+              ? "Invalid pattern CSV. Expected Volume/Arrival, AHT, and Shrinkage sections."
+              : "Invalid Hours pattern CSV. Expected Hours Distribution and Shrinkage sections. AHT must not be included.",
         });
 
-        setPreview(null);
         return;
       }
 
+      setPreview(parsed);
+
       setMessage({
         type: "info",
-        text: `Parsed ${parsed.dates.length} date(s), ${parsed.totalIntervals} intervals/day, and ${parsed.totalRows} total records.`,
-      });
 
-      setPreview(parsed);
+        text:
+          `Parsed ${parsed.dates.length} date(s), ` +
+          `${parsed.totalIntervals} intervals/day, and ` +
+          `${parsed.totalRows} total records for ${selectedChannelName}.`,
+      });
+    };
+
+    reader.onerror = () => {
+      setPreview(null);
+
+      setMessage({
+        type: "danger",
+        text:
+          "The selected pattern file could not be read.",
+      });
     };
 
     reader.readAsText(file);
-  };
-
-  // ==========================================
-  // FORMAT API VALIDATION ERROR
-  // ==========================================
-
-  const getApiErrorMessage = (
-    data,
-    fallback
-  ) => {
-    const validationErrors =
-      data?.validation?.errors || [];
-
-    const errorDetails =
-      validationErrors
-        .slice(0, 5)
-        .map(
-          (error) => error.message
-        )
-        .join(" | ");
-
-    if (errorDetails) {
-      return `${
-        data.message ||
-        "Validation failed."
-      } ${errorDetails}`;
-    }
-
-    return data?.message || fallback;
   };
 
   // ==========================================
@@ -1015,42 +1593,57 @@ export default function PatternManager({
   const upload = async () => {
     if (
       !preview ||
-      !selectedChannel
+      !selectedChannel ||
+      !selectedChannelEntry
     ) {
       return;
     }
 
+    const payload =
+      preview.dates.map(
+        (date) => ({
+          channelKey:
+            selectedChannel,
+
+          channel:
+            selectedChannelEntry
+              .name,
+
+          date,
+
+          intervals:
+            preview.intervals[
+              date
+            ] || [],
+        })
+      );
+
     setUploading(true);
     setMessage(null);
 
-    const payload =
-      preview.dates.map((date) => ({
-        channel: selectedChannel,
-        date,
-        intervals:
-          preview.intervals[
-            date
-          ] || [],
-      }));
-
     try {
-      const response = await fetch(
-        `/api/capacity-engine/patterns?capPlan=${encodeURIComponent(
-          capPlanId
-        )}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-            Authorization:
-              auth.authorization(),
-          },
-          body: JSON.stringify({
-            payload,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          `/api/capacity-engine/patterns?capPlan=${encodeURIComponent(
+            capPlanId
+          )}`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                auth.authorization(),
+            },
+
+            body:
+              JSON.stringify({
+                payload,
+              }),
+          }
+        );
 
       const data =
         await response.json();
@@ -1058,10 +1651,12 @@ export default function PatternManager({
       if (!response.ok) {
         setMessage({
           type: "danger",
-          text: getApiErrorMessage(
-            data,
-            `Upload failed (${response.status}).`
-          ),
+
+          text:
+            getApiErrorMessage(
+              data,
+              `Upload failed (${response.status}).`
+            ),
         });
 
         return;
@@ -1069,13 +1664,17 @@ export default function PatternManager({
 
       setMessage({
         type: "success",
-        text: data.message,
+
+        text:
+          data.message ||
+          "Pattern upload completed.",
       });
 
       setPreview(null);
 
       if (fileRef.current) {
-        fileRef.current.value = "";
+        fileRef.current.value =
+          "";
       }
 
       await loadExistingPatterns();
@@ -1100,79 +1699,100 @@ export default function PatternManager({
   };
 
   // ==========================================
-  // DELETE CHANNEL PATTERNS
+  // DELETE PATTERNS
   // ==========================================
 
-  const deletePatterns = async (
-    channelName
-  ) => {
-    const confirmed =
-      window.confirm(
-        `Delete all patterns for ${channelName}?`
-      );
+  const deletePatterns =
+    async (
+      channelKey
+    ) => {
+      const channelName =
+        channelByKey[
+          channelKey
+        ]?.name ||
+        loadedPatterns[
+          channelKey
+        ]?.channelName ||
+        channelKey;
 
-    if (!confirmed) return;
+      const confirmed =
+        window.confirm(
+          `Delete all patterns for ${channelName}?`
+        );
 
-    try {
-      const response = await fetch(
-        `/api/capacity-engine/patterns?capPlan=${encodeURIComponent(
-          capPlanId
-        )}&channel=${encodeURIComponent(
-          channelName
-        )}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization:
-              auth.authorization(),
-          },
-        }
-      );
-
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        setMessage({
-          type: "danger",
-          text:
-            data.message ||
-            "Delete failed.",
-        });
-
+      if (!confirmed) {
         return;
       }
 
-      setMessage({
-        type: "success",
-        text: data.message,
-      });
+      try {
+        const response =
+          await fetch(
+            `/api/capacity-engine/patterns?capPlan=${encodeURIComponent(
+              capPlanId
+            )}&channelKey=${encodeURIComponent(
+              channelKey
+            )}`,
+            {
+              method: "DELETE",
 
-      await loadExistingPatterns();
-    } catch (error) {
-      console.error(
-        "Pattern deletion failed:",
-        error
-      );
+              headers: {
+                Authorization:
+                  auth.authorization(),
+              },
+            }
+          );
 
-      setMessage({
-        type: "danger",
-        text:
-          "The patterns could not be deleted.",
-      });
-    }
-  };
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            getApiErrorMessage(
+              data,
+              `Delete failed (${response.status}).`
+            )
+          );
+        }
+
+        setMessage({
+          type: "success",
+
+          text:
+            data.message ||
+            "Patterns deleted.",
+        });
+
+        await loadExistingPatterns();
+      } catch (error) {
+        console.error(
+          "Pattern deletion failed:",
+          error
+        );
+
+        setMessage({
+          type: "danger",
+
+          text:
+            error?.message ||
+            "The patterns could not be deleted.",
+        });
+      }
+    };
 
   // ==========================================
   // DOWNLOAD TEMPLATE
   // ==========================================
 
   const downloadTemplate = () => {
-    const dates = getWeekDates();
+    const dates =
+      getWeekDates();
 
-    if (dates.length === 0) {
+    if (
+      dates.length === 0
+    ) {
       setMessage({
         type: "warning",
+
         text:
           "Select a week range first to generate a template with the correct dates.",
       });
@@ -1180,112 +1800,225 @@ export default function PatternManager({
       return;
     }
 
-    const times = getTimeSlots(
-      selectedChannel
-    );
-
-    if (times.length === 0) {
+    if (
+      !selectedChannel ||
+      !selectedChannelEntry
+    ) {
       setMessage({
-        type: "danger",
+        type: "warning",
+
         text:
-          "No valid interval times were found for the selected channel.",
+          "Select a channel before downloading the template.",
       });
 
       return;
     }
 
-    const percentage = (
-      100 / times.length
-    ).toFixed(2);
+    const slotsByDate =
+      Object.fromEntries(
+        dates.map(
+          (date) => [
+            date,
+            getTimeSlots(
+              selectedChannel,
+              date
+            ),
+          ]
+        )
+      );
 
-    let csv = `Volume,${dates.join(
-      ","
-    )}\n`;
-
-    times.forEach((time) => {
-      csv += `${time},${dates
-        .map(() => percentage)
-        .join(",")}\n`;
-    });
-
-    csv += `\nAHT,${dates.join(
-      ","
-    )}\n`;
-
-    times.forEach((time) => {
-      csv += `${time},${dates
-        .map(() => "1.0")
-        .join(",")}\n`;
-    });
-
-    csv += `\nShrinkage,${dates.join(
-      ","
-    )}\n`;
-
-    times.forEach((time) => {
-      csv += `${time},${dates
-        .map(() => "0")
-        .join(",")}\n`;
-    });
-
-    csv += `\n# Channel: ${
-      selectedChannel || "unknown"
-    }\n`;
+    const allTimes = [
+      ...new Set(
+        Object.values(
+          slotsByDate
+        ).flat()
+      ),
+    ].sort();
 
     if (
-      selectedChannel &&
-      channelsConfig
+      allTimes.length === 0
     ) {
-      const channelConfig =
-        Object.values(
-          channelsConfig
-        ).find(
-          (channel) =>
-            String(
-              channel?.name || ""
-            )
-              .trim()
-              .toLowerCase() ===
-            String(selectedChannel)
-              .trim()
-              .toLowerCase()
-        );
+      setMessage({
+        type: "danger",
 
-      if (channelConfig) {
-        csv += `# Base AHT (sec): ${
-          channelConfig.baseAHT ?? 0
-        }\n`;
-      }
+        text:
+          "The selected channel has no open intervals in the selected week range.",
+      });
+
+      return;
     }
 
-    csv += `# Interval (min): ${
-      intervalMinutes || 30
-    }\n`;
+    const validTimeSets =
+      Object.fromEntries(
+        dates.map(
+          (date) => [
+            date,
+            new Set(
+              slotsByDate[
+                date
+              ]
+            ),
+          ]
+        )
+      );
 
-    const blob = new Blob([csv], {
-      type: "text/csv;charset=utf-8",
-    });
+    const buildSection = (
+      label,
+      getValue
+    ) => {
+      let section =
+        `${label},${dates.join(
+          ","
+        )}\n`;
+
+      allTimes.forEach(
+        (time) => {
+          section +=
+            `${time},${dates
+              .map(
+                (date) =>
+                  getValue(
+                    date,
+                    time
+                  )
+              )
+              .join(",")}\n`;
+        }
+      );
+
+      return section;
+    };
+
+    const getDistributionValue = (
+      date,
+      time
+    ) => {
+      if (
+        !validTimeSets[
+          date
+        ].has(time)
+      ) {
+        return "";
+      }
+
+      const count =
+        slotsByDate[
+          date
+        ].length;
+
+      return count > 0
+        ? (
+            100 / count
+          ).toFixed(4)
+        : "";
+    };
+
+    const distributionLabel =
+      selectedRequiresAHT
+        ? "Volume Distribution %"
+        : "Hours Distribution %";
+
+    let csv =
+      buildSection(
+        distributionLabel,
+        getDistributionValue
+      );
+
+    /*
+     * Hours templates intentionally do not
+     * contain an AHT section.
+     */
+    if (
+      selectedRequiresAHT
+    ) {
+      csv += "\n";
+
+      csv += buildSection(
+        "AHT Multiplier",
+        (date, time) =>
+          validTimeSets[
+            date
+          ].has(time)
+            ? "1.0"
+            : ""
+      );
+    }
+
+    csv += "\n";
+
+    csv += buildSection(
+      "Shrinkage %",
+      (date, time) =>
+        validTimeSets[
+          date
+        ].has(time)
+          ? "0"
+          : ""
+    );
+
+    csv +=
+      `\n# Channel: ${selectedChannelEntry.name}\n`;
+
+    csv +=
+      `# Channel Key: ${selectedChannel}\n`;
+
+    csv +=
+      `# Model: ${selectedChannelEntry.model || "default"}\n`;
+
+    csv +=
+      `# Interval (min): ${intervalMinutes || 30}\n`;
+
+    csv +=
+      "# Blank cells are outside the channel HOOP for that date.\n";
+
+    if (
+      !selectedRequiresAHT
+    ) {
+      csv +=
+        "# Hours patterns do not use AHT.\n";
+    }
+
+    const blob =
+      new Blob(
+        [csv],
+        {
+          type:
+            "text/csv;charset=utf-8",
+        }
+      );
 
     const url =
-      URL.createObjectURL(blob);
+      URL.createObjectURL(
+        blob
+      );
 
     const link =
-      document.createElement("a");
+      document.createElement(
+        "a"
+      );
 
     link.href = url;
-    link.download = `pattern_${
-      selectedChannel || "template"
-    }.csv`;
 
-    document.body.appendChild(link);
+    link.download =
+      `pattern_${safeFileName(
+        selectedChannelEntry.name
+      )}.csv`;
+
+    document.body.appendChild(
+      link
+    );
+
     link.click();
-    document.body.removeChild(link);
+
+    document.body.removeChild(
+      link
+    );
 
     URL.revokeObjectURL(url);
   };
 
   // ==========================================
-  // COPY PATTERN TO SELECTED WEEKS
+  // COPY PATTERNS
   // ==========================================
 
   const toggleCopyTargetWeek = (
@@ -1298,7 +2031,8 @@ export default function PatternManager({
         )
           ? currentWeeks.filter(
               (week) =>
-                week !== weekStart
+                week !==
+                weekStart
             )
           : [
               ...currentWeeks,
@@ -1321,11 +2055,14 @@ export default function PatternManager({
     async () => {
       if (
         !selectedChannel ||
+        !selectedChannelEntry ||
         !copySourceWeek ||
-        copyTargetWeeks.length === 0
+        copyTargetWeeks.length ===
+          0
       ) {
         setMessage({
           type: "warning",
+
           text:
             "Select a channel, a source week, and at least one target week.",
         });
@@ -1341,6 +2078,7 @@ export default function PatternManager({
       if (!channelPattern) {
         setMessage({
           type: "danger",
+
           text:
             "No pattern was found for the selected channel.",
         });
@@ -1358,18 +2096,22 @@ export default function PatternManager({
           (date) =>
             !Array.isArray(
               channelPattern
-                .intervals?.[date]
+                .intervals?.[
+                date
+              ]
             )
         );
 
       if (
-        missingSourceDates.length > 0
+        missingSourceDates.length >
+        0
       ) {
         setMessage({
           type: "danger",
-          text: `The source week is incomplete. Missing: ${missingSourceDates.join(
-            ", "
-          )}.`,
+
+          text:
+            `The source week is incomplete. Missing: ` +
+            `${missingSourceDates.join(", ")}.`,
         });
 
         return;
@@ -1382,30 +2124,37 @@ export default function PatternManager({
         (targetWeek) => {
           getSevenDates(
             targetWeek
-          ).forEach((date) => {
-            if (
-              Array.isArray(
-                channelPattern
-                  .intervals?.[date]
-              )
-            ) {
-              existingTargetDates.push(
-                date
-              );
+          ).forEach(
+            (date) => {
+              if (
+                Array.isArray(
+                  channelPattern
+                    .intervals?.[
+                    date
+                  ]
+                )
+              ) {
+                existingTargetDates.push(
+                  date
+                );
+              }
             }
-          });
+          );
         }
       );
 
       if (
-        existingTargetDates.length > 0
+        existingTargetDates.length >
+        0
       ) {
         const confirmed =
           window.confirm(
-            `${existingTargetDates.length} target date(s) already contain patterns for ${selectedChannel}. Continuing will replace those dates. Do you want to continue?`
+            `${existingTargetDates.length} target date(s) already contain patterns for ${selectedChannelEntry.name}. Continuing will replace those dates. Continue?`
           );
 
-        if (!confirmed) return;
+        if (!confirmed) {
+          return;
+        }
       }
 
       const payload = [];
@@ -1429,8 +2178,12 @@ export default function PatternManager({
                 ];
 
               payload.push({
-                channel:
+                channelKey:
                   selectedChannel,
+
+                channel:
+                  selectedChannelEntry
+                    .name,
 
                 date:
                   targetDates[
@@ -1446,8 +2199,12 @@ export default function PatternManager({
                       arrivalPct:
                         interval.arrivalPct,
 
-                      ahtMultiplier:
-                        interval.ahtMultiplier,
+                      ...(selectedRequiresAHT
+                        ? {
+                            ahtMultiplier:
+                              interval.ahtMultiplier,
+                          }
+                        : {}),
 
                       shrinkagePct:
                         interval.shrinkagePct,
@@ -1470,18 +2227,25 @@ export default function PatternManager({
             )}`,
             {
               method: "POST",
+
               headers: {
                 "Content-Type":
                   "application/json",
+
                 Authorization:
                   auth.authorization(),
               },
-              body: JSON.stringify({
-                payload,
-                operation: "copy",
-                copiedFromWeek:
-                  copySourceWeek,
-              }),
+
+              body:
+                JSON.stringify({
+                  payload,
+
+                  operation:
+                    "copy",
+
+                  copiedFromWeek:
+                    copySourceWeek,
+                }),
             }
           );
 
@@ -1491,10 +2255,12 @@ export default function PatternManager({
         if (!response.ok) {
           setMessage({
             type: "danger",
-            text: getApiErrorMessage(
-              data,
-              `Copy failed (${response.status}).`
-            ),
+
+            text:
+              getApiErrorMessage(
+                data,
+                `Copy failed (${response.status}).`
+              ),
           });
 
           return;
@@ -1502,7 +2268,10 @@ export default function PatternManager({
 
         setMessage({
           type: "success",
-          text: data.message,
+
+          text:
+            data.message ||
+            "Pattern copy completed.",
         });
 
         setCopyTargetWeeks([]);
@@ -1520,152 +2289,404 @@ export default function PatternManager({
 
         setMessage({
           type: "danger",
+
           text:
             "The pattern could not be copied.",
         });
       } finally {
-        setCopyingPatterns(false);
+        setCopyingPatterns(
+          false
+        );
       }
     };
 
   // ==========================================
-  // CHART DATA
-  // ==========================================
+// WEEKLY VISUALIZATION DATA
+// ==========================================
 
-  const buildChartData = () => {
-    if (
-      Object.keys(
-        loadedPatterns
-      ).length === 0 ||
-      !selectedDate
-    ) {
-      return [];
-    }
+const [
+  focusedVisualizationDate,
+  setFocusedVisualizationDate,
+] = useState("");
 
-    const allTimes = new Set();
+const [
+  hoveredVisualizationDate,
+  setHoveredVisualizationDate,
+] = useState("");
 
-    Object.entries(
-      loadedPatterns
-    ).forEach(
-      ([channel, data]) => {
-        const intervals =
-          data.intervals[
-            selectedDate
-          ];
+const [
+  weekdaysOnly,
+  setWeekdaysOnly,
+] = useState(false);
 
-        if (
-          Array.isArray(intervals)
-        ) {
-          intervals.forEach(
-            (interval) =>
-              allTimes.add(
-                interval.time
-              )
-          );
-        }
-      }
-    );
+const loadedChannelKeys =
+  Object.keys(
+    loadedPatterns
+  );
 
-    const sortedTimes = [
-      ...allTimes,
-    ].sort();
+const hasPatterns =
+  loadedChannelKeys.length > 0;
 
-    return sortedTimes.map(
-      (time) => {
-        const point = { time };
+const visualizationPattern =
+  loadedPatterns[
+    visualizationChannel
+  ] || null;
 
-        Object.entries(
-          loadedPatterns
-        ).forEach(
-          ([channel, data]) => {
-            if (
-              visibleChannels[
-                channel
-              ] === false
-            ) {
-              return;
-            }
+const visualizationChannelEntry =
+  channelByKey[
+    visualizationChannel
+  ] || null;
 
-            const dayIntervals =
-              data.intervals[
-                selectedDate
-              ];
+const visualizationChannelName =
+  visualizationPattern?.channelName ||
+  visualizationChannelEntry?.name ||
+  visualizationChannel;
 
-            if (
-              !Array.isArray(
-                dayIntervals
-              )
-            ) {
-              return;
-            }
+const visualizationRequiresAHT =
+  visualizationPattern
+    ? visualizationPattern
+        .requiresAHT !== false
+    : visualizationChannelEntry
+        ?.requiresAHT !== false;
 
-            const interval =
-              dayIntervals.find(
-                (item) =>
-                  item.time === time
-              );
-
-            if (!interval) return;
-
-            switch (metric) {
-              case "arrival":
-                point[channel] =
-                  interval.arrivalPct ??
-                  0;
-                break;
-
-              case "aht":
-                point[channel] =
-                  interval.ahtMultiplier ??
-                  1;
-                break;
-
-              case "shrinkage":
-                point[channel] =
-                  interval.shrinkagePct ??
-                  0;
-                break;
-
-              default:
-                break;
-            }
-          }
-        );
-
-        return point;
-      }
-    );
-  };
-
-  // ==========================================
-  // DERIVED DISPLAY DATA
-  // ==========================================
-
-  const allDates = [
-    ...new Set(
-      Object.values(
-        loadedPatterns
-      ).flatMap(
-        (result) => result.dates
+/*
+ * Only weeks containing at least one stored
+ * date for the selected channel are offered.
+ */
+const visualizationWeekOptions =
+  availableWeekStarts.filter(
+    (weekStart) =>
+      getSevenDates(
+        weekStart
+      ).some(
+        (date) =>
+          Array.isArray(
+            visualizationPattern
+              ?.intervals?.[
+              date
+            ]
+          )
       )
-    ),
-  ].sort();
+  );
 
-  const metricLabels = {
-    arrival:
-      "Volume Distribution %",
-    aht: "AHT Multiplier",
-    shrinkage: "Shrinkage %",
-  };
+const visualizationWeekOptionsKey =
+  visualizationWeekOptions.join(
+    "|"
+  );
 
-  const chartData =
-    buildChartData();
+/*
+ * Keep the selected week valid whenever the
+ * chart channel or stored data changes.
+ */
+useEffect(() => {
+  if (
+    visualizationWeekOptions.length ===
+    0
+  ) {
+    setSelectedVisualizationWeek(
+      ""
+    );
 
-  const loadedChannelNames =
-    Object.keys(loadedPatterns);
+    return;
+  }
 
-  const hasPatterns =
-    loadedChannelNames.length > 0;
+  setSelectedVisualizationWeek(
+    (currentWeek) =>
+      visualizationWeekOptions.includes(
+        currentWeek
+      )
+        ? currentWeek
+        : visualizationWeekOptions[0]
+  );
+}, [
+  visualizationChannel,
+  visualizationWeekOptionsKey,
+]);
+
+/*
+ * Hours channels do not have an AHT metric.
+ * If the user changes from a volume channel
+ * to an Hours channel while viewing AHT,
+ * return to the distribution chart.
+ */
+useEffect(() => {
+  if (
+    metric === "aht" &&
+    !visualizationRequiresAHT
+  ) {
+    setMetric("arrival");
+  }
+}, [
+  metric,
+  visualizationRequiresAHT,
+]);
+
+const visualizationWeekDates =
+  selectedVisualizationWeek
+    ? getSevenDates(
+        selectedVisualizationWeek
+      )
+    : [];
+
+/*
+ * A working day contains at least one
+ * interval. Closed and unavailable dates
+ * are omitted.
+ */
+const allWorkingVisualizationDates =
+  visualizationWeekDates.filter(
+    (date) => {
+      const intervals =
+        visualizationPattern
+          ?.intervals?.[
+          date
+        ];
+
+      return (
+        Array.isArray(
+          intervals
+        ) &&
+        intervals.length > 0
+      );
+    }
+  );
+
+const isWeekendDate = (
+  dateString
+) => {
+  const date = new Date(
+    `${dateString}T00:00:00.000Z`
+  );
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return false;
+  }
+
+  const weekday =
+    date.getUTCDay();
+
+  return (
+    weekday === 0 ||
+    weekday === 6
+  );
+};
+
+/*
+ * The weekday filter affects only the
+ * visualization. It does not modify data.
+ */
+const workingVisualizationDates =
+  weekdaysOnly
+    ? allWorkingVisualizationDates.filter(
+        (date) =>
+          !isWeekendDate(
+            date
+          )
+      )
+    : allWorkingVisualizationDates;
+
+const workingVisualizationDatesKey =
+  workingVisualizationDates.join(
+    "|"
+  );
+
+/*
+ * Clear a selected or hovered date if it is
+ * no longer displayed after changing the
+ * channel, week, or weekday filter.
+ */
+useEffect(() => {
+  if (
+    focusedVisualizationDate &&
+    !workingVisualizationDates.includes(
+      focusedVisualizationDate
+    )
+  ) {
+    setFocusedVisualizationDate(
+      ""
+    );
+  }
+
+  if (
+    hoveredVisualizationDate &&
+    !workingVisualizationDates.includes(
+      hoveredVisualizationDate
+    )
+  ) {
+    setHoveredVisualizationDate(
+      ""
+    );
+  }
+}, [
+  visualizationChannel,
+  selectedVisualizationWeek,
+  weekdaysOnly,
+  workingVisualizationDatesKey,
+  focusedVisualizationDate,
+  hoveredVisualizationDate,
+]);
+
+/*
+ * Hover temporarily takes priority over the
+ * day selected by the planner.
+ */
+const activeVisualizationDate =
+  hoveredVisualizationDate ||
+  focusedVisualizationDate;
+
+const toggleFocusedDate = (
+  date
+) => {
+  setFocusedVisualizationDate(
+    (currentDate) =>
+      currentDate === date
+        ? ""
+        : date
+  );
+};
+
+const showAllVisualizationDates =
+  () => {
+    setFocusedVisualizationDate(
+      ""
+    );
+
+    setHoveredVisualizationDate(
+      ""
+    );
+};
+
+const getVisualizationMetricValue = (
+  interval
+) => {
+  if (!interval) {
+    return undefined;
+  }
+
+  switch (metric) {
+    case "arrival":
+      return interval.arrivalPct;
+
+    case "aht":
+      return interval.ahtMultiplier;
+
+    case "shrinkage":
+      return interval.shrinkagePct;
+
+    default:
+      return undefined;
+  }
+};
+
+const buildWeeklyChartData = () => {
+  if (
+    !visualizationPattern ||
+    !selectedVisualizationWeek ||
+    workingVisualizationDates.length ===
+      0
+  ) {
+    return [];
+  }
+
+  const allTimes =
+    new Set();
+
+  workingVisualizationDates.forEach(
+    (date) => {
+      const intervals =
+        visualizationPattern
+          .intervals[
+          date
+        ];
+
+      intervals.forEach(
+        (interval) => {
+          if (interval?.time) {
+            allTimes.add(
+              interval.time
+            );
+          }
+        }
+      );
+    }
+  );
+
+  return [
+    ...allTimes,
+  ]
+    .sort()
+    .map((time) => {
+      const point = {
+        time,
+      };
+
+      workingVisualizationDates.forEach(
+        (date) => {
+          const interval =
+            visualizationPattern
+              .intervals[
+              date
+            ].find(
+              (item) =>
+                item.time ===
+                time
+            );
+
+          const value =
+            getVisualizationMetricValue(
+              interval
+            );
+
+          if (
+            value !== undefined &&
+            value !== null &&
+            Number.isFinite(
+              Number(value)
+            )
+          ) {
+            point[date] =
+              Number(value);
+          }
+        }
+      );
+
+      return point;
+    });
+};
+
+const chartData =
+  buildWeeklyChartData();
+
+const distributionLabel =
+  visualizationRequiresAHT
+    ? "Volume Distribution %"
+    : "Hours Distribution %";
+
+const metricLabels = {
+  arrival:
+    distributionLabel,
+
+  aht:
+    "AHT Multiplier",
+
+  shrinkage:
+    "Shrinkage %",
+};
+
+const previewDate =
+  preview?.dates?.[0] ||
+  null;
+
+const previewIntervals =
+  previewDate
+    ? preview?.intervals?.[
+        previewDate
+      ] || []
+    : [];
 
   if (!capPlanId) {
     return null;
@@ -1685,14 +2706,15 @@ export default function PatternManager({
         </div>
       )}
 
-      {/* ====================================== */}
+      {/* ==================================== */}
       {/* PATTERN STATUS */}
-      {/* ====================================== */}
+      {/* ==================================== */}
 
       <div
         className="box mb-4"
         style={{
-          background: "#fafafa",
+          background:
+            "#fafafa",
         }}
       >
         <div className="is-flex is-align-items-center is-justify-content-space-between mb-2">
@@ -1733,7 +2755,7 @@ export default function PatternManager({
             (channel) => {
               const pattern =
                 loadedPatterns[
-                  channel.name
+                  channel.key
                 ];
 
               const hasData =
@@ -1741,7 +2763,9 @@ export default function PatternManager({
 
               return (
                 <div
-                  key={channel.key}
+                  key={
+                    channel.key
+                  }
                   className="column is-narrow"
                 >
                   <div
@@ -1751,7 +2775,8 @@ export default function PatternManager({
                         : "is-danger is-light"
                     }`}
                     style={{
-                      gap: "0.3rem",
+                      gap:
+                        "0.3rem",
                     }}
                   >
                     {hasData ? (
@@ -1760,10 +2785,14 @@ export default function PatternManager({
                       <FaTimesCircle className="has-text-danger" />
                     )}
 
-                    <span>
-                      <strong>
-                        {channel.name}
-                      </strong>
+                    <strong>
+                      {channel.name}
+                    </strong>
+
+                    <span className="is-size-7">
+                      {channel.requiresAHT
+                        ? "Volume"
+                        : "Hours"}
                     </span>
 
                     {hasData && (
@@ -1789,15 +2818,16 @@ export default function PatternManager({
         </div>
       </div>
 
-      {/* ====================================== */}
+      {/* ==================================== */}
       {/* UPLOAD */}
-      {/* ====================================== */}
+      {/* ==================================== */}
 
       <div className="box mb-4">
         <strong
           className="is-size-6 mb-2"
           style={{
-            display: "block",
+            display:
+              "block",
           }}
         >
           Upload Pattern
@@ -1815,7 +2845,9 @@ export default function PatternManager({
                   value={
                     selectedChannel
                   }
-                  onChange={(event) => {
+                  onChange={(
+                    event
+                  ) => {
                     setSelectedChannel(
                       event.target
                         .value
@@ -1823,6 +2855,13 @@ export default function PatternManager({
 
                     setPreview(null);
                     setMessage(null);
+
+                    if (
+                      fileRef.current
+                    ) {
+                      fileRef.current.value =
+                        "";
+                    }
                   }}
                 >
                   <option value="">
@@ -1830,33 +2869,30 @@ export default function PatternManager({
                   </option>
 
                   {channelEntries.map(
-                    (channel) => {
-                      const hasData =
-                        Boolean(
-                          loadedPatterns[
-                            channel
-                              .name
-                          ]
-                        );
-
-                      return (
-                        <option
-                          key={
-                            channel.key
-                          }
-                          value={
-                            channel.name
-                          }
-                        >
-                          {
-                            channel.name
-                          }{" "}
-                          {hasData
-                            ? "✓"
-                            : ""}
-                        </option>
-                      );
-                    }
+                    (channel) => (
+                      <option
+                        key={
+                          channel.key
+                        }
+                        value={
+                          channel.key
+                        }
+                      >
+                        {
+                          channel.name
+                        }{" "}
+                        (
+                        {channel.requiresAHT
+                          ? "Volume + AHT"
+                          : "Hours"}
+                        )
+                        {loadedPatterns[
+                          channel.key
+                        ]
+                          ? " ✓"
+                          : ""}
+                      </option>
+                    )
                   )}
                 </select>
               </div>
@@ -1867,10 +2903,14 @@ export default function PatternManager({
             <div
               className="is-flex is-align-items-end"
               style={{
-                gap: "0.5rem",
+                gap:
+                  "0.5rem",
+
                 paddingTop:
                   "1.5rem",
-                flexWrap: "wrap",
+
+                flexWrap:
+                  "wrap",
               }}
             >
               <div className="file is-small is-info">
@@ -1939,7 +2979,7 @@ export default function PatternManager({
                     <span>
                       Clear{" "}
                       {
-                        selectedChannel
+                        selectedChannelName
                       }
                     </span>
                   </button>
@@ -1948,11 +2988,28 @@ export default function PatternManager({
           </div>
         </div>
 
+        {selectedChannelEntry && (
+          <div className="notification is-info is-light is-size-7 py-2">
+            <strong>
+              {
+                selectedChannelEntry.name
+              }
+            </strong>{" "}
+            uses{" "}
+            {selectedRequiresAHT
+              ? "Volume Distribution %, AHT Multiplier, and Shrinkage %."
+              : "Hours Distribution % and Shrinkage %. AHT is not used for this model."}
+          </div>
+        )}
+
         {preview && (
           <div className="mt-3">
             <div className="tags mb-2">
               <span className="tag is-info is-light">
-                {preview.dates.length}{" "}
+                {
+                  preview.dates
+                    .length
+                }{" "}
                 date(s)
               </span>
 
@@ -1964,14 +3021,25 @@ export default function PatternManager({
               </span>
 
               <span className="tag is-warning is-light">
-                {preview.totalRows}{" "}
+                {
+                  preview.totalRows
+                }{" "}
                 total records
+              </span>
+
+              <span className="tag is-primary is-light">
+                {selectedRequiresAHT
+                  ? "Volume model"
+                  : "Hours model"}
               </span>
             </div>
 
             <p className="is-size-7 has-text-grey mb-2">
               Dates:{" "}
-              {preview.dates} →{" "}
+              {
+                preview.dates
+              }{" "}
+              →{" "}
               {
                 preview.dates[
                   preview.dates
@@ -1991,89 +3059,93 @@ export default function PatternManager({
               )}
             </p>
 
-            {preview.dates.length >
-              0 &&
-              preview.intervals[
-                preview.dates
-              ] && (
-                <div
-                  className="table-container"
-                  style={{
-                    maxHeight:
-                      "200px",
-                    overflow:
-                      "auto",
-                  }}
-                >
-                  <table className="table is-narrow is-striped is-fullwidth is-size-7">
-                    <thead>
-                      <tr>
-                        <th>Time</th>
-                        <th>
-                          Arrival %
-                        </th>
+            {previewDate && (
+              <div
+                className="table-container"
+                style={{
+                  maxHeight:
+                    "220px",
+
+                  overflow:
+                    "auto",
+                }}
+              >
+                <table className="table is-narrow is-striped is-fullwidth is-size-7">
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+
+                      <th>
+                        {selectedRequiresAHT
+                          ? "Volume %"
+                          : "Hours %"}
+                      </th>
+
+                      {selectedRequiresAHT && (
                         <th>
                           AHT Mult.
                         </th>
-                        <th>
-                          Shrinkage %
-                        </th>
-                      </tr>
-                    </thead>
+                      )}
 
-                    <tbody>
-                      {preview.intervals[
-                        preview.dates
-                      ].map(
-                        (
-                          interval,
-                          index
-                        ) => (
-                          <tr
-                            key={`${interval.time}-${index}`}
-                          >
-                            <td>
-                              {
-                                interval.time
-                              }
-                            </td>
+                      <th>
+                        Shrinkage %
+                      </th>
+                    </tr>
+                  </thead>
 
-                            <td>
-                              {formatPatternValue(
-                                interval.arrivalPct
-                              )}
-                            </td>
+                  <tbody>
+                    {previewIntervals.map(
+                      (
+                        interval,
+                        index
+                      ) => (
+                        <tr
+                          key={`${interval.time}-${index}`}
+                        >
+                          <td>
+                            {
+                              interval.time
+                            }
+                          </td>
 
+                          <td>
+                            {formatPatternValue(
+                              interval.arrivalPct
+                            )}
+                          </td>
+
+                          {selectedRequiresAHT && (
                             <td>
                               {formatPatternValue(
                                 interval.ahtMultiplier
                               )}
                             </td>
+                          )}
 
-                            <td>
-                              {formatPatternValue(
-                                interval.shrinkagePct
-                              )}
-                            </td>
-                          </tr>
-                        )
-                      )}
-                    </tbody>
-                  </table>
+                          <td>
+                            {formatPatternValue(
+                              interval.shrinkagePct
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
 
-                  <p className="is-size-7 has-text-grey">
-                    Preview:{" "}
-                    {preview.dates}.
-                    All{" "}
-                    {
-                      preview.dates
-                        .length
-                    }{" "}
-                    dates will be
-                    uploaded.
-                  </p>
-                </div>
-              )}
+                <p className="is-size-7 has-text-grey">
+                  Preview:{" "}
+                  {previewDate}.
+                  All{" "}
+                  {
+                    preview.dates
+                      .length
+                  }{" "}
+                  dates will be
+                  uploaded.
+                </p>
+              </div>
+            )}
 
             <button
               type="button"
@@ -2091,22 +3163,23 @@ export default function PatternManager({
               <span>
                 {uploading
                   ? "Uploading..."
-                  : `Upload ${preview.dates.length} day(s) × ${preview.totalIntervals} intervals`}
+                  : `Upload ${preview.dates.length} day(s)`}
               </span>
             </button>
           </div>
         )}
       </div>
 
-      {/* ====================================== */}
-      {/* REUSE PATTERN */}
-      {/* ====================================== */}
+      {/* ==================================== */}
+      {/* COPY PATTERN */}
+      {/* ==================================== */}
 
       <div className="box mb-4">
         <strong
           className="is-size-6 mb-1"
           style={{
-            display: "block",
+            display:
+              "block",
           }}
         >
           Reuse Pattern Across Weeks
@@ -2114,9 +3187,8 @@ export default function PatternManager({
 
         <p className="is-size-7 has-text-grey mb-3">
           Copy a validated source
-          pattern to the matching
-          weekdays of one or more
-          selected weeks.
+          pattern to matching weekdays
+          in one or more selected weeks.
         </p>
 
         <div className="columns">
@@ -2131,7 +3203,9 @@ export default function PatternManager({
                   value={
                     selectedChannel
                   }
-                  onChange={(event) => {
+                  onChange={(
+                    event
+                  ) => {
                     setSelectedChannel(
                       event.target
                         .value
@@ -2152,7 +3226,7 @@ export default function PatternManager({
                           channel.key
                         }
                         value={
-                          channel.name
+                          channel.key
                         }
                       >
                         {
@@ -2190,8 +3264,7 @@ export default function PatternManager({
                   }
                 >
                   <option value="">
-                    Select source
-                    week...
+                    Select source week...
                   </option>
 
                   {sourceWeekOptions.map(
@@ -2224,7 +3297,9 @@ export default function PatternManager({
               source pattern is
               currently available for{" "}
               <strong>
-                {selectedChannel}
+                {
+                  selectedChannelName
+                }
               </strong>
               .
             </div>
@@ -2273,17 +3348,20 @@ export default function PatternManager({
               <div className="notification is-warning is-light is-size-7 py-2">
                 No other weeks are
                 available in the
-                selected capacity-plan
-                range.
+                selected plan range.
               </div>
             ) : (
               <div
                 className="mb-3"
                 style={{
-                  display: "grid",
+                  display:
+                    "grid",
+
                   gridTemplateColumns:
                     "repeat(auto-fit, minmax(230px, 1fr))",
-                  gap: "0.5rem",
+
+                  gap:
+                    "0.5rem",
                 }}
               >
                 {targetWeekOptions.map(
@@ -2318,12 +3396,17 @@ export default function PatternManager({
                         style={{
                           padding:
                             "0.75rem",
+
                           margin: 0,
+
                           cursor:
                             "pointer",
-                          border: selected
-                            ? "2px solid #4b4bf9"
-                            : "1px solid #e5e5e5",
+
+                          border:
+                            selected
+                              ? "2px solid #4b4bf9"
+                              : "1px solid #e5e5e5",
+
                           background:
                             selected
                               ? "#f3f3ff"
@@ -2399,97 +3482,166 @@ export default function PatternManager({
         )}
       </div>
 
-      {/* ====================================== */}
-      {/* VISUALIZATION */}
-      {/* ====================================== */}
+     {/* ==================================== */}
+    {/* WEEKLY VISUALIZATION */}
+    {/* ==================================== */}
 
-      {hasPatterns && (
-        <div className="box">
-          <div
-            className="is-flex is-align-items-center is-justify-content-space-between mb-3 is-flex-wrap-wrap"
-            style={{
-              gap: "0.5rem",
-            }}
-          >
-            <div className="buttons has-addons are-small mb-0">
-              {[
-                {
-                  key: "arrival",
-                  label: "Volume %",
-                },
-                {
-                  key: "aht",
-                  label: "AHT",
-                },
-                {
-                  key: "shrinkage",
-                  label:
-                    "Shrinkage %",
-                },
-              ].map((tab) => (
-                <button
-                  type="button"
-                  key={tab.key}
-                  className={`button is-small ${
-                    metric ===
-                    tab.key
-                      ? "is-info"
-                      : ""
-                  }`}
-                  onClick={() =>
-                    setMetric(
-                      tab.key
-                    )
-                  }
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+    {hasPatterns && (
+      <div className="box">
+        <div className="mb-3">
+          <strong className="is-size-6">
+            Weekly Pattern Comparison
+          </strong>
 
-            <div
-              className="is-flex is-align-items-center"
-              style={{
-                gap: "0.5rem",
-              }}
-            >
-              <div className="select is-small">
+          <p className="is-size-7 has-text-grey mt-1">
+            Compare the selected channel’s
+            working-day distributions across
+            one week. Each line represents a
+            different day.
+          </p>
+        </div>
+
+        {/* ================================== */}
+        {/* CHART FILTERS */}
+        {/* ================================== */}
+
+        <div className="columns is-vcentered mb-2">
+          <div className="column is-4">
+            <div className="field">
+              <label className="label is-small">
+                Chart channel
+              </label>
+
+              <div className="select is-small is-fullwidth">
                 <select
                   value={
-                    selectedDate
+                    visualizationChannel
                   }
                   onChange={(
                     event
-                  ) =>
-                    setSelectedDate(
-                      event.target
-                        .value
-                    )
-                  }
+                  ) => {
+                    setVisualizationChannel(
+                      event.target.value
+                    );
+
+                    setSelectedVisualizationWeek(
+                      ""
+                    );
+
+                    setFocusedVisualizationDate(
+                      ""
+                    );
+
+                    setHoveredVisualizationDate(
+                      ""
+                    );
+                  }}
                 >
-                  {allDates.map(
-                    (date) => (
-                      <option
-                        key={date}
-                        value={date}
-                      >
-                        {getWeekdayLabel(
-                          date,
-                          "short"
-                        )}{" "}
-                        {date}
-                      </option>
+                  {loadedChannelKeys.map(
+                    (channelKey) => {
+                      const pattern =
+                        loadedPatterns[
+                          channelKey
+                        ];
+
+                      return (
+                        <option
+                          key={
+                            channelKey
+                          }
+                          value={
+                            channelKey
+                          }
+                        >
+                          {
+                            pattern.channelName
+                          }{" "}
+                          (
+                          {pattern.requiresAHT
+                            ? "Volume"
+                            : "Hours"}
+                          )
+                        </option>
+                      );
+                    }
+                  )}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="column is-4">
+            <div className="field">
+              <label className="label is-small">
+                Week
+              </label>
+
+              <div className="select is-small is-fullwidth">
+                <select
+                  value={
+                    selectedVisualizationWeek
+                  }
+                  disabled={
+                    visualizationWeekOptions.length ===
+                    0
+                  }
+                  onChange={(
+                    event
+                  ) => {
+                    setSelectedVisualizationWeek(
+                      event.target.value
+                    );
+
+                    setFocusedVisualizationDate(
+                      ""
+                    );
+
+                    setHoveredVisualizationDate(
+                      ""
+                    );
+                  }}
+                >
+                  {visualizationWeekOptions.length ===
+                  0 ? (
+                    <option value="">
+                      No pattern weeks available
+                    </option>
+                  ) : (
+                    visualizationWeekOptions.map(
+                      (weekStart) => (
+                        <option
+                          key={
+                            weekStart
+                          }
+                          value={
+                            weekStart
+                          }
+                        >
+                          {formatWeekLabel(
+                            weekStart
+                          )}
+                        </option>
+                      )
                     )
                   )}
                 </select>
               </div>
+            </div>
+          </div>
 
+          <div className="column">
+            <div
+              className="is-flex is-align-items-flex-end is-justify-content-flex-end"
+              style={{
+                paddingTop:
+                  "1.5rem",
+              }}
+            >
               <div className="buttons has-addons are-small mb-0">
                 <button
                   type="button"
                   className={`button is-small ${
-                    viewMode ===
-                    "chart"
+                    viewMode === "chart"
                       ? "is-info"
                       : ""
                   }`}
@@ -2498,6 +3650,7 @@ export default function PatternManager({
                       "chart"
                     )
                   }
+                  title="Chart view"
                 >
                   <FaChartArea />
                 </button>
@@ -2505,8 +3658,7 @@ export default function PatternManager({
                 <button
                   type="button"
                   className={`button is-small ${
-                    viewMode ===
-                    "table"
+                    viewMode === "table"
                       ? "is-info"
                       : ""
                   }`}
@@ -2515,322 +3667,650 @@ export default function PatternManager({
                       "table"
                     )
                   }
+                  title="Table view"
                 >
                   <FaTable />
                 </button>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* ================================== */}
+        {/* METRIC TABS */}
+        {/* ================================== */}
+
+        <div
+          className="is-flex is-align-items-center is-justify-content-space-between is-flex-wrap-wrap mb-3"
+          style={{
+            gap: "0.75rem",
+          }}
+        >
+          <div className="buttons has-addons are-small mb-0">
+            <button
+              type="button"
+              className={`button is-small ${
+                metric === "arrival"
+                  ? "is-info"
+                  : ""
+              }`}
+              onClick={() =>
+                setMetric(
+                  "arrival"
+                )
+              }
+            >
+              {distributionLabel}
+            </button>
+
+            {visualizationRequiresAHT && (
+              <button
+                type="button"
+                className={`button is-small ${
+                  metric === "aht"
+                    ? "is-info"
+                    : ""
+                }`}
+                onClick={() =>
+                  setMetric(
+                    "aht"
+                  )
+                }
+              >
+                AHT
+              </button>
+            )}
+
+            <button
+              type="button"
+              className={`button is-small ${
+                metric === "shrinkage"
+                  ? "is-info"
+                  : ""
+              }`}
+              onClick={() =>
+                setMetric(
+                  "shrinkage"
+                )
+              }
+            >
+              Shrinkage %
+            </button>
+          </div>
 
           <div
-            className="is-flex mb-3"
+            className="is-flex is-align-items-center"
             style={{
-              gap: "0.75rem",
+              gap: "0.5rem",
               flexWrap: "wrap",
             }}
           >
-            {loadedChannelNames.map(
-              (channel, index) => (
-                <label
-                  key={channel}
-                  className="is-flex is-align-items-center is-size-7"
-                  style={{
-                    gap: "0.3rem",
-                    cursor: "pointer",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={
-                      visibleChannels[
-                        channel
-                      ] !== false
-                    }
-                    onChange={() =>
-                      setVisibleChannels(
-                        (current) => ({
-                          ...current,
-                          [channel]:
-                            !current[
-                              channel
-                            ],
-                        })
-                      )
-                    }
-                  />
+            <button
+              type="button"
+              className={`button is-small ${
+                weekdaysOnly
+                  ? "is-info is-light"
+                  : "is-light"
+              }`}
+              onClick={() => {
+                setWeekdaysOnly(
+                  (currentValue) =>
+                    !currentValue
+                );
 
-                  <span
-                    style={{
-                      width: "12px",
-                      height: "12px",
-                      borderRadius:
-                        "2px",
-                      backgroundColor:
-                        CHANNEL_COLORS[
-                          index %
-                            CHANNEL_COLORS.length
-                        ],
-                      display:
-                        "inline-block",
-                    }}
-                  />
+                setFocusedVisualizationDate(
+                  ""
+                );
 
-                  {channel}
-                </label>
-              )
-            )}
+                setHoveredVisualizationDate(
+                  ""
+                );
+              }}
+              title="Show or hide Saturday and Sunday"
+            >
+              {weekdaysOnly
+                ? "All Weekdays"
+                : "Mon-Fri only"}
+            </button>
+
+            <button
+              type="button"
+              className="button is-small is-light"
+              onClick={
+                showAllVisualizationDates
+              }
+              disabled={
+                !activeVisualizationDate
+              }
+              title="Give every displayed day equal emphasis"
+            >
+              Show all
+            </button>
+
+            <span className="tag is-light">
+              <strong>
+                {visualizationChannelName}
+              </strong>
+
+              &nbsp;·&nbsp;
+
+              {visualizationRequiresAHT
+                ? "Volume model"
+                : "Hours model"}
+            </span>
           </div>
+        </div>
 
-          <p className="is-size-7 has-text-grey mb-2">
+        {!visualizationRequiresAHT && (
+          <div className="notification is-info is-light is-size-7 py-2">
+            This Hours channel uses Hours
+            Distribution % and Shrinkage %.
+            AHT is not applicable.
+          </div>
+        )}
+
+        {/* ================================== */}
+        {/* INTERACTIVE DAY LEGEND */}
+        {/* ================================== */}
+
+        {workingVisualizationDates.length >
+          0 && (
+          <div className="mb-3">
+            <p className="is-size-7 has-text-grey mb-2">
+              Select a day to focus its line.
+              Hover over another day for a
+              temporary comparison.
+            </p>
+
+            <div
+              className="is-flex"
+              style={{
+                gap: "0.5rem",
+                flexWrap: "wrap",
+              }}
+            >
+              {workingVisualizationDates.map(
+                (
+                  date,
+                  index
+                ) => {
+                  const focused =
+                    focusedVisualizationDate ===
+                    date;
+
+                  const active =
+                    activeVisualizationDate ===
+                    date;
+
+                  const dimmed =
+                    Boolean(
+                      activeVisualizationDate
+                    ) &&
+                    !active;
+
+                  const color =
+                    DAY_COLORS[
+                      index %
+                        DAY_COLORS.length
+                    ];
+
+                  return (
+                    <button
+                      type="button"
+                      key={date}
+                      className="button is-small"
+                      onClick={() =>
+                        toggleFocusedDate(
+                          date
+                        )
+                      }
+                      onMouseEnter={() =>
+                        setHoveredVisualizationDate(
+                          date
+                        )
+                      }
+                      onMouseLeave={() =>
+                        setHoveredVisualizationDate(
+                          ""
+                        )
+                      }
+                      aria-pressed={
+                        focused
+                      }
+                      title={
+                        focused
+                          ? "Remove focus from this day"
+                          : `Focus ${getWeekdayLabel(
+                              date,
+                              "long"
+                            )}`
+                      }
+                      style={{
+                        border:
+                          focused
+                            ? `2px solid ${color}`
+                            : "1px solid #dddddd",
+
+                        background:
+                          focused
+                            ? `${color}18`
+                            : "#ffffff",
+
+                        opacity:
+                          dimmed
+                            ? 0.45
+                            : 1,
+
+                        transition:
+                          "opacity 140ms ease, border-color 140ms ease, background 140ms ease",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: "18px",
+
+                          height:
+                            active
+                              ? "4px"
+                              : "3px",
+
+                          borderRadius:
+                            "2px",
+
+                          backgroundColor:
+                            color,
+
+                          display:
+                            "inline-block",
+
+                          marginRight:
+                            "0.35rem",
+                        }}
+                      />
+
+                      <strong>
+                        {getWeekdayLabel(
+                          date,
+                          "long"
+                        )}
+                      </strong>
+
+                      <span className="has-text-grey ml-1">
+                        {date}
+                      </span>
+                    </button>
+                  );
+                }
+              )}
+            </div>
+          </div>
+        )}
+
+        <p className="is-size-7 has-text-grey mb-2">
+        <strong>
+          {metricLabels[metric]}
+        </strong>
+
+        {selectedVisualizationWeek && (
+          <>
+            {" "}
+            —{" "}
+            {formatWeekLabel(
+              selectedVisualizationWeek
+            )}
+          </>
+        )}
+
+        {workingVisualizationDates.length >
+          0 && (
+          <>
+            {" "}
+            ·{" "}
+            {
+              workingVisualizationDates.length
+            }{" "}
+            displayed working day
+            {workingVisualizationDates.length ===
+            1
+              ? ""
+              : "s"}
+          </>
+        )}
+
+        {focusedVisualizationDate && (
+          <>
+            {" "}
+            · Focused:{" "}
             <strong>
-              {metricLabels[metric]}
-            </strong>{" "}
-            — {selectedDate} (
-            {getWeekdayLabel(
-              selectedDate,
-              "long"
-            )}
-            )
-          </p>
+              {getWeekdayLabel(
+                focusedVisualizationDate,
+                "long"
+              )}{" "}
+              {
+                focusedVisualizationDate
+              }
+            </strong>
+          </>
+        )}
+      </p>
 
-          {viewMode === "chart" &&
-            chartData.length > 0 && (
-              <ResponsiveContainer
-                width="100%"
-                height={320}
-              >
-                <LineChart
-                  data={chartData}
-                  margin={{
-                    top: 5,
-                    right: 20,
-                    left: 10,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#eee"
-                  />
+        {/* ================================== */}
+        {/* CHART VIEW */}
+        {/* ================================== */}
 
-                  <XAxis
-                    dataKey="time"
-                    tick={{
-                      fontSize: 10,
-                    }}
-                    interval="preserveStartEnd"
-                  />
-
-                  <YAxis
-                    tick={{
-                      fontSize: 10,
-                    }}
-                    label={{
-                      value:
-                        metricLabels[
-                          metric
-                        ],
-                      angle: -90,
-                      position:
-                        "insideLeft",
-                      style: {
-                        fontSize: 10,
-                      },
-                    }}
-                  />
-
-                  <Tooltip
-                    contentStyle={{
-                      fontSize: 11,
-                    }}
-                    formatter={(
-                      value,
-                      name
-                    ) => [
-                      metric === "aht"
-                        ? `×${value}`
-                        : `${Number(
-                            value
-                          ).toFixed(
-                            2
-                          )}%`,
-                      name,
-                    ]}
-                  />
-
-                  <Legend
-                    wrapperStyle={{
-                      fontSize: 11,
-                    }}
-                    iconType="line"
-                  />
-
-                  {loadedChannelNames
-                    .filter(
-                      (channel) =>
-                        visibleChannels[
-                          channel
-                        ] !== false
-                    )
-                    .map(
-                      (
-                        channel,
-                        index
-                      ) => (
-                        <Line
-                          key={
-                            channel
-                          }
-                          type="monotone"
-                          dataKey={
-                            channel
-                          }
-                          stroke={
-                            CHANNEL_COLORS[
-                              index %
-                                CHANNEL_COLORS.length
-                            ]
-                          }
-                          strokeWidth={
-                            2
-                          }
-                          dot={false}
-                          activeDot={{
-                            r: 4,
-                          }}
-                        />
-                      )
-                    )}
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-
-          {viewMode === "table" &&
-            chartData.length > 0 && (
-              <div
-                className="table-container"
-                style={{
-                  maxHeight:
-                    "400px",
-                  overflow: "auto",
+        {viewMode === "chart" &&
+          chartData.length > 0 &&
+          workingVisualizationDates.length >
+            0 && (
+            <ResponsiveContainer
+              width="100%"
+              height={360}
+            >
+              <LineChart
+                data={
+                  chartData
+                }
+                margin={{
+                  top: 10,
+                  right: 25,
+                  left: 15,
+                  bottom: 5,
                 }}
               >
-                <table className="table is-narrow is-striped is-bordered is-fullwidth is-size-7">
-                  <thead>
-                    <tr>
-                      <th>Time</th>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#eeeeee"
+                />
 
-                      {loadedChannelNames
-                        .filter(
-                          (channel) =>
-                            visibleChannels[
-                              channel
-                            ] !==
-                            false
-                        )
-                        .map(
-                          (
-                            channel,
-                            index
-                          ) => (
-                            <th
-                              key={
-                                channel
-                              }
-                              className="has-text-centered"
-                              style={{
-                                borderBottom: `3px solid ${
-                                  CHANNEL_COLORS[
-                                    index %
-                                      CHANNEL_COLORS.length
-                                  ]
-                                }`,
-                              }}
-                            >
-                              {
-                                channel
-                              }
-                            </th>
-                          )
-                        )}
-                    </tr>
-                  </thead>
+                <XAxis
+                  dataKey="time"
+                  tick={{
+                    fontSize: 10,
+                  }}
+                  interval="preserveStartEnd"
+                />
 
-                  <tbody>
-                    {chartData.map(
+                <YAxis
+                  tick={{
+                    fontSize: 10,
+                  }}
+                  domain={
+                    metric === "aht"
+                      ? [
+                          "auto",
+                          "auto",
+                        ]
+                      : [
+                          0,
+                          "auto",
+                        ]
+                  }
+                  label={{
+                    value:
+                      metricLabels[
+                        metric
+                      ],
+
+                    angle: -90,
+
+                    position:
+                      "insideLeft",
+
+                    style: {
+                      fontSize: 10,
+                    },
+                  }}
+                />
+
+                <Tooltip
+                  contentStyle={{
+                    fontSize: 11,
+                    borderRadius: "6px",
+                    border:
+                      "1px solid #e5e5e5",
+                  }}
+                  labelFormatter={(
+                    time
+                  ) =>
+                    `Time: ${time}`
+                  }
+                  itemSorter={(item) =>
+                    item?.dataKey ===
+                    activeVisualizationDate
+                      ? -1
+                      : 1
+                  }
+                  formatter={(
+                    value,
+                    date
+                  ) => [
+                    metric === "aht"
+                      ? `×${Number(
+                          value
+                        ).toFixed(
+                          2
+                        )}`
+                      : `${Number(
+                          value
+                        ).toFixed(
+                          2
+                        )}%`,
+
+                    `${getWeekdayLabel(
+                      date,
+                      "long"
+                    )} ${date}`,
+                  ]}
+                />
+
+                {workingVisualizationDates.map(
+                  (
+                    date,
+                    index
+                  ) => {
+                    const active =
+                      activeVisualizationDate ===
+                      date;
+
+                    const hasActiveDate =
+                      Boolean(
+                        activeVisualizationDate
+                      );
+
+                    const dimmed =
+                      hasActiveDate &&
+                      !active;
+
+                    const color =
+                      DAY_COLORS[
+                        index %
+                          DAY_COLORS.length
+                      ];
+
+                    return (
+                      <Line
+                        key={date}
+
+                        /*
+                        * Pattern values belong to discrete
+                        * intervals, so straight segments are
+                        * more accurate than smoothed curves.
+                        */
+                        type="linear"
+
+                        dataKey={date}
+                        name={date}
+                        stroke={color}
+
+                        strokeWidth={
+                          active
+                            ? 3.5
+                            : hasActiveDate
+                              ? 1.25
+                              : 2
+                        }
+
+                        strokeOpacity={
+                          dimmed
+                            ? 0.16
+                            : 1
+                        }
+
+                        dot={false}
+                        connectNulls={false}
+
+                        activeDot={{
+                          r:
+                            active ||
+                            !hasActiveDate
+                              ? 4
+                              : 2,
+
+                          strokeWidth: 1,
+                        }}
+
+                        isAnimationActive={
+                          false
+                        }
+                      />
+                    );
+                  }
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+
+        {/* ================================== */}
+        {/* TABLE VIEW */}
+        {/* ================================== */}
+
+        {viewMode === "table" &&
+          chartData.length > 0 &&
+          workingVisualizationDates.length >
+            0 && (
+            <div
+              className="table-container"
+              style={{
+                maxHeight:
+                  "450px",
+
+                overflow:
+                  "auto",
+              }}
+            >
+              <table className="table is-narrow is-striped is-bordered is-fullwidth is-size-7">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+
+                    {workingVisualizationDates.map(
                       (
-                        row,
+                        date,
                         index
                       ) => (
-                        <tr
-                          key={`${row.time}-${index}`}
+                        <th
+                          key={
+                            date
+                          }
+                          className="has-text-centered"
+                          style={{
+                            borderBottom:
+                              `3px solid ${
+                                DAY_COLORS[
+                                  index %
+                                    DAY_COLORS.length
+                                ]
+                              }`,
+                          }}
                         >
-                          <td>
-                            <strong>
-                              {
-                                row.time
-                              }
-                            </strong>
-                          </td>
-
-                          {loadedChannelNames
-                            .filter(
-                              (
-                                channel
-                              ) =>
-                                visibleChannels[
-                                  channel
-                                ] !==
-                                false
-                            )
-                            .map(
-                              (
-                                channel
-                              ) => {
-                                const value =
-                                  row[
-                                    channel
-                                  ];
-
-                                return (
-                                  <td
-                                    key={
-                                      channel
-                                    }
-                                    className="has-text-centered"
-                                  >
-                                    {value !==
-                                    undefined
-                                      ? metric ===
-                                        "aht"
-                                        ? `×${value}`
-                                        : Number(
-                                            value
-                                          ).toFixed(
-                                            2
-                                          )
-                                      : "—"}
-                                  </td>
-                                );
-                              }
+                          <div>
+                            {getWeekdayLabel(
+                              date,
+                              "short"
                             )}
-                        </tr>
+                          </div>
+
+                          <div className="has-text-grey has-text-weight-normal">
+                            {date}
+                          </div>
+                        </th>
                       )
                     )}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                  </tr>
+                </thead>
 
-          {chartData.length === 0 && (
-            <div className="notification is-warning is-light is-size-7">
-              No pattern data is
-              available for{" "}
-              {selectedDate}.
+                <tbody>
+                  {chartData.map(
+                    (
+                      row,
+                      index
+                    ) => (
+                      <tr
+                        key={`${row.time}-${index}`}
+                      >
+                        <td>
+                          <strong>
+                            {row.time}
+                          </strong>
+                        </td>
+
+                        {workingVisualizationDates.map(
+                          (date) => {
+                            const value =
+                              row[date];
+
+                            return (
+                              <td
+                                key={
+                                  date
+                                }
+                                className="has-text-centered"
+                              >
+                                {value !==
+                                undefined
+                                  ? metric ===
+                                    "aht"
+                                    ? `×${Number(
+                                        value
+                                      ).toFixed(
+                                        2
+                                      )}`
+                                    : `${Number(
+                                        value
+                                      ).toFixed(
+                                        2
+                                      )}%`
+                                  : "—"}
+                              </td>
+                            );
+                          }
+                        )}
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
-        </div>
-      )}
+
+        {/* ================================== */}
+        {/* EMPTY STATE */}
+        {/* ================================== */}
+
+        {(
+          !selectedVisualizationWeek ||
+          chartData.length === 0 ||
+          workingVisualizationDates.length ===
+            0
+        ) && (
+          <div className="notification is-warning is-light is-size-7">
+            No working-day pattern data is
+            available for the selected
+            channel and week.
+          </div>
+        )}
+      </div>
+    )}
     </div>
   );
 }

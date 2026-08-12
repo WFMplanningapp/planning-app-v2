@@ -157,7 +157,14 @@ const DAY_MAP = {
 const MODEL_OPTIONS = [
   { value: 'erlangC', label: 'Erlang C (Real-time: Phone, Chat)' },
   { value: 'workload', label: 'Workload (Back-office: Email, Tickets)' },
+  { value: 'hours', label: 'Hours' },
 ];
+
+const HOURS_BASES = {
+  GROSS: 'gross',
+  IN_CENTER: 'inCenter',
+  PRODUCTIVE: 'productive',
+};
 
 const ICON_OPTIONS = ['📞', '📧', '💬', '🎧'];
 
@@ -207,6 +214,7 @@ const DEFAULT_CHANNEL = (operationDays) => ({
   name: '',
   icon: '📞',
   model: 'erlangC',
+  hoursBasis: HOURS_BASES.GROSS,
   baseAHT: 300,
   concurrency: 1,
   subServices: 1,
@@ -333,7 +341,15 @@ const ChannelConfiguratorInline = ({ form }) => {
             </strong>
             <span className="tag is-light is-small mr-2">{channel.model}</span>
             <span className="tag is-info is-light is-small mr-2">
-              AHT: {channel.baseAHT}s
+              {channel.model === 'hours'
+                ? `${
+                    channel.hoursBasis === HOURS_BASES.IN_CENTER
+                      ? 'In-center'
+                      : channel.hoursBasis === HOURS_BASES.PRODUCTIVE
+                        ? 'Productive'
+                        : 'Gross'
+                  } hours`
+                : `AHT: ${channel.baseAHT}s`}
             </span>
             <span className="ml-auto mr-2">
               {expandedChannel === key ? (
@@ -402,17 +418,58 @@ const ChannelConfiguratorInline = ({ form }) => {
                     </select>
                   </div>
                 </div>
-                <div className="column is-2">
-                  <label className="label is-small">Base AHT (sec)</label>
-                  <input
-                    className="input is-small"
-                    type="number"
-                    value={channel.baseAHT}
-                    onChange={(e) =>
-                      updateChannel(key, 'baseAHT', e.target.value)
-                    }
-                  />
-                </div>
+                {channel.model === 'hours' ? (
+                  <div className="column is-2">
+                    <label className="label is-small">
+                      Forecast hours represent
+                    </label>
+
+                    <div className="select is-small is-fullwidth">
+                      <select
+                        value={
+                          channel.hoursBasis ||
+                          HOURS_BASES.GROSS
+                        }
+                        onChange={(e) =>
+                          updateChannel(
+                            key,
+                            'hoursBasis',
+                            e.target.value
+                          )
+                        }
+                      >
+                        <option value={HOURS_BASES.GROSS}>
+                          Gross hours
+                        </option>
+                        <option value={HOURS_BASES.IN_CENTER}>
+                          In-center hours
+                        </option>
+                        <option value={HOURS_BASES.PRODUCTIVE}>
+                          Productive hours
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="column is-2">
+                    <label className="label is-small">
+                      Base AHT (sec)
+                    </label>
+
+                    <input
+                      className="input is-small"
+                      type="number"
+                      value={channel.baseAHT}
+                      onChange={(e) =>
+                        updateChannel(
+                          key,
+                          'baseAHT',
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                )}
                 {channel.model === 'erlangC' && (
                   <div className="column is-2">
                     <label className="label is-small">
@@ -506,37 +563,37 @@ const ChannelConfiguratorInline = ({ form }) => {
                   </>
                 )}
 
-                <div className="column is-2">
-                  <label
-                    className="label is-small"
-                    style={{ whiteSpace: 'nowrap' }}
-                  >
-                    Shift Hours / Day
-                  </label>
+                  <div className="column is-2">
+                    <label
+                      className="label is-small"
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      Shift Hours / Day
+                    </label>
 
-                  <input
-                    className="input is-small"
-                    type="number"
-                    min="0.1"
-                    max="24"
-                    step="0.1"
-                    value={channel.maxShiftHours ?? 8}
-                    onChange={(e) =>
-                      updateChannel(
-                        key,
-                        'maxShiftHours',
-                        e.target.value
-                      )
-                    }
-                  />
+                    <input
+                      className="input is-small"
+                      type="number"
+                      min="0.1"
+                      max="24"
+                      step="0.1"
+                      value={channel.maxShiftHours ?? 8}
+                      onChange={(e) =>
+                        updateChannel(
+                          key,
+                          'maxShiftHours',
+                          e.target.value
+                        )
+                      }
+                    />
 
-                  <p
-                    className="help"
-                    style={{ fontSize: '0.6rem' }}
-                  >
-                    For daily FTE calc
-                  </p>
-                </div>
+                    <p
+                      className="help"
+                      style={{ fontSize: '0.6rem' }}
+                    >
+                      For daily FTE calc
+                    </p>
+                  </div>
               </div>
 
               {/* KPI — Erlang C */}
@@ -849,7 +906,7 @@ const EngineSection = ({ form }) => {
           </label>
           <p className="is-size-7 has-text-grey mb-3">
             Configure the channels for this capacity plan. Each channel can use
-            Erlang C (real-time) or Workload (back-office) model. Hours of
+            Erlang C (real-time), Workload (back-office), or Hours model. Hours of
             operation can be synced from the capPlan's Days of Operation or set
             independently per channel.
           </p>
@@ -931,13 +988,49 @@ const CapPlanManagement = ({ data }) => {
     // ── ENGINE INTEGRATION: Clean channel keys before saving ──
     let engineChannels = form.get('engineChannels') || {};
     const cleanChannels = {};
-    Object.entries(engineChannels).forEach(([key, ch]) => {
-      const newKey = ch.name
-        ? ch.name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '_')
-            .replace(/^_|_$/g, '')
-        : key;
+      if (form.get('engineEnabled')) {
+        const usedChannelNames = new Set();
+
+        for (const [key, channel] of Object.entries(
+          engineChannels
+        )) {
+          const channelName = String(
+            channel?.name || ''
+          ).trim();
+
+          if (!channelName) {
+            window.alert(
+              `Channel "${key}" requires a name.`
+            );
+
+            return;
+          }
+
+          const normalizedName =
+            channelName.toLowerCase();
+
+          if (
+            usedChannelNames.has(
+              normalizedName
+            )
+          ) {
+            window.alert(
+              `Channel name "${channelName}" is duplicated. Channel names must be unique within a capacity plan.`
+            );
+
+            return;
+          }
+
+          usedChannelNames.add(
+            normalizedName
+          );
+        }
+      }
+
+      Object.entries(engineChannels).forEach(([key, ch]) => {
+        // The channel key is its permanent identity.
+        // Changing the display name must not change this key.
+        const newKey = key;
 
       const normalizedModel = String(ch.model || "")
         .trim()
@@ -1012,6 +1105,9 @@ const CapPlanManagement = ({ data }) => {
 
       cleanChannels[newKey] = {
         ...ch,
+        name: String(
+          ch.name || ''
+        ).trim(),
 
         baseAHT:
           parseFloat(ch.baseAHT) || 300,
