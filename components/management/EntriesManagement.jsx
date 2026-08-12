@@ -136,9 +136,6 @@ const EntriesManagement = ({ data }) => {
   const [valid, setValid] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
 
-  const [staffUpload, setStaffUpload] = useState([]);
-  const [staffValid, setStaffValid] = useState(false);
-
   const auth = useAuth();
 
   useEffect(() => {
@@ -198,39 +195,6 @@ const EntriesManagement = ({ data }) => {
     upload[0] ? setValid(isValid(upload)) : setValid(false);
   }, [upload]);
 
-  useEffect(() => {
-    const isValid = (staffUpload) => {
-      let hasInvalidField = false;
-      let hasWeek = 0,
-        hasTarget = 0,
-        hasName = 0;
-      Object.keys(staffUpload[0]).forEach((key) => {
-        if (key === 'capPlan') {
-          hasTarget++;
-        } else if (key === 'week') {
-          hasWeek++;
-        } else if (key === 'name') {
-          hasName++;
-        } else {
-          let found = ['volumes', 'aht'].includes(key);
-          if (!found) {
-            hasInvalidField = true;
-          }
-        }
-      });
-
-      let valid =
-        hasTarget === 1 && hasWeek === 1 && hasName === 1 && !hasInvalidField;
-
-      if (!valid) {
-        alert('Invalid Upload File');
-      }
-
-      return valid;
-    };
-
-    staffUpload[0] ? setStaffValid(isValid(staffUpload)) : setStaffValid(false);
-  }, [staffUpload]);
 
   // HANDLERS
   const handleSubmit = async (type) => {
@@ -272,59 +236,6 @@ const EntriesManagement = ({ data }) => {
         }
       }
     }
-  };
-
-  const handleSubmitStaff = (type) => {
-    if (type === 'planned') {
-      staffUpload.forEach((row) =>
-        fetch(
-          `/api/data/entries/planned?week=${row.week}&capPlan=${row.capPlan}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: auth.authorization(),
-            },
-            body: JSON.stringify({
-              payload: {
-                name: row.name,
-                aht: row.aht,
-                volumes: row.volumes,
-              },
-            }),
-          }
-        )
-          .then((response) => response.json())
-          .then((data) => {})
-          .catch((err) => console.log(err))
-      );
-    } else if (type === 'actual') {
-      staffUpload.forEach((row) =>
-        fetch(
-          `/api/data/entries/actual?week=${row.week}&capPlan=${row.capPlan}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: auth.authorization(),
-            },
-            body: JSON.stringify({
-              payload: {
-                name: row.name,
-                aht: row.aht,
-                volumes: row.volumes,
-              },
-            }),
-          }
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            console.log(data.message);
-          })
-          .catch((err) => console.log(err))
-      );
-    }
-    alert('Submitted bulk import, check console for logs');
   };
 
   return (
@@ -666,98 +577,6 @@ const EntriesManagement = ({ data }) => {
                       Fields{' '}
                       <span className="tag is-info ml-2">
                         {Object.keys(upload[0]).length || 0}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="tag m-auto has-text-right">No upload</p>
-                )}
-              </div>
-            </div>
-            {/*////////////////////////////////////////////////////// PLANNED UPLOAD ////////////////////////////////////////////////*/}
-            <div className="columns is-multiline">
-              <div className="column">
-                <label className="label">Volumes & AHT Upload</label>
-                <CSVUploader
-                  removeHandler={() => setStaffUpload([])}
-                  loadedHandler={(csv) => setStaffUpload(csv)}
-                  label={
-                    'capPlan (ObjId) - week (YYYYw#) - name (channel name) - volumes (#) - aht (#")'
-                  }
-                ></CSVUploader>
-                <button
-                  className="button is-small m-1 is-primary is-rounded"
-                  onClick={() => {
-                    handleSubmitStaff('planned');
-                  }}
-                  disabled={
-                    !(
-                      staffValid &&
-                      staffUpload &&
-                      Object.keys(staffUpload[0]).includes('capPlan')
-                    )
-                  }
-                >
-                  Upload Planned
-                </button>
-                <button
-                  className="button is-small m-1 is-primary is-rounded"
-                  onClick={() => {
-                    handleSubmitStaff('actual');
-                  }}
-                  disabled={
-                    !(
-                      staffValid &&
-                      staffUpload &&
-                      Object.keys(staffUpload[0]).includes('capPlan')
-                    )
-                  }
-                >
-                  Upload Actual
-                </button>
-
-                <br></br>
-                <br></br>
-              </div>
-              <div className="column is-narrow has-text-right">
-                <label className="label">Field Check</label>
-
-                {staffUpload.length ? (
-                  <div>
-                    {Object.keys(staffUpload[0]).map((header) => (
-                      <div key={'uploadField-' + header}>
-                        {header}
-                        {['volumes', 'aht'].find(
-                          (field) => field === header
-                        ) ? (
-                          <span className="tag is-success ml-2">Valid</span>
-                        ) : ['capPlan', 'week', 'name'].includes(header) ? (
-                          <span className="tag is-success ml-2">Valid</span>
-                        ) : (
-                          <span className="tag is-danger ml-2">Invalid</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="tag m-auto has-text-right">No upload</p>
-                )}
-              </div>
-              <div className="column is-narrow has-text-right">
-                <label className="label">Upload Stats</label>
-
-                {staffUpload.length ? (
-                  <div>
-                    <div>
-                      Entries{' '}
-                      <span className="tag is-info ml-2">
-                        {staffUpload.length || 0}
-                      </span>
-                    </div>
-                    <div>
-                      Fields{' '}
-                      <span className="tag is-info ml-2">
-                        {Object.keys(staffUpload[0]).length || 0}
                       </span>
                     </div>
                   </div>
