@@ -1,9 +1,5 @@
 import { connectToDatabase } from "../../../lib/mongodb"
-import {
-  ROLES,
-  verifyPermissions,
-  verifySession,
-} from "../../../lib/verification"
+import { authorizeReportingRead } from "../../../lib/reportingAuthentication"
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -18,29 +14,16 @@ export default async function handler(req, res) {
   try {
     const { db } = await connectToDatabase()
 
-    const verification = await verifySession(
-      db,
-      req.headers.authorization
-    )
+    const authorization =
+      await authorizeReportingRead(db, req)
 
-    if (!verification.verified) {
-      return res.status(401).json({
-        message: "A valid session is required.",
-        data: null,
-      })
-    }
-
-    const hasPermission = await verifyPermissions(
-      ROLES.GUEST,
-      verification.user
-    )
-
-    if (!hasPermission) {
-      return res.status(403).json({
-        message:
-          "You do not have permission to access this report.",
-        data: null,
-      })
+    if (!authorization.authorized) {
+      return res
+        .status(authorization.status)
+        .json({
+          message: authorization.message,
+          data: null,
+        })
     }
 
     const output = await db
