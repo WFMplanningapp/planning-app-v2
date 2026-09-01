@@ -19,9 +19,20 @@ const ALLOWED_COLLECTIONS = new Set([
   "pms",
 ])
 
-const isPowerBIRequest = (selected) =>
-  selected.length === 1 &&
-  selected[0] === "capPlans"
+const REPORTING_COLLECTIONS = new Set([
+  "capPlans",
+  "weeks",
+  "countries",
+  "projects",
+  "lobs",
+  "languages",
+])
+
+const isReportingRequest = (selected) =>
+  selected.length > 0 &&
+  selected.every((collectionName) =>
+    REPORTING_COLLECTIONS.has(collectionName)
+  )
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -85,12 +96,12 @@ export default async function handler(req, res) {
   try {
     const { db } = await connectToDatabase()
 
-    if (isPowerBIRequest(selected)) {
+    if (isReportingRequest(selected)) {
       /*
-       * The reporting API keys are accepted only
-       * when capPlans is the sole requested structure.
-       * Employee sessions remain supported.
-       */
+      * Reporting API keys are accepted when every requested
+      * structure is included in the reporting allowlist.
+      * Employee sessions remain supported.
+      */
       const authorization =
         await authorizeReportingRead(db, req)
 
