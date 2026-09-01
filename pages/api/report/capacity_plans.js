@@ -97,7 +97,7 @@ export default async function handler(req, res) {
         },
         {
           $project: {
-            _id: 0,
+            _id: 1,
             Project_Name: {
               $arrayElemAt: ["$projDoc.name", 0],
             },
