@@ -1,82 +1,161 @@
 import { useState } from "react"
 import _ from "lodash"
-/**
- * @props
- **/
+import { useAuth } from "../contexts/authContext"
 
 const useCapacity = () => {
-  
   const [capacity, setCapacity] = useState(null)
-  const [generated, setGenerated] = useState(false)
-  const [lastUpdated, setLastUpdated] = useState(null)
+  const [generated, setGenerated] =
+    useState(false)
+  const [lastUpdated, setLastUpdated] =
+    useState(null)
 
-  const generate = (capPlan) => {
-    if (capPlan && capPlan._id) {
-      fetch(`/api/capacity/${capPlan._id}`)
-        .then((response) => response.json())
-        .then((data) => {
-          //console.log(data.message)
-          setCapacity(data.capacity)
-          setGenerated(true)
-        })
-        .catch((err) => console.log(err))
+  const auth = useAuth()
 
-      fetch(`/api/data/find/lastUpdated?capPlan=${capPlan._id}`)
-        .then((response) => response.json())
-        .then((data) => {
-          //console.log(data.message)
-          setLastUpdated(data.data)
-        })
-        .catch((err) => console.log(err))
-    } else {
-      //console.log("No initial data!")
+  const generate = async (capPlan) => {
+    if (!capPlan?._id) {
+      return
     }
-    return
+
+    const authorization = auth.authorization()
+
+    if (!authorization) {
+      console.error(
+        "Capacity request requires authentication."
+      )
+      return
+    }
+
+    setGenerated(false)
+
+    try {
+      const [capacityResponse, updatedResponse] =
+        await Promise.all([
+          fetch(
+            `/api/capacity/${encodeURIComponent(
+              capPlan._id
+            )}`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: authorization,
+              },
+            }
+          ),
+          fetch(
+            `/api/data/find/lastUpdated?capPlan=${encodeURIComponent(
+              capPlan._id
+            )}`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: authorization,
+              },
+            }
+          ),
+        ])
+
+      const capacityResult =
+        await capacityResponse.json()
+
+      if (!capacityResponse.ok) {
+        throw new Error(
+          capacityResult.message ||
+            "Unable to generate capacity."
+        )
+      }
+
+      setCapacity(
+        Array.isArray(capacityResult.capacity)
+          ? capacityResult.capacity
+          : []
+      )
+      setGenerated(true)
+
+      const updatedResult =
+        await updatedResponse.json()
+
+      if (updatedResponse.ok) {
+        setLastUpdated(
+          updatedResult.data || null
+        )
+      } else {
+        setLastUpdated(null)
+      }
+    } catch (error) {
+      console.error(
+        "Capacity request failed:",
+        error
+      )
+
+      setCapacity(null)
+      setLastUpdated(null)
+      setGenerated(false)
+    }
   }
 
   const reset = () => {
     setCapacity(null)
     setLastUpdated(null)
+    setGenerated(false)
   }
 
   const get = (weekRange, fields) => {
     if (!capacity) {
-      //console.log("No capacity generated")
       return []
     }
 
     let firstIndex
+
     if (weekRange) {
-      for (let i = 0; i < capacity.length; ++i) {
-        if (weekRange[0].code === capacity[i].week.code) {
-          firstIndex = i
+      for (
+        let index = 0;
+        index < capacity.length;
+        index += 1
+      ) {
+        if (
+          weekRange[0].code ===
+          capacity[index].week.code
+        ) {
+          firstIndex = index
           break
         }
       }
     }
 
-    let output = weekRange
+    if (
+      weekRange &&
+      firstIndex === undefined
+    ) {
+      return []
+    }
+
+    return weekRange
       ? weekRange.map((week, index) => {
+          const weeklyCapacity =
+            capacity[firstIndex + index]
+
+          if (!weeklyCapacity) {
+            return {}
+          }
+
           return fields
             ? {
-                ..._.pick(capacity[firstIndex + index], fields),
+                ..._.pick(
+                  weeklyCapacity,
+                  fields
+                ),
               }
             : {
-                ...capacity[firstIndex + index],
+                ...weeklyCapacity,
               }
         })
       : capacity
-
-    return output
   }
 
-  const isGenerated = () => {
-    return generated
-  }
+  const isGenerated = () => generated
 
-  const getLastUpdated = () => {
-    return lastUpdated
-  }
+  const getLastUpdated = () =>
+    lastUpdated
 
   return {
     generate,

@@ -50,56 +50,135 @@ const Report = () => {
   });
 
   const handleGenerate = async () => {
-    // Existing report generation logic...
+    const selectedLob = selection.get("lob");
+    const selectedProject =
+      selection.get("project");
+    const fromWeek =
+      selection.get("fromWeek");
+    const toWeek = selection.get("toWeek");
+
+    if (
+      !selectedLob ||
+      !selectedProject ||
+      !fromWeek?.code ||
+      !toWeek?.code
+    ) {
+      return;
+    }
+
+    const authorization =
+      auth.authorization();
+
+    if (!authorization) {
+      console.error(
+        "Report generation requires authentication."
+      );
+      return;
+    }
+
     let lobs = [];
-    if (selection.get("lob")._id) {
-      lobs = data.lobs.filter((lob) => lob._id === selection.get("lob")._id);
+
+    if (selectedLob._id) {
+      lobs = data.lobs.filter(
+        (lob) => lob._id === selectedLob._id
+      );
     } else {
       lobs = data.lobs.filter(
-        (lob) => lob.project === selection.get("project")._id
+        (lob) =>
+          lob.project === selectedProject._id
       );
     }
 
-    let capPlans = lobs
-      .map((lob) =>
+    const capPlans = lobs
+      .flatMap((lob) =>
         data.capPlans
-          .filter((capPlan) => capPlan.lob === lob._id)
+          .filter(
+            (capPlan) =>
+              capPlan.lob === lob._id
+          )
           .map((capPlan) => ({
             _id: capPlan._id,
             name: capPlan.name,
             country: capPlan.country,
           }))
-      )
-      .flat();
+      );
 
-    await fetch(
-      `/api/capacity/multiple?from=${selection.get("fromWeek").code}&to=${selection.get("toWeek").code}&selected=${capPlans
+    if (capPlans.length === 0) {
+      setReport([]);
+      setGenerated(false);
+      return;
+    }
+
+    const parameters = new URLSearchParams({
+      from: fromWeek.code,
+      to: toWeek.code,
+      selected: capPlans
         .map((capPlan) => capPlan._id)
-        .join("+")}`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setReport(
-          data.multiple.map((weekly) => {
-            let projection = {
-              week_code: weekly.week,
-              week_start: weekly.firstDate,
-              cap_plan_name: weekly.capPlan,
-              cap_plan_id: weekly.capPlanId,
-              cap_plan_country: weekly.country,
-            };
+        .join(","),
+    });
 
-            fields.forEach((field) => {
-              
-                  projection[field.payload.internal] = weekly[field.payload.internal] || null;
-              
-            });
-            return projection;
-          })
+    try {
+      setGenerated(false);
+
+      const response = await fetch(
+        `/api/capacity/multiple?${parameters.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: authorization,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.message ||
+            "Unable to generate the report."
         );
-        setGenerated(true);
-      })
-      .catch((error) => console.log("ERROR:", error));
+      }
+
+      const rows = Array.isArray(
+        result.multiple
+      )
+        ? result.multiple
+        : [];
+
+      setReport(
+        rows.map((weekly) => {
+          const projection = {
+            week_code: weekly.week,
+            week_start: weekly.firstDate,
+            cap_plan_name: weekly.capPlan,
+            cap_plan_id: weekly.capPlanId,
+            cap_plan_country:
+              weekly.country,
+          };
+
+          fields.forEach((field) => {
+            projection[
+              field.payload.internal
+            ] =
+              weekly[
+                field.payload.internal
+              ] ?? null;
+          });
+
+          return projection;
+        })
+      );
+
+      setGenerated(true);
+    } catch (error) {
+      console.error(
+        "Report generation failed:",
+        error
+      );
+
+      setReport([]);
+      setGenerated(false);
+    }
   };
 
   const handleSelectAllFields = () => {
