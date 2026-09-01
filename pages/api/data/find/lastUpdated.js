@@ -1,50 +1,105 @@
-/**
-query: field1=field1value, field2=field1value, ...
-*/
-
+import { ObjectId } from "mongodb"
 import { connectToDatabase } from "../../../../lib/mongodb"
+import {
+  ROLES,
+  verifyPermissions,
+  verifySession,
+} from "../../../../lib/verification"
 
 export default async function handler(req, res) {
-  const { query, method, body } = req
+  if (req.method !== "GET") {
+    res.setHeader("Allow", ["GET"])
 
-  //console.log(body)
+    return res.status(405).json({
+      message:
+        "Method not allowed. Use GET only.",
+    })
+  }
 
-  //console.log(query)
+  try {
+    const { db } = await connectToDatabase()
 
-  let capPlan = query.capPlan
+    const verification = await verifySession(
+      db,
+      req.headers.authorization
+    )
 
-  const { client, db } = await connectToDatabase()
-
-  if (method === "GET") {
-    if (capPlan) {
-      let entries = await db
-        .collection("capEntries")
-        .find({ capPlan: capPlan, lastUpdated: { $exists: 1 } })
-        .toArray()
-
-      let lastUpdatedEntry = entries.reduce(
-        (a, b) => (a.lastUpdated > b.lastUpdated ? a : b),
-        {}
-      )
-
-      res.status(200).json({
-        message: `Retrieved Last Updated!`,
-        data: lastUpdatedEntry
-          ? {
-              lastUpdated: lastUpdatedEntry.lastUpdated,
-              updatedBy: lastUpdatedEntry.updatedBy,
-              updateType: lastUpdatedEntry.updateType,
-            }
-          : null,
-      })
-    } else {
-      res.status(200).json({
-        message: `No Cap Plan Selected`,
+    if (!verification.verified) {
+      return res.status(401).json({
+        message: "A valid session is required.",
         data: null,
       })
     }
-  } else {
-    //BAD REQUEST
-    res.status(405).json({ message: "Method not Allowed, use GET only" })
+
+    const hasPermission = await verifyPermissions(
+      ROLES.GUEST,
+      verification.user
+    )
+
+    if (!hasPermission) {
+      return res.status(403).json({
+        message:
+          "You do not have permission to access this resource.",
+        data: null,
+      })
+    }
+
+    const capPlan = req.query.capPlan
+
+    if (
+      typeof capPlan !== "string" ||
+      !ObjectId.isValid(capPlan)
+    ) {
+      return res.status(400).json({
+        message:
+          "A valid Capacity Plan ID is required.",
+        data: null,
+      })
+    }
+
+    const lastUpdatedEntry = await db
+      .collection("capEntries")
+      .findOne(
+        {
+          capPlan,
+          lastUpdated: {
+            $exists: true,
+            $ne: null,
+          },
+        },
+        {
+          projection: {
+            _id: 0,
+            lastUpdated: 1,
+            updatedBy: 1,
+            updateType: 1,
+          },
+          sort: {
+            lastUpdated: -1,
+          },
+        }
+      )
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store, max-age=0"
+    )
+
+    return res.status(200).json({
+      message:
+        "Last update information retrieved.",
+      data: lastUpdatedEntry || null,
+    })
+  } catch (error) {
+    console.error(
+      "Last-update retrieval failed:",
+      error
+    )
+
+    return res.status(500).json({
+      message:
+        "Unable to retrieve last-update information.",
+      data: null,
+    })
   }
 }
