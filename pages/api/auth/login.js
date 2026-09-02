@@ -1,6 +1,12 @@
 import { compare } from "bcryptjs"
 import { randomBytes } from "crypto"
 import { connectToDatabase } from "../../../lib/mongodb"
+import {
+  clearFailedLogins,
+  createLoginRateLimitKey,
+  getLoginRateLimitStatus,
+  recordFailedLogin,
+} from "../../../lib/loginRateLimit"
 
 const SESSION_DURATION_MS =
   12 * 60 * 60 * 1000
@@ -42,6 +48,23 @@ const sendInvalidCredentials = (res) =>
     logged: false,
     user: null,
   })
+
+const sendRateLimited = (
+  res,
+  retryAfterSeconds
+) => {
+  res.setHeader(
+    "Retry-After",
+    String(retryAfterSeconds)
+  )
+
+  return res.status(429).json({
+    message:
+      "Too many login attempts. Please try again later.",
+    logged: false,
+    user: null,
+  })
+}
 
 export default async function handler(
   req,
@@ -95,6 +118,25 @@ export default async function handler(
     const { db } =
       await connectToDatabase()
 
+    const rateLimitKey =
+      createLoginRateLimitKey(
+        username,
+        req
+      )
+
+    const rateLimitStatus =
+      await getLoginRateLimitStatus(
+        db,
+        rateLimitKey
+      )
+
+    if (rateLimitStatus.blocked) {
+      return sendRateLimited(
+        res,
+        rateLimitStatus.retryAfterSeconds
+      )
+    }
+
     const user = await db
       .collection("verification")
       .findOne({ username })
@@ -113,6 +155,11 @@ export default async function handler(
       )
 
     if (!user || !credentialsMatch) {
+      await recordFailedLogin(
+        db,
+        rateLimitKey
+      )
+
       return sendInvalidCredentials(res)
     }
 
@@ -146,9 +193,14 @@ export default async function handler(
 
     if (updateResult.matchedCount !== 1) {
       throw new Error(
-        " login session could not be saved."
+        "The login session could not be saved."
       )
     }
+
+    await clearFailedLogins(
+      db,
+      rateLimitKey
+    )
 
     return res.status(200).json({
       message: "Login successful!",
