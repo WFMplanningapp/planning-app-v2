@@ -405,6 +405,40 @@ try {
   )
 
   await test(
+    "derives end date for flattened multiple-plan rows",
+    () => {
+      const result =
+        toCanonicalCapacityWeek(
+          createBaseWeek({
+            firstDate: "2026-06-29",
+            week: "2026w27",
+          })
+        );
+
+      assert.equal(
+        result.period.code,
+        "2026w27"
+      );
+
+      assert.equal(
+        result.period.startDate,
+        "2026-06-29"
+      );
+
+      assert.equal(
+        result.period.endDate,
+        "2026-07-05"
+      );
+
+      assert.equal(
+        result.dataQuality
+          .hasLegacyWeekObject,
+        false
+      );
+    }
+  );
+
+  await test(
     "maps an array without changing row count",
     () => {
       const result =
