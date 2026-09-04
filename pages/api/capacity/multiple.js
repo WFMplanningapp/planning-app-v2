@@ -6,6 +6,7 @@ import {
   verifyPermissions,
   verifySession,
 } from "../../../lib/verification"
+import { toCanonicalCapacityWeek } from "../../../lib/capacity/canonicalCapacityModel"
 
 const MAX_CAPACITY_PLANS = 100
 
@@ -265,15 +266,47 @@ export default async function handler(req, res) {
       "no-store, max-age=0"
     )
 
-    return res.status(200).json({
+    const range = {
+      from:
+        allWeeks[fromIndex]?.code || null,
+      to:
+        allWeeks[toIndex]?.code || null,
+    }
+
+    const createCanonicalCapacity = () =>
+      multiple.map((weekly) =>
+        toCanonicalCapacityWeek(
+          weekly,
+          {
+            capacityPlanId:
+              weekly.capPlanId,
+            capacityPlanName:
+              weekly.capPlan,
+          }
+        )
+      )
+
+    if (req.query.responseModel === "canonical") {
+      return res.status(200).json({
+        message: "Capacity generated.",
+        canonicalCapacity:
+          createCanonicalCapacity(),
+        range,
+      })
+    }
+
+    const responseBody = {
       message: "Capacity generated.",
       multiple,
-      range: {
-        from:
-          allWeeks[fromIndex]?.code || null,
-        to: allWeeks[toIndex]?.code || null,
-      },
-    })
+      range,
+    }
+
+    if (req.query.includeCanonical === "true") {
+      responseBody.canonicalCapacity =
+        createCanonicalCapacity()
+    }
+
+    return res.status(200).json(responseBody)
   } catch (error) {
     console.error(
       "Multiple capacity generation failed:",

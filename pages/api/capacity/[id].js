@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb"
 import { generateCapacity } from "../../../lib/capacityCalculations"
 import { connectToDatabase } from "../../../lib/mongodb"
 import { authorizeReportingRead } from "../../../lib/reportingAuthentication"
+import { toCanonicalCapacity } from "../../../lib/capacity/canonicalCapacityModel"
 
 const normalizeWeekCode = (value) => {
   if (!value || typeof value !== "string") {
@@ -222,15 +223,45 @@ export default async function handler(req, res) {
       "no-store, max-age=0"
     )
 
-    return res.status(200).json({
+    const range = {
+      from:
+        allWeeks[fromIndex]?.code || null,
+      to:
+        allWeeks[toIndex]?.code || null,
+    }
+
+    const canonicalContext = {
+      capacityPlanId: capPlan._id,
+      capacityPlanName: capPlan.name,
+    }
+
+    if (req.query.responseModel === "canonical") {
+      return res.status(200).json({
+        message: "Capacity generated.",
+        canonicalCapacity:
+          toCanonicalCapacity(
+            capacity,
+            canonicalContext
+          ),
+        range,
+      })
+    }
+
+    const responseBody = {
       message: "Capacity generated.",
       capacity,
-      range: {
-        from:
-          allWeeks[fromIndex]?.code || null,
-        to: allWeeks[toIndex]?.code || null,
-      },
-    })
+      range,
+    }
+
+    if (req.query.includeCanonical === "true") {
+      responseBody.canonicalCapacity =
+        toCanonicalCapacity(
+          capacity,
+          canonicalContext
+        )
+    }
+
+    return res.status(200).json(responseBody)
   } catch (error) {
     console.error(
       "Capacity generation failed:",
