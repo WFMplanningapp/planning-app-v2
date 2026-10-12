@@ -35,6 +35,6 @@
 		"recharts": "^2.1.8"
 	},
 	"engines": {
-		"node": "20.x"
+		"node": "24.x"
 	}
 }
